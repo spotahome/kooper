@@ -89,7 +89,7 @@
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-  revision = "c65a0412e71e8b9b3bfd22925720d23c0f054237"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
 
 [[projects]]
   branch = "master"
@@ -245,6 +245,7 @@
   revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 
 [[projects]]
+  branch = "release-1.8"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -272,10 +273,10 @@
     "storage/v1",
     "storage/v1beta1"
   ]
-  revision = "fe29995db37613b9c5b2a647544cf627bfa8d299"
-  version = "kubernetes-1.8.0"
+  revision = "389dfa299845bcf399c16af89987e8775718ea48"
 
 [[projects]]
+  branch = "release-1.8"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
@@ -286,8 +287,7 @@
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake"
   ]
-  revision = "89b2a556a65053a90552eaed26f810df4a266367"
-  version = "kubernetes-1.8.0"
+  revision = "d0becfa6529e20309bd6684f8486abc265cf0b59"
 
 [[projects]]
   name = "k8s.io/apimachinery"
@@ -333,8 +333,8 @@
     "pkg/watch",
     "third_party/forked/golang/reflect"
   ]
-  revision = "019ae5ada31de202164b118aee88ee2d14075c31"
-  version = "kubernetes-1.8.0"
+  revision = "bc110fd540ab678abbf2bc71d9ce908eb9325ef6"
+  version = "kubernetes-1.8.7"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -419,6 +419,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8361fc8b9440cfddfdcee1ad01f622454a80fad83951d47e9a93fafe4561d30"
+  inputs-digest = "ebc50a6c81c70f644b1940dcdb972871feee3967be09699d5ec394edbb38daf4"
   solver-name = "gps-cdcl"
   solver-version = 1
