@@ -10,22 +10,23 @@
   branch = "master"
   name = "golang.org/x/sync"
 
-# Kubernetes stuff is versioned to be synced within them (to run tests and examples)
+# Kubernetes >= 1.8
+
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.9.2"
+  version = "kubernetes-1.8.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.9.2"
+  version = "kubernetes-1.8.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "6.0.0"
+  version = "5.0.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.9.2"
+  version = "kubernetes-1.8.0"
 
 [prune]
   go-tests = true
