@@ -132,6 +132,18 @@
   revision = "0a025b7e63adc15a622f29b0b2c4c3848243bbf6"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/howeyc/gopass"
+  packages = ["."]
+  revision = "bf9dde6d0d2c004a008c27aaee91170c786f6db8"
+
+[[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "163f41321a19dd09362d4c63cc2489db2015f1f4"
+  version = "0.3.2"
+
+[[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
   revision = "f7279a603edee96fe7764d3de9c6ff8cf9970994"
@@ -194,6 +206,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "1875d0a70c90e57f11972aefd42276df65e895b9"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -209,6 +227,15 @@
   name = "golang.org/x/sync"
   packages = ["errgroup"]
   revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "ff2a66f350cefa5c93a634eadb5d25bb60c85a9c"
 
 [[projects]]
   branch = "master"
@@ -396,14 +423,19 @@
     "rest",
     "rest/watch",
     "testing",
+    "tools/auth",
     "tools/cache",
+    "tools/clientcmd",
     "tools/clientcmd/api",
+    "tools/clientcmd/api/latest",
+    "tools/clientcmd/api/v1",
     "tools/metrics",
     "tools/pager",
     "tools/reference",
     "transport",
     "util/cert",
     "util/flowcontrol",
+    "util/homedir",
     "util/integer",
     "util/workqueue"
   ]
@@ -419,6 +451,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ebc50a6c81c70f644b1940dcdb972871feee3967be09699d5ec394edbb38daf4"
+  inputs-digest = "ac75898ba51d9c75ef529bfb5940b70cd55f2363ce7312f1f75479f019965786"
   solver-name = "gps-cdcl"
   solver-version = 1
