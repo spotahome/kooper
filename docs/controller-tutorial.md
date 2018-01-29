@@ -3,13 +3,13 @@ Controller tutorial
 
 In this tutorial we will learn how to create a controller using kooper. Yes, I know what you are thinking, kooper is an operator library... but an operator as we described in the [concepts](concepts.md) is a controller on steroids.
 
-So... In this tutorial we will learn the pillars of the operator, the controller. The full controller is [here](https://github.com/spotahome/kooper/tree/examples/echo-pod-controller), we will go step by step but some of the code is *glue* or doesn't refer to kooper. 
+So... In this tutorial we will learn the pillars of the operator, the controller. The full controller is [here](https://github.com/spotahome/kooper/tree/master/examples/echo-pod-controller), we will go step by step but some of the code is *glue* or doesn't refer to kooper. 
 
 Lets start!
 
 ## 01 - Description.
 
-Our Controller will log all the add/delete events that occur to pods on a given namespace. Easy peasy... Lets call it  `echo-pod-controller` (yes, very original). The full controller is in [examples/echo-pod-controller](https://github.com/spotahome/kooper/tree/examples/echo-pod-controller).
+Our Controller will log all the add/delete events that occur to pods on a given namespace. Easy peasy... Lets call it  `echo-pod-controller` (yes, very original). The full controller is in [examples/echo-pod-controller](https://github.com/spotahome/kooper/tree/master/examples/echo-pod-controller).
 
 ### Structure.
 
