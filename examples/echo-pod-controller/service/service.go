@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/spotahome/kooper/examples/generic-echo-controller/log"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/log"
 )
 
 // Echo is simple echo service.
@@ -30,12 +30,11 @@ func NewSimpleEcho(logger log.Logger) *SimpleEcho {
 }
 
 func (s *SimpleEcho) getObjInfo(obj runtime.Object) (string, error) {
-	gk := obj.GetObjectKind().GroupVersionKind()
 	objMeta, ok := obj.(metav1.Object)
 	if !ok {
 		return "", fmt.Errorf("could not print object information")
 	}
-	return fmt.Sprintf("%s/%s", gk, objMeta.GetName()), nil
+	return fmt.Sprintf("%s", objMeta.GetName()), nil
 }
 
 func (s *SimpleEcho) echo(prefix string, str string) {
