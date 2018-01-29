@@ -108,5 +108,5 @@ all of them directly. For example we provide ways of bootstraping controllers an
 At this moment you have the basic knowledge or the pillars that sustain this framework/toolkit, the next
 thing you need to know is how to create and run stuff built with this toolkit:
 
-* [TODO] Controller tutorial.
+* [Controller tutorial.](controller-tutorial.md)
 * [TODO] Operator tutorial.
