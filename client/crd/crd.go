@@ -43,9 +43,14 @@ func (c *Conf) getName() string {
 
 // Interface is the CRD client that knows how to interact with k8s to manage them.
 type Interface interface {
-	// EnsureCreated will ensure the the CRD is present.
+	// EnsureCreated will ensure the the CRD is present, this also means that
+	// apart from creating the CRD if is not present it will wait until is
+	// ready, this is a blocking operation and will return an error if timesout
+	// waiting.
 	EnsurePresent(conf Conf) error
-	// WaitToBePresent will wait until the CRD is present or it timesout.
+	// WaitToBePresent will wait until the CRD is present, it will check if
+	// is present at regular intervals until it timesout, in case of timeout
+	// will return an error.
 	WaitToBePresent(name string, timeout time.Duration) error
 	// Delete will delete the CRD.
 	Delete(name string) error
@@ -100,7 +105,7 @@ func (c *Client) EnsurePresent(conf Conf) error {
 		return nil
 	}
 
-	c.logger.Infof("crd %s created, waitint to be ready...", crdName)
+	c.logger.Infof("crd %s created, waiting to be ready...", crdName)
 	c.WaitToBePresent(crdName, crdReadyTimeout)
 	c.logger.Infof("crd %s ready", crdName)
 
