@@ -8,3 +8,6 @@ package mocks // import "github.com/spotahome/kooper/mocks"
 //go:generate mockery -output ./operator/resource -outpkg resource -dir ../operator/resource -name CRD
 //go:generate mockery -output ./operator/controller -outpkg controller -dir ../operator/controller -name Controller
 //go:generate mockery -output ./operator/handler -outpkg handler -dir ../operator/handler -name Handler
+
+// Wrappers mocks
+//go:generate mockery -output ./wrapper/time -outpkg time -dir ../wrapper/time -name Time
