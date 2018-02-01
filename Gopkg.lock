@@ -448,9 +448,15 @@
   packages = ["pkg/common"]
   revision = "a07b7bbb58e7fdc5144f8d7046331d29fc9ad3b3"
 
+[[projects]]
+  name = "k8s.io/kubernetes"
+  packages = ["pkg/util/version"]
+  revision = "5fa2db2bd46ac79e5e00a4e6ed24191080aa463b"
+  version = "v1.9.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ac75898ba51d9c75ef529bfb5940b70cd55f2363ce7312f1f75479f019965786"
+  inputs-digest = "7d32651e3857433d3de5a2313cc19226335f309ce3519c8191ec24334b084fc9"
   solver-name = "gps-cdcl"
   solver-version = 1
