@@ -8,14 +8,21 @@ import (
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubeversion "k8s.io/kubernetes/pkg/util/version"
 
 	"github.com/spotahome/kooper/log"
 	wraptime "github.com/spotahome/kooper/wrapper/time"
 )
 
 const (
-	checkCRDInterval = 500 * time.Millisecond
-	crdReadyTimeout  = 30 * time.Second
+	checkCRDInterval     = 2 * time.Second
+	crdReadyTimeout      = 3 * time.Minute
+	k8sValidVersionMajor = 1
+	k8sValidVersionMinor = 7
+)
+
+var (
+	clusterMinVersion = kubeversion.MustParseGeneric("v1.7.0")
 )
 
 // Scope is the scope of a CRD.
@@ -79,7 +86,10 @@ func NewCustomClient(aeClient apiextensionscli.Interface, time wraptime.Time, lo
 
 // EnsurePresent satisfies crd.Interface.
 func (c *Client) EnsurePresent(conf Conf) error {
-	// TODO: Check version of cluster equal or greater than 1.7
+	if err := c.validClusterForCRDs(); err != nil {
+		return err
+	}
+
 	crdName := conf.getName()
 
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
@@ -114,6 +124,10 @@ func (c *Client) EnsurePresent(conf Conf) error {
 
 // WaitToBePresent satisfies crd.Interface.
 func (c *Client) WaitToBePresent(name string, timeout time.Duration) error {
+	if err := c.validClusterForCRDs(); err != nil {
+		return err
+	}
+
 	tout := c.time.After(timeout)
 	t := c.time.NewTicker(checkCRDInterval)
 
@@ -133,5 +147,28 @@ func (c *Client) WaitToBePresent(name string, timeout time.Duration) error {
 
 // Delete satisfies crd.Interface.
 func (c *Client) Delete(name string) error {
+	if err := c.validClusterForCRDs(); err != nil {
+		return err
+	}
+
 	return c.aeClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(name, &metav1.DeleteOptions{})
+}
+
+// validClusterForCRDs returns nil if cluster is ok to be used for CRDs, otherwise error.
+func (c *Client) validClusterForCRDs() error {
+	// Check cluster version.
+	v, err := c.aeClient.Discovery().ServerVersion()
+	if err != nil {
+		return err
+	}
+	parsedV, err := kubeversion.ParseGeneric(v.GitVersion)
+	if err != nil {
+		return err
+	}
+
+	if parsedV.LessThan(clusterMinVersion) {
+		return fmt.Errorf("not a valid cluster version for CRDs (required >=1.7)")
+	}
+
+	return nil
 }
