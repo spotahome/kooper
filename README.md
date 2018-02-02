@@ -65,9 +65,7 @@ if err := ctrl.Run(stopC); err != nil {
 os.Exit(0)
 ```
 
-As you see it is very easy to get a controller working in less that 100 lines of code.
-
-you can check how it works by running the controller from this repository.
+As you see it is very easy to get a controller working in less than 100 lines of code. You can check how it works by running the controller from this repository.
 
 ```bash
 go run ./examples/onefile-echo-pod-controller/main.go
