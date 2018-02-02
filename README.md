@@ -5,9 +5,9 @@ Kooper is a simple Go library to create Kubernetes [operators](https://coreos.co
 
 ## What is Kooper?
 
-Kooper is a set of utilities packed as a library or framework so you can easily create Kubernetes controllers and operators.
+Kooper is a set of utilities packed as a library or framework to easily create Kubernetes controllers and operators.
 
-There is a little of discussion of what a controller and what an operator is, [Here](https://stackoverflow.com/questions/47848258/kubernetes-controller-vs-kubernetes-operator) you can get more information. 
+There is a little of discussion of what a controller and what an operator is, see [here](https://stackoverflow.com/questions/47848258/kubernetes-controller-vs-kubernetes-operator) for more information. 
 
 In Kooper the concepts of controller an operator are very simple, a controller controls the state of a resource in Kubernetes, and an operator is a controller that initializes custom resources (CRD) and controls the state of this custom resource.
 
@@ -21,7 +21,7 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 
 ## Example
 
-You can check how easy is to develop a controller or an operator in kooper looking at the [documentation](docs).
+It can be seen how easy is to develop a controller or an operator in kooper looking at the [documentation](docs).
 
 This is a simple pod log controller example ([full running example here](https://github.com/spotahome/kooper/blob/master/examples/onefile-echo-pod-controller/main.go)):
 
@@ -65,7 +65,7 @@ if err := ctrl.Run(stopC); err != nil {
 os.Exit(0)
 ```
 
-As you see it is very easy to get a controller working in less than 100 lines of code. You can check how it works by running the controller from this repository.
+The above shows that is very easy to get a controller working in less than 100 lines of code. How it works can be demonstrated by running the controller from this repository.
 
 ```bash
 go run ./examples/onefile-echo-pod-controller/main.go
@@ -76,9 +76,9 @@ go run ./examples/onefile-echo-pod-controller/main.go
 
 The state of art in the operators/controllers moves fast, a lot of new operators are being published every day. Most of them have the same "infrastructure" code refering Kubernetes operators/controllers and bootstrapping a new operator can be slow or repetitive.
 
-At this moment there isn't an standard, although there are some projects like [rook operator kit](https://github.com/rook/operator-kit) or [Giantswarm operator kit](https://github.com/giantswarm/operatorkit) that are trying to create it.
+At this moment there is no standard, although there are some projects like [rook operator kit](https://github.com/rook/operator-kit) or [Giantswarm operator kit](https://github.com/giantswarm/operatorkit) that are trying to create it.
 
-At Spotahome we studied these projects before developing Kooper and they didn't fit our requirements:
+Spotahome studied these projects before developing Kooper and they didn't fit the requirements:
 
 * Clear and maintanable code.
 * Easy to test and mock.
@@ -90,7 +90,7 @@ At Spotahome we studied these projects before developing Kooper and they didn't 
 
 ## Installing
 
-You can use your favorite dependency manager to get Kooper or directly with go get the latest version:
+Any dependency manager can get Kooper or directly with go get the latest version:
 
 ```bash
 go get -u github.com/spotahome/kooper
