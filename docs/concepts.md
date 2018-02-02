@@ -2,12 +2,9 @@
 Start
 =====
 
-This project is a simple project with a simple task: Help creating Kubernetes Operators/controllers 
-by giving a framework, libraries or a set of tools (pick the name that you prefer).
+This project is a simple project with a simple task: Help creating Kubernetes operators and controllers by giving a framework, libraries or a set of tools (pick the name that you prefer).
 
-To explain the library first we need to explain the basic concepts and structure of this toolkit, after
-that you will be redirected to some operators and controllers so you can see what can you do with this
-toolkit.
+To explain the library first we need to explain the basic concepts and structure of this toolkit, after that you will be redirected to some operators and controllers so you can see what can you do with this toolkit.
 
 ## Concepts
 
@@ -17,10 +14,9 @@ These will be the pieces of the framework required to implement and know to crea
 
 A Kubernetes controller is something that listens/watch the status of a Kubernetes controller and takes actions so it meets the state required by the resource. Example:
 
-I listen to a `replicaset` resource that wants N instances of X `pod`. My controller should take whatever action it considers so the cluster has N instances of X. In this case It will create N
-`pod` resources.
+I listen to a `replicaset` resource that wants N instances of X `pod`. My controller should take whatever action it considers so the cluster has N instances of X. In this case It will create N `pod` resources.
 
-In this framework is just "something" that runs. (`operator/controller`)
+In this framework is defined as an interface [here](https://github.com/spotahome/kooper/tree/master/operator/controller)
 
 ```go
 package controller
@@ -35,7 +31,7 @@ type Controller interface {
 In kubernetes world the way of retrieving resources is listing or watching (streaming events) them. In Kubernetes client libraries they are called [listerwatchers](https://github.com/kubernetes/client-go/blob/1b825e3a786379cb2ae2edc98a39e9c8cd68ee3c/tools/cache/listwatch.go#L35-L41). They know how to list and watch a resource kind.
 
 In this framework we have the concept of `Retriever` It knows how to list, watch and create a void object
-so we can know the kind of the Retriever by inspecting the object. (`operator/retrieve`)
+so we can know the kind of the Retriever by inspecting the object. Is defined [here](https://github.com/spotahome/kooper/tree/master/operator/retrieve)
 
 ```go
 type Retriever interface {
@@ -46,10 +42,10 @@ type Retriever interface {
 
 ### CRD
 
-A `crd` is a Custom Resource Definition (the evolution of the TPRs). It's a Kubernetes resource that is not in a Kubernetes base resource (`pod`, `deployment`, `secret`...). It's used so we (as Kubernetes users) can create our custom resources (in the end a manifest) and use new resource kinds inside the cluster.
+A `crd` is a Custom Resource Definition (the evolution of the TPRs). It's a Kubernetes resource that is not a Kubernetes base resource (`pod`, `deployment`, `secret`...). It's used so we (as Kubernetes users) can create our custom resources (in the end a manifest/spec/definition) and use new resource kinds inside the cluster.
 
 In his framework we have the concept of `CRD`. It's just a Retriever that knows how to Initialize.
-The Initialize is because when you want to use in a Kubernetes cluster you need to ensure that the CRD is previously present (registered). (`operator/resource`)
+The Initialize is because when you want to use it in a Kubernetes cluster you need to ensure that the CRD is previously present (registered).
 
 ```go
 type CRD interface {
@@ -60,7 +56,7 @@ type CRD interface {
 
 ### Handler
 
-Handler it's just where our operator/controller logic be placed. In other words, every time the resource we are *listwatching* for its events (delete, create, changed) the handler will be called.
+Handler it's just where our operator/controller logic will be placed. In other words, every time the resource we are *listwatching* for its events (delete, create, changed) the handler will be called.
 
 ```go
 type Handler interface {
@@ -69,27 +65,24 @@ type Handler interface {
 }
 ```
 
-Could be that you have some doubts like: 
+Maybe you have some doubts like... 
 
 * Where is the update method?
-In the Kuberntes world there is the concept of state and eventual consistency. YOu don't need to know
-if the resource is new or not, only that needs to be in that state (that state or not present in the cluster).
+In the Kuberntes world there is the concept of state and eventual consistency and reconciliation loops. In a few words, You don't need to know
+if the resource is new or not, only that the state should bethis and eventually that state will be real in the cluster.
 
 * What happens if it errors my handling?
-The event will be requeued for a new handling in the future until it rate limits the maximum times that
-can error a handling on specific resource (if this isn't rate limited you could get stuck forever handling same resources)
+The event will be requeued for a new handling in the future until it rate limits the maximum times allowed (if this isn't rate limited you could get stuck forever handling same resources)
 
 ### Operator
 
-All the concepts described above are glued together and create an operator. An [operator](https://coreos.com/operators/) its a concept invented by the CoreOS devs that is basically a regular controller that automates operators (we) actions, so we manage CRDs to represent resources that
-our controllers will manage them. Example:
+All the concepts described above are glued together and create an operator. An [operator](https://coreos.com/operators/) its a concept invented by the CoreOS devs that is basically a regular controller that automates operator (we) actions, so we manage CRDs to represent resources that our controllers will manage them. Example:
 
-I need to deploy a Prometheus, set up configuration... Instead of doing this myself (as a human operator) I create a new resource kind called `Prometheus`, or in other words a CRD called `Prometheus` with different options and create a controller that knows how to set the required state for our Prometheus CRD (this means deploying, updating... a Promethus instance.).
+I need to deploy a Prometheus, set up configuration... Instead of doing this myself (as a human operator) I create a new resource kind called `Prometheus`, or in other words a CRD called `Prometheus` with different options and create a controller that knows how to set the required state for our Prometheus CRD (this means deploying, configuring, backups, updating... a Promethus instance.).
 
 This way we just automated repetitive stuff, remove toil, errors...
 
-In this framework the concept operator is: controller(s) + CRD(s) = Operator. In other words an Operator
-is "something" that initializes one or more CRDs and the runs one or more controllers related to one or more CRDs previously initialized.
+In this framework the concept operator is: controller(s) + CRD(s) = Operator. In other words an Operator initializes one or more CRDs and the runs one or more controllers related to one or more CRDs previously initialized.
 
 ```go
 type Operator interface {
