@@ -185,6 +185,7 @@ func (p *podKiller) kill() error {
 
 	// Get random pods.
 	targets := p.getRandomTargets(pods, totalTargets)
+	p.logger.Infof("%s pod killer will kill %d targets", p.pt.Name, len(targets))
 
 	// Terminate.
 	for _, target := range targets {

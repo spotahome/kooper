@@ -8,8 +8,8 @@ metadata:
 spec:
   selector:
     k8s-app: nginx-ingress-controller
-  periodSeconds: 120
-  TerminationPercent: 25
+  periodSeconds: 60
+  TerminationPercent: 35
   MinimumInstances: 2
   #DryRun: true
 

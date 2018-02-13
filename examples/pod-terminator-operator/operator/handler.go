@@ -8,7 +8,7 @@ import (
 
 	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator/service"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/service"
 )
 
 // Handler  is the pod terminator handler that will handle the
