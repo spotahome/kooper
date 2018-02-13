@@ -1,4 +1,4 @@
-package service
+package chaos
 
 import (
 	"fmt"
@@ -17,101 +17,58 @@ import (
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
 )
 
-// ChaosSyncer is the interface that every chaos service implementation
-// needs to implement.
-type ChaosSyncer interface {
-	// EnsurePodTerminator will ensure that the pod terminator is running and working.
-	EnsurePodTerminator(pt *chaosv1alpha1.PodTerminator) error
-	// DeletePodTerminator will stop and delete the pod terminator.
-	DeletePodTerminator(name string) error
+// TimeWrapper is a wrapper around time so it can be mocked
+type TimeWrapper interface {
+	// After is the same as time.After
+	After(d time.Duration) <-chan time.Time
+	// Now is the same as Now.
+	Now() time.Time
 }
 
-// Chaos is the service that will ensure that the desired pod terminator CRDs are met.
-// Chaos will have running instances of PodDestroyers.
-type Chaos struct {
-	k8sCli kubernetes.Interface
-	reg    sync.Map
-	logger log.Logger
-}
+type timeStd struct{}
 
-// NewChaos returns a new Chaos service.
-func NewChaos(k8sCli kubernetes.Interface, logger log.Logger) *Chaos {
-	return &Chaos{
-		k8sCli: k8sCli,
-		reg:    sync.Map{},
-		logger: logger,
-	}
-}
+func (t *timeStd) After(d time.Duration) <-chan time.Time { return time.After(d) }
+func (t *timeStd) Now() time.Time                         { return time.Now() }
 
-// EnsurePodTerminator satisfies ChaosSyncer interface.
-func (c *Chaos) EnsurePodTerminator(pt *chaosv1alpha1.PodTerminator) error {
-	pkt, ok := c.reg.Load(pt.Name)
-	var pk *podKiller
-
-	// We are already running.
-	if ok {
-		pk = pkt.(*podKiller)
-		// If not the same spec means options have changed, so we don't longer need this pod killer.
-		if !pk.SameSpec(pt) {
-			c.logger.Infof("spec of %s changed, recreating pod killer", pt.Name)
-			if err := c.DeletePodTerminator(pt.Name); err != nil {
-				return err
-			}
-		} else { // We are ok, nothing changed.
-			return nil
-		}
-	}
-
-	// CReate a pod killer
-	ptCopy := pt.DeepCopy()
-	pk = newPodKiller(ptCopy, c.k8sCli, c.logger)
-	c.reg.Store(pt.Name, pk)
-	return pk.Start()
-	// TODO: garbage collection.
-}
-
-// DeletePodTerminator satisfies ChaosSyncer interface.
-func (c *Chaos) DeletePodTerminator(name string) error {
-	pkt, ok := c.reg.Load(name)
-	if !ok {
-		return nil
-	}
-
-	pk := pkt.(*podKiller)
-	if err := pk.Stop(); err != nil {
-		return err
-	}
-
-	c.reg.Delete(name)
-	return nil
-}
-
-// podKiller will kill pods at regular intervals.
-type podKiller struct {
+// PodKiller will kill pods at regular intervals.
+type PodKiller struct {
 	pt     *chaosv1alpha1.PodTerminator
 	k8sCli kubernetes.Interface
 	logger log.Logger
+	time   TimeWrapper
 
 	running bool
 	mutex   sync.Mutex
 	stopC   chan struct{}
 }
 
-func newPodKiller(pt *chaosv1alpha1.PodTerminator, k8sCli kubernetes.Interface, logger log.Logger) *podKiller {
-	return &podKiller{
+// NewPodKiller returns a new pod killer.
+func NewPodKiller(pt *chaosv1alpha1.PodTerminator, k8sCli kubernetes.Interface, logger log.Logger) *PodKiller {
+	return &PodKiller{
 		pt:     pt,
 		k8sCli: k8sCli,
 		logger: logger,
+		time:   &timeStd{},
+	}
+}
+
+// NewCustomPodKiller is a constructor that lets you customize everything on the object construction.
+func NewCustomPodKiller(pt *chaosv1alpha1.PodTerminator, k8sCli kubernetes.Interface, time TimeWrapper, logger log.Logger) *PodKiller {
+	return &PodKiller{
+		pt:     pt,
+		k8sCli: k8sCli,
+		logger: logger,
+		time:   time,
 	}
 }
 
 // SameSpec checks if the pod killer has the same spec.
-func (p *podKiller) SameSpec(pt *chaosv1alpha1.PodTerminator) bool {
+func (p *PodKiller) SameSpec(pt *chaosv1alpha1.PodTerminator) bool {
 	return reflect.DeepEqual(p.pt.Spec, pt.Spec)
 }
 
 // Start will run the pod killer at regular intervals.
-func (p *podKiller) Start() error {
+func (p *PodKiller) Start() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if p.running {
@@ -132,7 +89,7 @@ func (p *podKiller) Start() error {
 }
 
 // Stop stops the pod killer.
-func (p *podKiller) Stop() error {
+func (p *PodKiller) Stop() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if p.running {
@@ -145,10 +102,10 @@ func (p *podKiller) Stop() error {
 }
 
 // run will run the loop that will kill eventually the required pods.
-func (p *podKiller) run() error {
+func (p *PodKiller) run() error {
 	for {
 		select {
-		case <-time.After(time.Duration(p.pt.Spec.PeriodSeconds) * time.Second):
+		case <-p.time.After(time.Duration(p.pt.Spec.PeriodSeconds) * time.Second):
 			if err := p.kill(); err != nil {
 				p.logger.Errorf("error terminating pods: %s", err)
 			}
@@ -159,7 +116,7 @@ func (p *podKiller) run() error {
 }
 
 // kill will terminate the required pods.
-func (p *podKiller) kill() error {
+func (p *PodKiller) kill() error {
 	// Get all probable targets.
 	pods, err := p.getProbableTargets()
 	if err != nil {
@@ -186,7 +143,6 @@ func (p *podKiller) kill() error {
 	// Get random pods.
 	targets := p.getRandomTargets(pods, totalTargets)
 	p.logger.Infof("%s pod killer will kill %d targets", p.pt.Name, len(targets))
-
 	// Terminate.
 	for _, target := range targets {
 		if p.pt.Spec.DryRun {
@@ -204,7 +160,7 @@ func (p *podKiller) kill() error {
 }
 
 // Gets all the pods filtered that can be a target of termination.
-func (p *podKiller) getProbableTargets() (*corev1.PodList, error) {
+func (p *PodKiller) getProbableTargets() (*corev1.PodList, error) {
 	set := labels.Set(p.pt.Spec.Selector)
 	slc := set.AsSelector()
 	opts := metav1.ListOptions{
@@ -214,7 +170,7 @@ func (p *podKiller) getProbableTargets() (*corev1.PodList, error) {
 }
 
 // getRandomTargets will get the targets randomly.
-func (p *podKiller) getRandomTargets(pods *corev1.PodList, q int) []corev1.Pod {
+func (p *PodKiller) getRandomTargets(pods *corev1.PodList, q int) []corev1.Pod {
 	if len(pods.Items) == q {
 		return pods.Items
 	}
@@ -225,7 +181,7 @@ func (p *podKiller) getRandomTargets(pods *corev1.PodList, q int) []corev1.Pod {
 	randomPods := pods.DeepCopy().Items
 	sort.Slice(randomPods, func(_, _ int) bool {
 		// Create a random number and check if is even, if its true then a < b.
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		r := rand.New(rand.NewSource(p.time.Now().UnixNano()))
 		return r.Intn(1000)%2 == 0
 	})
 

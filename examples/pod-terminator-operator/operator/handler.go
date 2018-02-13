@@ -8,20 +8,20 @@ import (
 
 	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/service"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/service/chaos"
 )
 
 // Handler  is the pod terminator handler that will handle the
 // events received from kubernetes.
 type handler struct {
-	chaosService service.ChaosSyncer
+	chaosService chaos.Syncer
 	logger       log.Logger
 }
 
 // newHandler returns a new handler.
 func newHandler(k8sCli kubernetes.Interface, logger log.Logger) *handler {
 	return &handler{
-		chaosService: service.NewChaos(k8sCli, logger),
+		chaosService: chaos.NewChaos(k8sCli, logger),
 		logger:       logger,
 	}
 }
