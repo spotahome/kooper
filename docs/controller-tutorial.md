@@ -1,7 +1,7 @@
 Controller tutorial
 ===================
 
-In this tutorial we will learn how to create a controller using kooper. Yes, I know what you are thinking, kooper is an operator library... but an operator as we described in the [concepts](concepts.md) is a controller on steroids.
+In this tutorial we will learn how to create a controller using kooper. Yes, I know what you are thinking, kooper is more an operator library... but an operator as we described in the [concepts](concepts.md) is a controller on steroids and controllers are also fully supported in Kooper.
 
 So... In this tutorial we will learn the pillars of the operator, the controller. The full controller is [here](https://github.com/spotahome/kooper/tree/master/examples/echo-pod-controller), we will go step by step but some of the code is *glue* or doesn't refer to kooper. 
 
@@ -175,7 +175,7 @@ Wow, that was easy :)
 
 ## 07 - Finishing.
 
-After all this steps we have a controller, now just depends how the main is organized or where you start the controller. You can check how is initialized the kubernetes client on the exmaple's [main]((https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/cmd/main.go)), call our controller constructor and run it. But mainly is this:
+After all these steps we have a controller, now just depends how the main is organized or where you start the controller. You can check how is initialized the kubernetes client on the exmaple's [main]((https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/cmd/main.go)), call our controller constructor and run it. But mainly is this:
 
 ```go
 //...

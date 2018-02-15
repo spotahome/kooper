@@ -102,4 +102,4 @@ At this moment you have the basic knowledge or the pillars that sustain this fra
 thing you need to know is how to create and run stuff built with this toolkit:
 
 * [Controller tutorial.](controller-tutorial.md)
-* [TODO] Operator tutorial.
+* [Operator tutorial.](operator-tutorial.md)
