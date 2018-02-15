@@ -120,8 +120,7 @@ To summarize a little bit, we have this API structure:
         └── zz_generated.deepcopy.go
 ```
 
-in `types` is our [PodTerminator Go object]
-(https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/types.go) that describes de API and in `register.go` files there is data to register this types in kubernetes client.
+in `types` is our [PodTerminator Go object](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/types.go) that describes de API and in `register.go` files there is data to register this types in kubernetes client.
 
 With these files kubernetes code-generator will generate the required code for the [clients](https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/client/k8s/clientset) and deepcopy methods ([deepcopy](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/zz_generated.deepcopy.go) methods are required by all the kubernetes objects). You can see how its used in the [Makefile](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/Makefile). This will generate all the boilerplate code that is the same in all the kubernetes objects (crds and not crds).
 
@@ -131,7 +130,7 @@ At this point we have our PodTerminator CRD go code ready to work with (create, 
 
 Let's start with our domain logic. Our domain logic is a single service called `Chaos`. This service will be responsible for running a number of `podKillers`, and these podkillers will kill pods at regular intervals based on the filters and description described on our manifests (`PodTerminator` CRD).
 
-We will not explain the logic of this service as is out of the scope of this operator tutorial. But you can take a look [here]((https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/service/chaos)) if you think is interesting.
+We will not explain the logic of this service as is out of the scope of this operator tutorial. But you can take a look [here]((https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/service/chaos) if you think is interesting.
 
 Our service has these methods and are the ones that will be used by our operator.
 
@@ -142,7 +141,7 @@ type ChaosSyncer interface {
 }
 ```
 
-For us create and update are the same. This means that we need to think as "ensure" or "sync" verbs instead of create/update.
+For us, create and update are the same. This means that we need to think as "ensure" or "sync" verbs instead of create/update.
 
 ## 05 - Operator
 
