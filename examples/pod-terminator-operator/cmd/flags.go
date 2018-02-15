@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
 )
 
 // Flags are the controller flags.

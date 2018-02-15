@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"github.com/spotahome/kooper/client/crd"
-	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned"
 	applogger "github.com/spotahome/kooper/log"
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
@@ -15,6 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
 )
