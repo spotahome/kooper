@@ -1,4 +1,4 @@
-Kooper
+Kooper [![Build Status](https://travis-ci.org/spotahome/kooper.svg?branch=master)](https://travis-ci.org/spotahome/kooper)
 ======
 
 Kooper is a simple Go library to create Kubernetes [operators](https://coreos.com/operators/) and [controllers](https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md).
