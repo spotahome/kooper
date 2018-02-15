@@ -166,10 +166,10 @@ Then we create our simple handler that will have our service.
 And... finally we create the controller!
 
 ```go
-ctrl := controller.NewDefaultGeneric(config.ResyncPeriod, handler, ret, logger)
+ctrl := controller.NewSequential(config.ResyncPeriod, handler, ret, logger)
 ```
 
-We are using the `DefaultGeneric` constructor (`NewDefaultGeneric`) from `"github.com/spotahome/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
+We are using the a sequential controller constructor (`NewSequential`) from `"github.com/spotahome/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
 
 Wow, that was easy :)
 

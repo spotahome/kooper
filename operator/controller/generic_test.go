@@ -113,7 +113,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 			}
 
 			nsret := retrieve.NewNamespace(mc)
-			c := controller.NewDefaultGeneric(0, mh, nsret, log.Dummy)
+			c := controller.NewSequential(0, mh, nsret, log.Dummy)
 
 			// Run Controller in background.
 			go func() {
@@ -181,7 +181,7 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 			}
 
 			nsret := retrieve.NewNamespace(mc)
-			c := controller.NewDefaultGeneric(0, mh, nsret, log.Dummy)
+			c := controller.NewSequential(0, mh, nsret, log.Dummy)
 
 			// Run Controller in background.
 			go func() {

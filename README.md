@@ -56,7 +56,7 @@ hand := &handler.HandlerFunc{
 }
 
 // Create the controller that will refresh every 30 seconds.
-ctrl := controller.NewDefaultGeneric(30*time.Second, hand, retr, log)
+ctrl := controller.NewSequential(30*time.Second, hand, retr, log)
 stopC := make(chan struct{})
 if err := ctrl.Run(stopC); err != nil {
     log.Errorf("error running controller: %s", err)
