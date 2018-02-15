@@ -11,14 +11,46 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	kubetesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/spotahome/kooper/log"
 	mhandler "github.com/spotahome/kooper/mocks/operator/handler"
 	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/retrieve"
 )
+
+// Namespace knows how to retrieve namespaces.
+type namespaceRetriever struct {
+	lw  cache.ListerWatcher
+	obj runtime.Object
+}
+
+// NewNamespace returns a Namespace retriever.
+func newNamespaceRetriever(client kubernetes.Interface) *namespaceRetriever {
+	return &namespaceRetriever{
+		lw: &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				return client.CoreV1().Namespaces().List(options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				return client.CoreV1().Namespaces().Watch(options)
+			},
+		},
+		obj: &corev1.Namespace{},
+	}
+}
+
+// GetListerWatcher knows how to retreive Namespaces.
+func (n *namespaceRetriever) GetListerWatcher() cache.ListerWatcher {
+	return n.lw
+}
+
+// GetObject returns the namespace Object.
+func (n *namespaceRetriever) GetObject() runtime.Object {
+	return n.obj
+}
 
 func onKubeClientWatchNamespaceReturn(client *fake.Clientset, adds []*corev1.Namespace, updates []*corev1.Namespace, deletes []*corev1.Namespace) {
 	w := watch.NewFake()
@@ -112,7 +144,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 				})
 			}
 
-			nsret := retrieve.NewNamespace(mc)
+			nsret := newNamespaceRetriever(mc)
 			c := controller.NewSequential(0, mh, nsret, log.Dummy)
 
 			// Run Controller in background.
@@ -180,7 +212,7 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 				})
 			}
 
-			nsret := retrieve.NewNamespace(mc)
+			nsret := newNamespaceRetriever(mc)
 			c := controller.NewSequential(0, mh, nsret, log.Dummy)
 
 			// Run Controller in background.

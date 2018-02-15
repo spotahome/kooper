@@ -6,7 +6,8 @@ import (
 	"github.com/spotahome/kooper/log"
 )
 
-// Logger will log the handling events.
+// Logger will log the handling events. This handler can be sued to test that a
+//  controller receives resource events..
 type Logger struct {
 	logger log.Logger
 }
