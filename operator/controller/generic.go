@@ -19,8 +19,8 @@ const (
 	processingJobRetries = 3
 )
 
-// Generic controller is a controller that can be used to create different kind of controllers.
-type Generic struct {
+// generic controller is a controller that can be used to create different kind of controllers.
+type generic struct {
 	queue                workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
 	informer             cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
 	handler              handler.Handler                 // handler is where the logic of resource processing.
@@ -30,8 +30,8 @@ type Generic struct {
 	logger               log.Logger
 }
 
-// NewDefaultGeneric creates a new default generic controller.
-func NewDefaultGeneric(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) *Generic {
+// NewSequential creates a new controller that will process the received events sequentially.
+func NewSequential(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) Controller {
 	// Create the queue that will have our received job changes. It's rate limited so we don't have problems when
 	// a job processing errors every time is processed in a loop.
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -63,12 +63,12 @@ func NewDefaultGeneric(resync time.Duration, handler handler.Handler, retriever 
 		},
 	}, resync)
 
-	return NewGeneric(processingJobRetries, handler, queue, informer, logger)
+	return newGeneric(processingJobRetries, handler, queue, informer, logger)
 }
 
 // NewGeneric returns a new Generic controller.
-func NewGeneric(jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, logger log.Logger) *Generic {
-	return &Generic{
+func newGeneric(jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, logger log.Logger) *generic {
+	return &generic{
 		queue:                queue,
 		informer:             informer,
 		logger:               logger,
@@ -77,20 +77,20 @@ func NewGeneric(jobProcessingRetries int, handler handler.Handler, queue workque
 	}
 }
 
-func (g *Generic) isRunning() bool {
+func (g *generic) isRunning() bool {
 	g.runningMu.Lock()
 	defer g.runningMu.Unlock()
 	return g.running
 }
 
-func (g *Generic) setRunning(running bool) {
+func (g *generic) setRunning(running bool) {
 	g.runningMu.Lock()
 	defer g.runningMu.Unlock()
 	g.running = running
 }
 
 // Run will run the controller.
-func (g *Generic) Run(stopC <-chan struct{}) error {
+func (g *generic) Run(stopC <-chan struct{}) error {
 	if g.isRunning() {
 		return fmt.Errorf("controller already running")
 	}
@@ -127,7 +127,7 @@ func (g *Generic) Run(stopC <-chan struct{}) error {
 }
 
 // process will start a processing loop on all events.
-func (g *Generic) runProcessingLoop() {
+func (g *generic) runProcessingLoop() {
 	for {
 		// Process newxt queue job, if needs to stop processing it will return true.
 		if g.getAndProcessNextJob() {
@@ -138,7 +138,7 @@ func (g *Generic) runProcessingLoop() {
 
 // getAndProcessNextJob job will process the next job of the queue job and returns if
 // it needs to stop processing.
-func (g *Generic) getAndProcessNextJob() bool {
+func (g *generic) getAndProcessNextJob() bool {
 	// Get next job.
 	key, exit := g.queue.Get()
 	if exit {
@@ -163,7 +163,7 @@ func (g *Generic) getAndProcessNextJob() bool {
 }
 
 // processJob is where the real processing logic of the item is.
-func (g *Generic) processJob(objKey string) error {
+func (g *generic) processJob(objKey string) error {
 	defer g.queue.Done(objKey)
 
 	// Get the object

@@ -14,10 +14,13 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 ## Features
 
 * Easy and decoupled library.
+* Well structured and a clear API.
 * Remove all duplicated code from every controller and operator.
 * Uses the tooling already created by Kubernetes.
 * Remove complexity from operators and controllers so the focus is on domain logic.
-* Don't support TPRs (yes it's afeature)
+* Easy to mock and extend functionality (Go interfaces!)
+* Only support CRD, no TPR support (Kubernetes >=1.8)
+
 
 ## Example
 
@@ -56,7 +59,7 @@ hand := &handler.HandlerFunc{
 }
 
 // Create the controller that will refresh every 30 seconds.
-ctrl := controller.NewDefaultGeneric(30*time.Second, hand, retr, log)
+ctrl := controller.NewSequential(30*time.Second, hand, retr, log)
 stopC := make(chan struct{})
 if err := ctrl.Run(stopC); err != nil {
     log.Errorf("error running controller: %s", err)

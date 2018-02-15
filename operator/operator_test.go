@@ -16,7 +16,7 @@ import (
 	"github.com/spotahome/kooper/operator/resource"
 )
 
-func TestSimpleOperatorInitialization(t *testing.T) {
+func TestMultiOperatorInitialization(t *testing.T) {
 	tests := []struct {
 		name    string
 		errInit bool
@@ -53,7 +53,7 @@ func TestSimpleOperatorInitialization(t *testing.T) {
 			}
 
 			// Operator.
-			op := operator.NewSimpleOperator(mcrds, nil, log.Dummy)
+			op := operator.NewMultiOperator(mcrds, nil, log.Dummy)
 			err := op.Initialize()
 
 			if test.expErr {
@@ -99,7 +99,7 @@ func createControllerMocks(cb []*controllerBehaviour) []controller.Controller {
 	return mctrls
 }
 
-func TestSimpleOperatorRun(t *testing.T) {
+func TestMultiOperatorRun(t *testing.T) {
 	tests := []struct {
 		name             string
 		controllers      []*controllerBehaviour
@@ -190,7 +190,7 @@ func TestSimpleOperatorRun(t *testing.T) {
 			mctrls := createControllerMocks(test.controllers)
 
 			// Operator.
-			op := operator.NewSimpleOperator(mcrds, mctrls, log.Dummy)
+			op := operator.NewMultiOperator(mcrds, mctrls, log.Dummy)
 
 			// Run in background and wait to the signals so it can test.
 			errC := make(chan error)
