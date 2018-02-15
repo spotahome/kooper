@@ -16,7 +16,7 @@ import (
 	"github.com/spotahome/kooper/operator/resource"
 )
 
-func TestMultiOperatorOperatorInitialization(t *testing.T) {
+func TestMultiOperatorInitialization(t *testing.T) {
 	tests := []struct {
 		name    string
 		errInit bool
@@ -99,7 +99,7 @@ func createControllerMocks(cb []*controllerBehaviour) []controller.Controller {
 	return mctrls
 }
 
-func TestMultiOperatorOperatorRun(t *testing.T) {
+func TestMultiOperatorRun(t *testing.T) {
 	tests := []struct {
 		name             string
 		controllers      []*controllerBehaviour

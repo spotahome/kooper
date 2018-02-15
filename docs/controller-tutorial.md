@@ -169,7 +169,7 @@ And... finally we create the controller!
 ctrl := controller.NewSequential(config.ResyncPeriod, handler, ret, logger)
 ```
 
-We are using the a sequential controller constructor (`NewSequential`) from `"github.com/spotahome/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
+We are using a sequential controller constructor (`NewSequential`) from `"github.com/spotahome/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
 
 Wow, that was easy :)
 
