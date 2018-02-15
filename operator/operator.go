@@ -25,9 +25,9 @@ type Operator interface {
 	controller.Controller
 }
 
-// SimpleOperator is an operator that initializes CRDs before starting
+// simpleOperator is an operator that initializes CRDs before starting
 // the execution of controllers.
-type SimpleOperator struct {
+type simpleOperator struct {
 	crds        []resource.CRD
 	controllers []controller.Controller
 	initialized bool
@@ -36,15 +36,15 @@ type SimpleOperator struct {
 	logger      log.Logger
 }
 
-// NewBasicOperator will return an operator that only manages one CRD
+// NewOperator will return an operator that only manages one CRD
 // and one Controller.
-func NewBasicOperator(crd resource.CRD, ctrlr controller.Controller, logger log.Logger) *SimpleOperator {
-	return NewSimpleOperator([]resource.CRD{crd}, []controller.Controller{ctrlr}, logger)
+func NewOperator(crd resource.CRD, ctrlr controller.Controller, logger log.Logger) Operator {
+	return NewMultiOperator([]resource.CRD{crd}, []controller.Controller{ctrlr}, logger)
 }
 
-// NewSimpleOperator returns an SimpleOperator.
-func NewSimpleOperator(crds []resource.CRD, ctrlrs []controller.Controller, logger log.Logger) *SimpleOperator {
-	return &SimpleOperator{
+// NewMultiOperator returns an operator that has multiple CRDs and controllers.
+func NewMultiOperator(crds []resource.CRD, ctrlrs []controller.Controller, logger log.Logger) Operator {
+	return &simpleOperator{
 		crds:        crds,
 		controllers: ctrlrs,
 		logger:      logger,
@@ -52,7 +52,7 @@ func NewSimpleOperator(crds []resource.CRD, ctrlrs []controller.Controller, logg
 }
 
 // Initialize will initializer all the CRDs and return. Satisfies Operator interface.
-func (s *SimpleOperator) Initialize() error {
+func (s *simpleOperator) Initialize() error {
 	if s.isInitialized() {
 		return nil
 	}
@@ -91,7 +91,7 @@ func (s *SimpleOperator) Initialize() error {
 // It's a blocking operation. Satisfies Operator interface. The client that uses an operator
 // has the responsibility of closing the stop channel if the operator ends execution
 // unexpectly so all the goroutines (controllers running) end its execution
-func (s *SimpleOperator) Run(stopC <-chan struct{}) error {
+func (s *simpleOperator) Run(stopC <-chan struct{}) error {
 	if s.isRunning() {
 		return fmt.Errorf("operator already running")
 	}
@@ -123,7 +123,7 @@ func (s *SimpleOperator) Run(stopC <-chan struct{}) error {
 }
 
 // runAllControllers will run controllers and block execution.
-func (s *SimpleOperator) runAllControllers(stopC <-chan struct{}) error {
+func (s *simpleOperator) runAllControllers(stopC <-chan struct{}) error {
 	errC := make(chan error)
 
 	for _, ctrl := range s.controllers {
@@ -147,25 +147,25 @@ func (s *SimpleOperator) runAllControllers(stopC <-chan struct{}) error {
 	}
 }
 
-func (s *SimpleOperator) isInitialized() bool {
+func (s *simpleOperator) isInitialized() bool {
 	s.stateMu.Lock()
 	defer s.stateMu.Unlock()
 	return s.initialized
 }
 
-func (s *SimpleOperator) setInitialized(value bool) {
+func (s *simpleOperator) setInitialized(value bool) {
 	s.stateMu.Lock()
 	defer s.stateMu.Unlock()
 	s.initialized = value
 }
 
-func (s *SimpleOperator) isRunning() bool {
+func (s *simpleOperator) isRunning() bool {
 	s.stateMu.Lock()
 	defer s.stateMu.Unlock()
 	return s.running
 }
 
-func (s *SimpleOperator) setRunning(value bool) {
+func (s *simpleOperator) setRunning(value bool) {
 	s.stateMu.Lock()
 	defer s.stateMu.Unlock()
 	s.running = value
