@@ -30,11 +30,11 @@ RUN_EXAMPLE_POD_TERM := go run ./examples/pod-terminator-operator/cmd/* --develo
 DEV_DIR := docker/dev
 
 # The default action of this Makefile is to build the development docker image
-.PHONY:
+.PHONY: default
 default: build
 
 # Test if the dependencies we need to run this Makefile are installed
-.PHONY:
+.PHONY: deps-development
 deps-development:
 ifndef DOCKER
 	@echo "Docker is not available. Please install docker"
@@ -42,42 +42,42 @@ ifndef DOCKER
 endif
 
 # Build the development docker image
-.PHONY:
+.PHONY: build
 build:
 	docker build -t $(SERVICE_NAME) --build-arg uid=$(UID) --build-arg  gid=$(GID) -f ./docker/dev/Dockerfile .
 
 # Test stuff in dev
-.PHONY:
+.PHONY: unit-test
 unit-test: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(UNIT_TEST_CMD)'
-.PHONY:
+.PHONY: integration-test
 integration-test: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(INTEGRATION_TEST_CMD)'
-.PHONY:
+.PHONY: test
 test: integration-test
 
 # Test stuff in ci
-.PHONY:
+.PHONY: ci-unit-test
 ci-unit-test: 
 	$(UNIT_TEST_CMD)
-.PHONY:
+.PHONY: ci-integration-test
 ci-integration-test:
 	$(INTEGRATION_TEST_CMD)
-.PHONY:
+.PHONY: ci
 ci: ci-integration-test
 
 # Mocks stuff in dev
-.PHONY:
+.PHONY: mocks
 mocks: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(MOCKS_CMD)'
 
 # Run examples.
-.PHONY:
+.PHONY: controller-example
 controller-example:
 	$(RUN_EXAMPLE_POD_ECHO)
-.PHONY:
+.PHONY: controller-example-onefile
 controller-example-onefile:
 	$(RUN_EXAMPLE_POD_ECHO_ONEFILE)
-.PHONY:
+.PHONY: operator-example
 operator-example:
 	$(RUN_EXAMPLE_POD_TERM)
