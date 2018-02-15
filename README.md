@@ -19,8 +19,7 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 * Uses the tooling already created by Kubernetes.
 * Remove complexity from operators and controllers so the focus is on domain logic.
 * Easy to mock and extend functionality (Go interfaces!)
-* Only support CRD, no TPR support (Kubernetes >=1.8)
-
+* Only support CRD, no TPR support (Kubernetes >=1.7)
 
 ## Example
 
