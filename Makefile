@@ -1,4 +1,3 @@
-.PHONY: default deps-development build dev shell unit-test integration-test test ci-unit-test ci-integration-test ci mocks
 
 # Name of this service/application
 SERVICE_NAME := kooper
@@ -23,14 +22,19 @@ UNIT_TEST_CMD := ./hack/scripts/unit-test.sh
 INTEGRATION_TEST_CMD := ./hack/scripts/integration-test.sh 
 MOCKS_CMD := ./hack/scripts/mockgen.sh
 DOCKER_RUN_CMD := docker run -v ${PWD}:$(DOCKER_GO_SERVICE_PATH) --rm -it $(SERVICE_NAME)
+RUN_EXAMPLE_POD_ECHO := go run ./examples/echo-pod-controller/cmd/* --development
+RUN_EXAMPLE_POD_ECHO_ONEFILE := go run ./examples/onefile-echo-pod-controller/main.go --development
+RUN_EXAMPLE_POD_TERM := go run ./examples/pod-terminator-operator/cmd/* --development
 
 # environment dirs
 DEV_DIR := docker/dev
 
 # The default action of this Makefile is to build the development docker image
+.PHONY:
 default: build
 
 # Test if the dependencies we need to run this Makefile are installed
+.PHONY:
 deps-development:
 ifndef DOCKER
 	@echo "Docker is not available. Please install docker"
@@ -38,23 +42,42 @@ ifndef DOCKER
 endif
 
 # Build the development docker image
+.PHONY:
 build:
 	docker build -t $(SERVICE_NAME) --build-arg uid=$(UID) --build-arg  gid=$(GID) -f ./docker/dev/Dockerfile .
 
 # Test stuff in dev
+.PHONY:
 unit-test: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(UNIT_TEST_CMD)'
+.PHONY:
 integration-test: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(INTEGRATION_TEST_CMD)'
+.PHONY:
 test: integration-test
 
 # Test stuff in ci
+.PHONY:
 ci-unit-test: 
 	$(UNIT_TEST_CMD)
+.PHONY:
 ci-integration-test:
 	$(INTEGRATION_TEST_CMD)
+.PHONY:
 ci: ci-integration-test
 
 # Mocks stuff in dev
+.PHONY:
 mocks: build
 	$(DOCKER_RUN_CMD) /bin/sh -c '$(MOCKS_CMD)'
+
+# Run examples.
+.PHONY:
+controller-example:
+	$(RUN_EXAMPLE_POD_ECHO)
+.PHONY:
+controller-example-onefile:
+	$(RUN_EXAMPLE_POD_ECHO_ONEFILE)
+.PHONY:
+operator-example:
+	$(RUN_EXAMPLE_POD_TERM)
