@@ -118,7 +118,7 @@ func (g *generic) Run(stopC <-chan struct{}) error {
 		wait.Until(g.runProcessingLoop, time.Second, stopC)
 	}()
 
-	// Until will be running our workers in a continous way (and re run if they fail). But
+	// Until will be running our workers in a continuous way (and re run if they fail). But
 	// when stop signal is received we must stop.
 	<-stopC
 	g.logger.Infof("stopping controller")
