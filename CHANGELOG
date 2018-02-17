@@ -1,3 +1,7 @@
+## 0.1.x / 2018-xx-xx
+
+* [FEATURE] Add concurrent controller implementation.
+
 ## 0.1.0 / 2018-02-15
 
 * [FEATURE] Add CRD client check for kubernetes apiserver (>=1.7)

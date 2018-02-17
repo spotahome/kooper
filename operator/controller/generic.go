@@ -24,6 +24,7 @@ type generic struct {
 	queue                workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
 	informer             cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
 	handler              handler.Handler                 // handler is where the logic of resource processing.
+	concurrentWorkers    int                             // concurrentWorkers is the number of workers concurrently processing events.
 	running              bool
 	runningMu            sync.Mutex
 	processingJobRetries int
@@ -32,6 +33,19 @@ type generic struct {
 
 // NewSequential creates a new controller that will process the received events sequentially.
 func NewSequential(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) Controller {
+	return newDefaultGeneric(1, resync, handler, retriever, logger)
+}
+
+// NewConcurrent creates a new controller that will process the received events concurrently.
+func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) (Controller, error) {
+	if concurrentWorkers < 2 {
+		return nil, fmt.Errorf("%d is not a valid concurrency workers ammount for a concurrent controller", concurrentWorkers)
+	}
+
+	return newDefaultGeneric(concurrentWorkers, resync, handler, retriever, logger), nil
+}
+
+func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) Controller {
 	// Create the queue that will have our received job changes. It's rate limited so we don't have problems when
 	// a job processing errors every time is processed in a loop.
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -63,16 +77,22 @@ func NewSequential(resync time.Duration, handler handler.Handler, retriever retr
 		},
 	}, resync)
 
-	return newGeneric(processingJobRetries, handler, queue, informer, logger)
+	return newGeneric(concurrentWorkers, processingJobRetries, handler, queue, informer, logger)
 }
 
-// NewGeneric returns a new Generic controller.
-func newGeneric(jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, logger log.Logger) *generic {
+// newGeneric returns a new Generic controller.
+func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, logger log.Logger) *generic {
+	if concurrentWorkers <= 0 {
+		logger.Warningf("%d is an illegal number of concurrent workers for a controller, setting 1 by default (sequential)", concurrentWorkers)
+		concurrentWorkers = 1
+	}
+
 	return &generic{
 		queue:                queue,
 		informer:             informer,
 		logger:               logger,
 		handler:              handler,
+		concurrentWorkers:    concurrentWorkers,
 		processingJobRetries: processingJobRetries,
 	}
 }
@@ -112,11 +132,13 @@ func (g *generic) Run(stopC <-chan struct{}) error {
 		return fmt.Errorf("timed out waiting for caches to sync")
 	}
 
-	// Start our resource processing worker, if finishes then restart the worker. The worker should
+	// Start our resource processing worker, if finishes then restart the worker. The workers should
 	// not end.
-	go func() {
-		wait.Until(g.runProcessingLoop, time.Second, stopC)
-	}()
+	for i := 0; i < g.concurrentWorkers; i++ {
+		go func() {
+			wait.Until(g.runWorker, time.Second, stopC)
+		}()
+	}
 
 	// Until will be running our workers in a continuous way (and re run if they fail). But
 	// when stop signal is received we must stop.
@@ -126,8 +148,8 @@ func (g *generic) Run(stopC <-chan struct{}) error {
 	return nil
 }
 
-// process will start a processing loop on all events.
-func (g *generic) runProcessingLoop() {
+// runWorker will start a processing loop on event queue.
+func (g *generic) runWorker() {
 	for {
 		// Process newxt queue job, if needs to stop processing it will return true.
 		if g.getAndProcessNextJob() {
