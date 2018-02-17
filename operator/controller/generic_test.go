@@ -42,7 +42,7 @@ func newNamespaceRetriever(client kubernetes.Interface) *namespaceRetriever {
 	}
 }
 
-// GetListerWatcher knows how to retreive Namespaces.
+// GetListerWatcher knows how to retrieve Namespaces.
 func (n *namespaceRetriever) GetListerWatcher() cache.ListerWatcher {
 	return n.lw
 }
