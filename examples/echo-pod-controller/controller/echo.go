@@ -24,7 +24,7 @@ func New(config Config, k8sCli kubernetes.Interface, logger log.Logger) (*Contro
 	echoSrv := service.NewSimpleEcho(logger)
 	handler := &handler{echoSrv: echoSrv}
 
-	ctrl := controller.NewSequential(config.ResyncPeriod, handler, ret, logger)
+	ctrl := controller.NewSequential(config.ResyncPeriod, handler, ret, nil, logger)
 
 	return &Controller{
 		Controller: ctrl,

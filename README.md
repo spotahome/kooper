@@ -1,6 +1,4 @@
-Kooper
-[![Build Status](https://travis-ci.org/spotahome/kooper.svg?branch=master)](https://travis-ci.org/spotahome/kooper)
-[![Go Report Card](https://goreportcard.com/badge/github.com/spotahome/kooper)](https://goreportcard.com/report/github.com/spotahome/kooper)
+Kooper [![Build Status][travis-image]][travis-url] [![Go Report Card][goreport-image]][goreport-url] [![GoDoc][godoc-image]][godoc-url]
 ======
 
 Kooper is a simple Go library to create Kubernetes [operators](https://coreos.com/operators/) and [controllers](https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md).
@@ -20,8 +18,9 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 * Remove all duplicated code from every controller and operator.
 * Uses the tooling already created by Kubernetes.
 * Remove complexity from operators and controllers so the focus is on domain logic.
-* Easy to mock and extend functionality (Go interfaces!)
-* Only support CRD, no TPR support (Kubernetes >=1.7)
+* Easy to mock and extend functionality (Go interfaces!).
+* Only support CRD, no TPR support (Kubernetes >=1.7).
+* Controller metrics.
 
 ## Example
 
@@ -60,7 +59,7 @@ hand := &handler.HandlerFunc{
 }
 
 // Create the controller that will refresh every 30 seconds.
-ctrl := controller.NewSequential(30*time.Second, hand, retr, log)
+ctrl := controller.NewSequential(30*time.Second, hand, retr, nil, log)
 stopC := make(chan struct{})
 if err := ctrl.Run(stopC); err != nil {
     log.Errorf("error running controller: %s", err)
@@ -103,3 +102,10 @@ go get -u github.com/spotahome/kooper
 ## Start
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
+
+[travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
+[travis-url]: https://travis-ci.org/spotahome/kooper
+[goreport-image]: https://goreportcard.com/badge/github.com/spotahome/kooper
+[goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
+[godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
+[godoc-url]: https://godoc.org/github.com/spotahome/kooper
