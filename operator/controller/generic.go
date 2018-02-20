@@ -100,7 +100,7 @@ func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler
 	// Default logger.
 	if logger == nil {
 		logger = &log.Std{}
-		logger.Warningf("no logger specified, fallback to default logger, tu disable logging use dummy logger")
+		logger.Warningf("no logger specified, fallback to default logger, to disable logging use dummy logger")
 	}
 
 	// Default metrics recorder.

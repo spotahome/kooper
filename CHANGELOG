@@ -2,6 +2,7 @@
 
 This release breaks controllers constructors to allow passing a metrics recorder backend.
 
+* [BUGFIX] Fix passing a nil logger to make controllers execution break.
 * [ENHANCEMENT] Controllers record metrics about queued and processed events.
 * [FEATURE] Add Prometheus metrics backend.
 * [FEATURE] Add metrics interface.
