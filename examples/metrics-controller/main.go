@@ -66,7 +66,7 @@ func createPrometheusRecorder(logger log.Logger) metrics.Recorder {
 	// We could use also prometheus global registry (the default one)
 	// prometheus.DefaultRegisterer instead of creating a new one
 	reg := prometheus.NewRegistry()
-	m := metrics.NewPrometheus(metricsPrefix, reg)
+	m := metrics.NewPrometheus(metricsPrefix, prometheus.DefaultRegisterer)
 
 	// Start serving metrics in background.
 	h := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
