@@ -99,7 +99,20 @@ Any dependency manager can get Kooper or directly with go get the latest version
 go get -u github.com/spotahome/kooper
 ```
 
-## Start
+## Documentation
+
+Kooper comes with different topics as documentation.
+
+### Core
+
+* [Basic concepts](docs/concepts.md)
+* [Controller tutorial] (docs/controller-tutorial.md)
+* [Operator tutorial] (docs/operator-tutorial.md)
+
+### Other
+
+* [Metrics](docs/metrics.md)
+* [Logger](docs/logger.md)
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 
