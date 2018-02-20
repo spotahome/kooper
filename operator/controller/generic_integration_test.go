@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/monitoring/metrics"
 	"github.com/spotahome/kooper/operator/controller"
 	"github.com/spotahome/kooper/operator/handler"
 	"github.com/spotahome/kooper/operator/retrieve"
@@ -26,7 +27,7 @@ const (
 	controllerRunTimeout = 10 * time.Second
 	// this delta is the max duration delta used on the assertion of controller handling, this is required because
 	// the controller requires some millisecond to bootstrap and sync.
-	maxAssertDurationDelta = 150 * time.Millisecond
+	maxAssertDurationDelta = 200 * time.Millisecond
 )
 
 func returnPodList(q int) *corev1.PodList {
@@ -84,9 +85,9 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	var ctrl controller.Controller
 	var err error
 	if concurrencyLevel < 2 {
-		ctrl = controller.NewSequential(noResync, h, r, log.Dummy)
+		ctrl = controller.NewSequential(noResync, h, r, metrics.Dummy, log.Dummy)
 	} else {
-		ctrl, err = controller.NewConcurrent(concurrencyLevel, noResync, h, r, log.Dummy)
+		ctrl, err = controller.NewConcurrent(concurrencyLevel, noResync, h, r, metrics.Dummy, log.Dummy)
 		if !assert.NoError(err) {
 			return 0
 		}

@@ -98,10 +98,10 @@ func main() {
 	var ctrl controller.Controller
 	if concurrentWorkers < 2 {
 		log.Infof("sequential controller created")
-		ctrl = controller.NewSequential(30*time.Second, hand, retr, log)
+		ctrl = controller.NewSequential(30*time.Second, hand, retr, nil, log)
 	} else {
 		log.Infof("sequential controller created")
-		ctrl, _ = controller.NewConcurrent(concurrentWorkers, 30*time.Second, hand, retr, log)
+		ctrl, _ = controller.NewConcurrent(concurrentWorkers, 30*time.Second, hand, retr, nil, log)
 	}
 
 	// Start our controller.

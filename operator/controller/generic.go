@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/monitoring/metrics"
 	"github.com/spotahome/kooper/operator/handler"
 	"github.com/spotahome/kooper/operator/retrieve"
 )
@@ -28,24 +29,30 @@ type generic struct {
 	running              bool
 	runningMu            sync.Mutex
 	processingJobRetries int
+	metrics              metrics.Recorder
 	logger               log.Logger
 }
 
 // NewSequential creates a new controller that will process the received events sequentially.
-func NewSequential(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) Controller {
-	return newDefaultGeneric(1, resync, handler, retriever, logger)
+func NewSequential(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+	return newDefaultGeneric(1, resync, handler, retriever, metricRecorder, logger)
 }
 
 // NewConcurrent creates a new controller that will process the received events concurrently.
-func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) (Controller, error) {
+func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) (Controller, error) {
 	if concurrentWorkers < 2 {
 		return nil, fmt.Errorf("%d is not a valid concurrency workers ammount for a concurrent controller", concurrentWorkers)
 	}
 
-	return newDefaultGeneric(concurrentWorkers, resync, handler, retriever, logger), nil
+	return newDefaultGeneric(concurrentWorkers, resync, handler, retriever, metricRecorder, logger), nil
 }
 
-func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, logger log.Logger) Controller {
+func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+	if metricRecorder == nil {
+		metricRecorder = metrics.Dummy
+		logger.Warningf("no metrics recorder specified, disabling metrics")
+	}
+
 	// Create the queue that will have our received job changes. It's rate limited so we don't have problems when
 	// a job processing errors every time is processed in a loop.
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -61,36 +68,52 @@ func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler hand
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
+				metricRecorder.IncResourceAddEventQueued()
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
 				queue.Add(key)
+				metricRecorder.IncResourceAddEventQueued()
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
+				metricRecorder.IncResourceDeleteEventQueued()
 			}
 		},
 	}, resync)
 
-	return newGeneric(concurrentWorkers, processingJobRetries, handler, queue, informer, logger)
+	return newGeneric(concurrentWorkers, processingJobRetries, handler, queue, informer, metricRecorder, logger)
 }
 
 // newGeneric returns a new Generic controller.
-func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, logger log.Logger) *generic {
+func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, metricRecorder metrics.Recorder, logger log.Logger) *generic {
 	if concurrentWorkers <= 0 {
 		logger.Warningf("%d is an illegal number of concurrent workers for a controller, setting 1 by default (sequential)", concurrentWorkers)
 		concurrentWorkers = 1
+	}
+
+	// Default logger.
+	if logger == nil {
+		logger = &log.Std{}
+		logger.Warningf("no logger specified, fallback to default logger, to disable logging use dummy logger")
+	}
+
+	// Default metrics recorder.
+	if metricRecorder == nil {
+		metricRecorder = metrics.Dummy
+		logger.Warningf("no metrics recorder specified, disabling metrics")
 	}
 
 	return &generic{
 		queue:                queue,
 		informer:             informer,
 		logger:               logger,
+		metrics:              metricRecorder,
 		handler:              handler,
 		concurrentWorkers:    concurrentWorkers,
 		processingJobRetries: processingJobRetries,
@@ -195,8 +218,19 @@ func (g *generic) processJob(objKey string) error {
 	}
 
 	// handle the object.
-	if !exists {
-		return g.handler.Delete(objKey)
+	if !exists { // Deleted resource from the cache.
+		if err := g.handler.Delete(objKey); err != nil {
+			g.metrics.IncResourceDeleteEventProcessedError()
+			return err
+		}
+		g.metrics.IncResourceDeleteEventProcessedSuccess()
+		return nil
 	}
-	return g.handler.Add(obj.(runtime.Object))
+
+	if err := g.handler.Add(obj.(runtime.Object)); err != nil {
+		g.metrics.IncResourceAddEventProcessedError()
+		return err
+	}
+	g.metrics.IncResourceAddEventProcessedSuccess()
+	return nil
 }

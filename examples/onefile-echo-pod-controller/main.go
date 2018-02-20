@@ -70,7 +70,7 @@ func main() {
 	}
 
 	// Create the controller that will refresh every 30 seconds.
-	ctrl := controller.NewSequential(30*time.Second, hand, retr, log)
+	ctrl := controller.NewSequential(30*time.Second, hand, retr, nil, log)
 
 	// Start our controller.
 	stopC := make(chan struct{})

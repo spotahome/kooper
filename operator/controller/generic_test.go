@@ -18,6 +18,7 @@ import (
 
 	"github.com/spotahome/kooper/log"
 	mhandler "github.com/spotahome/kooper/mocks/operator/handler"
+	"github.com/spotahome/kooper/monitoring/metrics"
 	"github.com/spotahome/kooper/operator/controller"
 )
 
@@ -145,7 +146,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 			}
 
 			nsret := newNamespaceRetriever(mc)
-			c := controller.NewSequential(0, mh, nsret, log.Dummy)
+			c := controller.NewSequential(0, mh, nsret, metrics.Dummy, log.Dummy)
 
 			// Run Controller in background.
 			go func() {
@@ -213,7 +214,7 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 			}
 
 			nsret := newNamespaceRetriever(mc)
-			c := controller.NewSequential(0, mh, nsret, log.Dummy)
+			c := controller.NewSequential(0, mh, nsret, metrics.Dummy, log.Dummy)
 
 			// Run Controller in background.
 			go func() {
