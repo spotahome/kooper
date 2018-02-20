@@ -106,8 +106,8 @@ Kooper comes with different topics as documentation.
 ### Core
 
 * [Basic concepts](docs/concepts.md)
-* [Controller tutorial] (docs/controller-tutorial.md)
-* [Operator tutorial] (docs/operator-tutorial.md)
+* [Controller tutorial](docs/controller-tutorial.md)
+* [Operator tutorial](docs/operator-tutorial.md)
 
 ### Other
 
