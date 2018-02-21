@@ -116,6 +116,10 @@ Kooper comes with different topics as documentation.
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 
+### Who is using kooper
+
+* [redis-operator](https://github.com/spotahome/redis-operator)
+
 [travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
 [travis-url]: https://travis-ci.org/spotahome/kooper
 [goreport-image]: https://goreportcard.com/badge/github.com/spotahome/kooper
