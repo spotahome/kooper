@@ -40,5 +40,5 @@ ctrl := controller.NewSequential(30*time.Second, hand, retr, m, log)
 **Note: if you pass nil as the logger to the controller it will use `log.Std` logger by default**
 
 
-[logger-interface]: https://github.com/spotahome/kooper/blob/master/monitoring/log/log.go
+[logger-interface]: https://github.com/spotahome/kooper/blob/master/log/log.go
 [glog]: https://github.com/golang/glog
