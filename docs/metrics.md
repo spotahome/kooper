@@ -23,8 +23,10 @@ type Recorder interface {
 The measured metrics are:
 
 * Number of delete and add queued events (to be processed).
-* Number of delete and add processed successfuly events.
-* Number of delete and add processed events with and error.
+* Number of delete and add processed successfully events.
+* Number of delete and add processed events with an error.
+* Duration of delete and add processed successfully events.
+* Duration of delete and add processed events with an error.
 
 ## How to use the recorder with the controller.
 

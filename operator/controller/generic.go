@@ -219,18 +219,24 @@ func (g *generic) processJob(objKey string) error {
 
 	// handle the object.
 	if !exists { // Deleted resource from the cache.
+		start := time.Now()
 		if err := g.handler.Delete(objKey); err != nil {
 			g.metrics.IncResourceDeleteEventProcessedError()
+			g.metrics.ObserveDurationResourceDeleteEventProcessedError(start)
 			return err
 		}
 		g.metrics.IncResourceDeleteEventProcessedSuccess()
+		g.metrics.ObserveDurationResourceDeleteEventProcessedSuccess(start)
 		return nil
 	}
 
+	start := time.Now()
 	if err := g.handler.Add(obj.(runtime.Object)); err != nil {
 		g.metrics.IncResourceAddEventProcessedError()
+		g.metrics.ObserveDurationResourceAddEventProcessedError(start)
 		return err
 	}
 	g.metrics.IncResourceAddEventProcessedSuccess()
+	g.metrics.ObserveDurationResourceAddEventProcessedSuccess(start)
 	return nil
 }
