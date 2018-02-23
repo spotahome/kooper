@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -25,6 +26,7 @@ type generic struct {
 	queue                workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
 	informer             cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
 	handler              handler.Handler                 // handler is where the logic of resource processing.
+	handlerName          string                          // handlerName will be used to identify and give more insight about metrics.
 	concurrentWorkers    int                             // concurrentWorkers is the number of workers concurrently processing events.
 	running              bool
 	runningMu            sync.Mutex
@@ -53,6 +55,9 @@ func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler hand
 		logger.Warningf("no metrics recorder specified, disabling metrics")
 	}
 
+	// Get a handler name for the metrics based on the type of the handler.
+	handlerName := reflect.TypeOf(handler).String()
+
 	// Create the queue that will have our received job changes. It's rate limited so we don't have problems when
 	// a job processing errors every time is processed in a loop.
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -68,30 +73,30 @@ func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler hand
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
-				metricRecorder.IncResourceAddEventQueued()
+				metricRecorder.IncResourceAddEventQueued(handlerName)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
 				queue.Add(key)
-				metricRecorder.IncResourceAddEventQueued()
+				metricRecorder.IncResourceAddEventQueued(handlerName)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
-				metricRecorder.IncResourceDeleteEventQueued()
+				metricRecorder.IncResourceDeleteEventQueued(handlerName)
 			}
 		},
 	}, resync)
 
-	return newGeneric(concurrentWorkers, processingJobRetries, handler, queue, informer, metricRecorder, logger)
+	return newGeneric(handlerName, concurrentWorkers, processingJobRetries, handler, queue, informer, metricRecorder, logger)
 }
 
 // newGeneric returns a new Generic controller.
-func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, metricRecorder metrics.Recorder, logger log.Logger) *generic {
+func newGeneric(handlerName string, concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, metricRecorder metrics.Recorder, logger log.Logger) *generic {
 	if concurrentWorkers <= 0 {
 		logger.Warningf("%d is an illegal number of concurrent workers for a controller, setting 1 by default (sequential)", concurrentWorkers)
 		concurrentWorkers = 1
@@ -115,6 +120,7 @@ func newGeneric(concurrentWorkers int, jobProcessingRetries int, handler handler
 		logger:               logger,
 		metrics:              metricRecorder,
 		handler:              handler,
+		handlerName:          handlerName,
 		concurrentWorkers:    concurrentWorkers,
 		processingJobRetries: processingJobRetries,
 	}
@@ -221,22 +227,22 @@ func (g *generic) processJob(objKey string) error {
 	if !exists { // Deleted resource from the cache.
 		start := time.Now()
 		if err := g.handler.Delete(objKey); err != nil {
-			g.metrics.IncResourceDeleteEventProcessedError()
-			g.metrics.ObserveDurationResourceDeleteEventProcessedError(start)
+			g.metrics.IncResourceDeleteEventProcessedError(g.handlerName)
+			g.metrics.ObserveDurationResourceDeleteEventProcessedError(g.handlerName, start)
 			return err
 		}
-		g.metrics.IncResourceDeleteEventProcessedSuccess()
-		g.metrics.ObserveDurationResourceDeleteEventProcessedSuccess(start)
+		g.metrics.IncResourceDeleteEventProcessedSuccess(g.handlerName)
+		g.metrics.ObserveDurationResourceDeleteEventProcessedSuccess(g.handlerName, start)
 		return nil
 	}
 
 	start := time.Now()
 	if err := g.handler.Add(obj.(runtime.Object)); err != nil {
-		g.metrics.IncResourceAddEventProcessedError()
-		g.metrics.ObserveDurationResourceAddEventProcessedError(start)
+		g.metrics.IncResourceAddEventProcessedError(g.handlerName)
+		g.metrics.ObserveDurationResourceAddEventProcessedError(g.handlerName, start)
 		return err
 	}
-	g.metrics.IncResourceAddEventProcessedSuccess()
-	g.metrics.ObserveDurationResourceAddEventProcessedSuccess(start)
+	g.metrics.IncResourceAddEventProcessedSuccess(g.handlerName)
+	g.metrics.ObserveDurationResourceAddEventProcessedSuccess(g.handlerName, start)
 	return nil
 }

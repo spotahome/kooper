@@ -6,32 +6,32 @@ import "time"
 type Recorder interface {
 	// IncResourceAddEvent increments in one the metric records of a queued add
 	// event in a resource.
-	IncResourceAddEventQueued()
+	IncResourceAddEventQueued(handler string)
 	// IncResourceDeleteEvent increments in one the metric records of a queued delete
 	// event in a resource.
-	IncResourceDeleteEventQueued()
+	IncResourceDeleteEventQueued(handler string)
 	// IncResourceAddEventProcessedSuccess increments in one the metric records of a
 	// processed add event in success.
-	IncResourceAddEventProcessedSuccess()
+	IncResourceAddEventProcessedSuccess(handler string)
 	// IncResourceAddEventProcessedError increments in one the metric records of a
 	// processed add event in error.
-	IncResourceAddEventProcessedError()
+	IncResourceAddEventProcessedError(handler string)
 	// IncResourceDeleteEventProcessedSuccess increments in one the metric records of a
 	// processed deleteevent in success.
-	IncResourceDeleteEventProcessedSuccess()
+	IncResourceDeleteEventProcessedSuccess(handler string)
 	// IncResourceDeleteEventProcessedError increments in one the metric records of a
 	// processed delete event in error.
-	IncResourceDeleteEventProcessedError()
+	IncResourceDeleteEventProcessedError(handler string)
 	// ObserveDurationResourceAddEventProcessedSuccess measures the duration it took to process
 	// until now a successful processed add event.
-	ObserveDurationResourceAddEventProcessedSuccess(start time.Time)
+	ObserveDurationResourceAddEventProcessedSuccess(handler string, start time.Time)
 	// ObserveDurationResourceAddEventProcessedError measures the duration it took to process
 	// until now a failed processed add event.
-	ObserveDurationResourceAddEventProcessedError(start time.Time)
+	ObserveDurationResourceAddEventProcessedError(handler string, start time.Time)
 	// ObserveDurationResourceAddEventProcessedSuccess measures the duration it took to process
 	// until now a successful processed delete event.
-	ObserveDurationResourceDeleteEventProcessedSuccess(start time.Time)
+	ObserveDurationResourceDeleteEventProcessedSuccess(handler string, start time.Time)
 	// ObserveDurationResourceAddEventProcessedError measures the duration it took to process
 	// until now a failed processed delete event.
-	ObserveDurationResourceDeleteEventProcessedError(start time.Time)
+	ObserveDurationResourceDeleteEventProcessedError(handler string, start time.Time)
 }
