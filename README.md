@@ -108,6 +108,10 @@ Any dependency manager can get Kooper or directly with go get the latest version
 go get -u github.com/spotahome/kooper
 ```
 
+## Using Kooper as a dependency
+
+Managing a project that uses different kubernetes libs as dependencies can be tricky at first because of the different versions of all these libraries(apimachinery, client-go, api...). [Here][dependency-example] you have an example of how would you use kooper as a dependency in a project and setting the kubernetes libraries to the version that you want along with kooper (using [dep][dep-project]).
+
 ## Documentation
 
 Kooper comes with different topics as documentation.
@@ -135,3 +139,5 @@ The starting point would be to check the [concepts](docs/concepts.md) and then c
 [goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
 [godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
 [godoc-url]: https://godoc.org/github.com/spotahome/kooper
+[dependency-example]: https://github.com/slok/kooper-as-dependency
+[dep-project]: https://github.com/golang/dep
