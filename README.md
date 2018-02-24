@@ -74,6 +74,15 @@ The above shows that is very easy to get a controller working in less than 100 l
 go run ./examples/onefile-echo-pod-controller/main.go
 ```
 
+or directly using docker (Note you are binding kubernetes configuration on the container so kooper can connect to kubernetes cluster).
+
+```bash
+docker run \
+    --rm -it \
+    -v ${HOME}/.kube:/root/.kube:ro \
+    golang:1.10 \
+    /bin/bash -c "go get github.com/spotahome/kooper/... && cd /go/src/github.com/spotahome/kooper && go run ./examples/onefile-echo-pod-controller/main.go"
+```
 
 ## Motivation
 
