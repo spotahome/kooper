@@ -27,7 +27,7 @@ const (
 	controllerRunTimeout = 10 * time.Second
 	// this delta is the max duration delta used on the assertion of controller handling, this is required because
 	// the controller requires some millisecond to bootstrap and sync.
-	maxAssertDurationDelta = 200 * time.Millisecond
+	maxAssertDurationDelta = 500 * time.Millisecond
 )
 
 func returnPodList(q int) *corev1.PodList {
