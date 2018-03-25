@@ -122,9 +122,11 @@ Managing a project that uses different kubernetes libs as dependencies can be tr
 
 Based on this matrix Kooper needs different versions of Kubernetes dependencies.
 
-An example would be. If the cluster that will use kooper operators/controllers if  a 1.9.x Kubernetes cluster, the version of kooper would be `0.2.x` and the kubernetes libraries the `1.9.x` compatibility style. For example the project that uses kooper dep file would be something like this:
+An example would be. If the cluster that will use kooper operators/controllers is a 1.9.x Kubernetes cluster, the version of kooper would be `0.2.x` and the kubernetes libraries in `1.9.x` compatibility style. For example the project that uses kooper as a dependency, its dep file would be something like this:
 
 ```yaml
+...
+
 [[override]]
   name = "k8s.io/api"
   version = "kubernetes-1.9.6"
@@ -141,9 +143,7 @@ An example would be. If the cluster that will use kooper operators/controllers i
   name = "github.com/spotahome/kooper"
   version = "0.2.0"
 
-[prune]
-  go-tests = true
-  unused-packages = true
+...
 ```
 
 ## Documentation
