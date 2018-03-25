@@ -17,6 +17,9 @@ import (
 const (
 	checkCRDInterval = 2 * time.Second
 	crdReadyTimeout  = 3 * time.Minute
+
+	allCategory    = "all"
+	kooperCategory = "kooper"
 )
 
 var (
@@ -35,11 +38,19 @@ const (
 
 // Conf is the configuration required to create a CRD
 type Conf struct {
-	Kind       string
+	// Kind is the kind of the CRD.
+	Kind string
+	// NamePlural is the plural name of the CRD (in most cases the plural of Kind).
 	NamePlural string
-	Group      string
-	Version    string
-	Scope      Scope
+	// Group is the group of the CRD.
+	Group string
+	// Version is the version of the CRD.
+	Version string
+	// Scope is the scode of the CRD (cluster scoped or namespace scoped).
+	Scope Scope
+	// Categories is a way of grouping multiple resources (example `kubectl get all`),
+	// Kooper adds the CRD to `all` and `kooper` categories(apart from the described in Caregories).
+	Categories []string
 }
 
 func (c *Conf) getName() string {
@@ -88,6 +99,7 @@ func (c *Client) EnsurePresent(conf Conf) error {
 		return err
 	}
 
+	// Get the generated name of the CRD.
 	crdName := conf.getName()
 
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
@@ -99,8 +111,9 @@ func (c *Client) EnsurePresent(conf Conf) error {
 			Version: conf.Version,
 			Scope:   conf.Scope,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural: conf.NamePlural,
-				Kind:   conf.Kind,
+				Plural:     conf.NamePlural,
+				Kind:       conf.Kind,
+				Categories: c.addDefaultCaregories(conf.Categories),
 			},
 		},
 	}
@@ -171,4 +184,33 @@ func (c *Client) validClusterForCRDs() error {
 	}
 
 	return nil
+}
+
+// addAllCaregory adds the `all` category if isn't present
+func (c *Client) addDefaultCaregories(categories []string) []string {
+	newCategories := categories
+
+	// Track if kooper categories need to add in the category slice.
+	catsToAppend := map[string]bool{
+		allCategory:    true,
+		kooperCategory: true,
+	}
+
+	// Check if the default categories are already present.
+	for _, cat := range categories {
+		for newCat := range catsToAppend {
+			// Is already present?.
+			if cat == newCat {
+				catsToAppend[newCat] = false
+			}
+		}
+	}
+
+	// Add the required categories.
+	for newCat, shouldAppend := range catsToAppend {
+		if shouldAppend {
+			newCategories = append(newCategories, newCat)
+		}
+	}
+	return newCategories
 }
