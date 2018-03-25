@@ -112,6 +112,40 @@ go get -u github.com/spotahome/kooper
 
 Managing a project that uses different kubernetes libs as dependencies can be tricky at first because of the different versions of all these libraries(apimachinery, client-go, api...). [Here][dependency-example] you have an example of how would you use kooper as a dependency in a project and setting the kubernetes libraries to the version that you want along with kooper (using [dep][dep-project]).
 
+## Compatibility matrix
+
+|                     | Kubernetes 1.8 | Kubernetes 1.9 | Kubernetes 1.10 |
+|---------------------|----------------|----------------|-----------------|
+| kooper 0.1          | ✓              | ✓              | ?               |
+| kooper 0.2          | ✓              | ✓              | ?               |
+| kooper HEAD         | ?              | ?              | ✓               |
+
+Based on this matrix Kooper needs different versions of Kubernetes dependencies.
+
+An example would be. If the cluster that will use kooper operators/controllers if  a 1.9.x Kubernetes cluster, the version of kooper would be `0.2.x` and the kubernetes libraries the `1.9.x` compatibility style. For example the project that uses kooper dep file would be something like this:
+
+```yaml
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.9.6"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.9.6"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.9.6"
+
+[[constraint]]
+  name = "github.com/spotahome/kooper"
+  version = "0.2.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+```
+
 ## Documentation
 
 Kooper comes with different topics as documentation.
