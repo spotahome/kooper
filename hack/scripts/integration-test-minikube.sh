@@ -4,6 +4,7 @@ set -o errexit
 set -o nounset
 
 KUBERNETES_VERSION=${KUBERNETES_VERSION:-1.9.4}
+current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 SUDO=''
 if [[ $(id -u) -ne 0 ]]
@@ -34,4 +35,4 @@ then
 fi
 
 echo "=> Running integration tests"
-./integration-test.sh
+${current_dir}/integration-test.sh
