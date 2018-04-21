@@ -1,5 +1,20 @@
+sudo: required
+dist: trusty
+services:
+  - docker
+
 language: go
 go:
   - "1.10"
+
+before_install:
+  - curl https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64 -o /usr/local/bin/minikube && chmod +x /usr/local/bin/minikube
+  - curl https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
 script:
   - make ci
+
+env:
+  global:
+    - MINIKUBE_VERSION=v0.25.2
+    - KUBERNETES_VERSION=v1.9.4
