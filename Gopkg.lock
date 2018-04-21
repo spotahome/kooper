@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/Pallinder/go-randomdata"
+  packages = ["."]
+  revision = "dab270d296c6c8fb98de3b4334bbd7d7b0ceca53"
+
+[[projects]]
+  branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
@@ -153,7 +159,8 @@
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "mock"
+    "mock",
+    "require"
   ]
   revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
   version = "v1.2.0"
@@ -450,6 +457,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7390598045496caca302d2b14b51a4b0166a5b7171f449c8664d10b2dc901664"
+  inputs-digest = "1d7a15384db11c7263c4b50797c2116728d196bfc20de170415c6e443fbb0c3f"
   solver-name = "gps-cdcl"
   solver-version = 1
