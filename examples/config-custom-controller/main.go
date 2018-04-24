@@ -69,7 +69,7 @@ func main() {
 		},
 	}
 
-	// Create the controller that will refresh every 30 seconds.
+	// Create the controller with custom configuration.
 	cfg := &controller.Config{
 		ProcessingJobRetries: 5,
 		ResyncInterval:       45 * time.Second,
