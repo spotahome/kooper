@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"path/filepath"
 
+	integrationtestk8scli "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned"
+	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // Load oidc authentication when creating the kubernetes client.
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
 
-// GetK8sClient returns a k8s client.
-func GetK8sClient(kubehome string) (kubernetes.Interface, error) {
+// GetK8sClients returns a all k8s clients.
+// * Kubernetes core resources client.
+// * Kubernetes api extensions client.
+// * Custom test integration CR client.
+func GetK8sClients(kubehome string) (kubernetes.Interface, apiextensionscli.Interface, integrationtestk8scli.Interface, error) {
 	// Fallback to default kubehome.
 	if kubehome == "" {
 		kubehome = filepath.Join(homedir.HomeDir(), ".kube", "config")
@@ -20,14 +25,26 @@ func GetK8sClient(kubehome string) (kubernetes.Interface, error) {
 	// Load kubernetes local connection.
 	config, err := clientcmd.BuildConfigFromFlags("", kubehome)
 	if err != nil {
-		return nil, fmt.Errorf("could not load configuration: %s", err)
+		return nil, nil, nil, fmt.Errorf("could not load configuration: %s", err)
 	}
 
 	// Get the client.
 	k8sCli, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	return k8sCli, nil
+	// App CRD k8s types client.
+	itCli, err := integrationtestk8scli.NewForConfig(config)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// api extensions cli.
+	aexCli, err := apiextensionscli.NewForConfig(config)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return k8sCli, aexCli, itCli, nil
 }

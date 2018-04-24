@@ -74,7 +74,8 @@ func TestControllerHandleEvents(t *testing.T) {
 			var gotDeletedServices []string
 
 			// Create the kubernetes client.
-			k8scli, err := cli.GetK8sClient("")
+			k8scli, _, _, err := cli.GetK8sClients("")
+
 			require.NoError(err, "kubernetes client is required")
 
 			// Prepare the environment on the cluster.
