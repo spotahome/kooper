@@ -234,3 +234,72 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 		})
 	}
 }
+
+func TestGenericControllerErrorRetries(t *testing.T) {
+	nsList, _ := createNamespaceList("testing", 11)
+
+	tests := []struct {
+		name        string
+		nsList      *corev1.NamespaceList
+		retryNumber int
+	}{
+		{
+			name:        "Retrying N resources with M retries and error on all should be 1 + M processing calls per resource (N+N*M event processing calls).",
+			nsList:      nsList,
+			retryNumber: 3,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			controllerStopperC := make(chan struct{})
+			resultC := make(chan error)
+
+			// Mocks kubernetes  client.
+			mc := &fake.Clientset{}
+			// Populate cache so we ensure deletes are correctly delivered.
+			onKubeClientListNamespaceReturn(mc, nsList)
+
+			// Mock our handler and set expects.
+			totalCalls := len(test.nsList.Items) + len(test.nsList.Items)*test.retryNumber
+			mh := &mhandler.Handler{}
+			err := fmt.Errorf("wanted error")
+
+			// Expect all the retries
+			for range test.nsList.Items {
+				callsPerNS := test.retryNumber + 1 // initial call + retries.
+				mh.On("Add", mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
+					totalCalls--
+					// Check last call, if is the last call expected then stop the controller so
+					// we can assert the expectations of the calls and finish the test.
+					if totalCalls <= 0 {
+						close(controllerStopperC)
+					}
+				})
+			}
+
+			nsret := newNamespaceRetriever(mc)
+			cfg := &controller.Config{
+				ProcessingJobRetries: test.retryNumber,
+			}
+			c := controller.New(cfg, mh, nsret, metrics.Dummy, log.Dummy)
+
+			// Run Controller in background.
+			go func() {
+				resultC <- c.Run(controllerStopperC)
+			}()
+
+			// Wait for different results. If no result means error failure.
+			select {
+			case err := <-resultC:
+				if assert.NoError(err) {
+					// Check handles from the controller.
+					mh.AssertExpectations(t)
+				}
+			case <-time.After(1 * time.Second):
+				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
+			}
+		})
+	}
+}
