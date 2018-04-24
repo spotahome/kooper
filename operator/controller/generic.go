@@ -17,10 +17,6 @@ import (
 	"github.com/spotahome/kooper/operator/retrieve"
 )
 
-const (
-	processingJobRetries = 3
-)
-
 // generic controller is a controller that can be used to create different kind of controllers.
 type generic struct {
 	queue                workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
@@ -36,20 +32,41 @@ type generic struct {
 }
 
 // NewSequential creates a new controller that will process the received events sequentially.
+// This constructor is just a wrapper to help bootstrapping default sequential controller.
 func NewSequential(resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
-	return newDefaultGeneric(1, resync, handler, retriever, metricRecorder, logger)
+	cfg := &Config{
+		ConcurrentWorkers: 1,
+		ResyncInterval:    resync,
+	}
+	return New(cfg, handler, retriever, metricRecorder, logger)
 }
 
 // NewConcurrent creates a new controller that will process the received events concurrently.
+// This constructor is just a wrapper to help bootstrapping default concurrent controller.
 func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) (Controller, error) {
 	if concurrentWorkers < 2 {
 		return nil, fmt.Errorf("%d is not a valid concurrency workers ammount for a concurrent controller", concurrentWorkers)
 	}
 
-	return newDefaultGeneric(concurrentWorkers, resync, handler, retriever, metricRecorder, logger), nil
+	cfg := &Config{
+		ConcurrentWorkers: concurrentWorkers,
+		ResyncInterval:    resync,
+	}
+	return New(cfg, handler, retriever, metricRecorder, logger), nil
 }
 
-func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+// New creates a new controller that can be configured using the cfg parameter.
+func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+	// Sets the required default configuration.
+	cfg.setDefaults()
+
+	// Default logger.
+	if logger == nil {
+		logger = &log.Std{}
+		logger.Warningf("no logger specified, fallback to default logger, to disable logging use dummy logger")
+	}
+
+	// Default metrics recorder.
 	if metricRecorder == nil {
 		metricRecorder = metrics.Dummy
 		logger.Warningf("no metrics recorder specified, disabling metrics")
@@ -64,7 +81,7 @@ func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler hand
 
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}
-	informer := cache.NewSharedIndexInformer(retriever.GetListerWatcher(), retriever.GetObject(), resync, store)
+	informer := cache.NewSharedIndexInformer(retriever.GetListerWatcher(), retriever.GetObject(), cfg.ResyncInterval, store)
 
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
 	// afterwards.
@@ -90,29 +107,7 @@ func newDefaultGeneric(concurrentWorkers int, resync time.Duration, handler hand
 				metricRecorder.IncResourceDeleteEventQueued(handlerName)
 			}
 		},
-	}, resync)
-
-	return newGeneric(handlerName, concurrentWorkers, processingJobRetries, handler, queue, informer, metricRecorder, logger)
-}
-
-// newGeneric returns a new Generic controller.
-func newGeneric(handlerName string, concurrentWorkers int, jobProcessingRetries int, handler handler.Handler, queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer, metricRecorder metrics.Recorder, logger log.Logger) *generic {
-	if concurrentWorkers <= 0 {
-		logger.Warningf("%d is an illegal number of concurrent workers for a controller, setting 1 by default (sequential)", concurrentWorkers)
-		concurrentWorkers = 1
-	}
-
-	// Default logger.
-	if logger == nil {
-		logger = &log.Std{}
-		logger.Warningf("no logger specified, fallback to default logger, to disable logging use dummy logger")
-	}
-
-	// Default metrics recorder.
-	if metricRecorder == nil {
-		metricRecorder = metrics.Dummy
-		logger.Warningf("no metrics recorder specified, disabling metrics")
-	}
+	}, cfg.ResyncInterval)
 
 	return &generic{
 		queue:                queue,
@@ -121,8 +116,8 @@ func newGeneric(handlerName string, concurrentWorkers int, jobProcessingRetries 
 		metrics:              metricRecorder,
 		handler:              handler,
 		handlerName:          handlerName,
-		concurrentWorkers:    concurrentWorkers,
-		processingJobRetries: processingJobRetries,
+		concurrentWorkers:    cfg.ConcurrentWorkers,
+		processingJobRetries: cfg.ProcessingJobRetries,
 	}
 }
 
