@@ -75,7 +75,7 @@ func main() {
 		ResyncInterval:       45 * time.Second,
 		ConcurrentWorkers:    1,
 	}
-	ctrl := controller.New(cfg, hand, retr, nil, log)
+	ctrl := controller.New(cfg, hand, retr, nil, nil, log)
 
 	// Start our controller.
 	stopC := make(chan struct{})
