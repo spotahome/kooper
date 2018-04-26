@@ -153,7 +153,7 @@ func (r *runner) Run(f func() error) error {
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: lef,
 			OnStoppedLeading: func() {
-				errC <- fmt.Errorf("leader election lost")
+				errC <- fmt.Errorf("leadership lost")
 			},
 		},
 	}

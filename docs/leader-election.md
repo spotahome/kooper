@@ -83,5 +83,37 @@ When one of the leaders looses the leadership the controller will end its execut
 
 For a full example check [this][leaderelection-example]
 
+## Test example in local
+
+You can check how it works locally using docker.
+
+Run N controllers in different containers. For example `ctrl1` and `ctrl2`
+
+```bash
+docker run --name ctrl1 \
+    --network bridge \
+    --rm -it \
+    -v ${HOME}/.kube:/root/.kube:ro \
+    -v `pwd`:/go/src/github.com/spotahome/kooper:ro  \
+    golang go run /go/src/github.com/spotahome/kooper/examples/leader-election-controller/main.go
+```
+
+```bash
+docker run --name ctrl2 \
+    --network bridge \
+    --rm -it \
+    -v ${HOME}/.kube:/root/.kube:ro \
+    -v `pwd`:/go/src/github.com/spotahome/kooper:ro  \
+    golang go run /go/src/github.com/spotahome/kooper/examples/leader-election-controller/main.go
+```
+
+Now you can test disconnecting and connecting them using these commands and checking the results.
+
+* `docker network disconnect bridge ctrl2`
+* `docker network disconnect bridge ctrl1`
+* `docker network connect bridge ctrl2`
+* `docker network connect bridge ctrl1`
+
+
 [leaderelection-src]: https://github.com/spotahome/kooper/tree/master/operator/controller/leaderelection
 [leaderelection-example]: https://github.com/spotahome/kooper/tree/master/examples/leader-election-controller
