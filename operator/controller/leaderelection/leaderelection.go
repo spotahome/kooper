@@ -22,6 +22,20 @@ const (
 	defRetryPeriod   = 2 * time.Second
 )
 
+// LockConfig is the configuration for the lock (timing, leases...).
+type LockConfig struct {
+	// LeaseDuration is the duration that non-leader candidates will
+	// wait to force acquire leadership. This is measured against time of
+	// last observed ack.
+	LeaseDuration time.Duration
+	// RenewDeadline is the duration that the acting master will retry
+	// refreshing leadership before giving up.
+	RenewDeadline time.Duration
+	// RetryPeriod is the duration the LeaderElector clients should wait
+	// between tries of actions.
+	RetryPeriod time.Duration
+}
+
 // Runner knows how to run using the leader election.
 type Runner interface {
 	// Run will run if the instance takes the lead. It's a blocking action.
@@ -33,13 +47,29 @@ type runner struct {
 	key          string
 	namespace    string
 	k8scli       kubernetes.Interface
+	lockCfg      *LockConfig
 	resourceLock resourcelock.Interface
 	logger       log.Logger
 }
 
+// NewDefault returns a new leader election service with a safe lock configuration.
+func NewDefault(key, namespace string, k8scli kubernetes.Interface, logger log.Logger) (Runner, error) {
+	return New(key, namespace, nil, k8scli, logger)
+}
+
 // New returns a new leader election service.
-func New(key, namespace string, k8scli kubernetes.Interface, logger log.Logger) (Runner, error) {
+func New(key, namespace string, lockCfg *LockConfig, k8scli kubernetes.Interface, logger log.Logger) (Runner, error) {
+	// If lock configuration is nil then fallback to defaults.
+	if lockCfg == nil {
+		lockCfg = &LockConfig{
+			LeaseDuration: defLeaseDuration,
+			RenewDeadline: defRenewDeadline,
+			RetryPeriod:   defRetryPeriod,
+		}
+	}
+
 	r := &runner{
+		lockCfg:   lockCfg,
 		key:       key,
 		namespace: namespace,
 		k8scli:    k8scli,
@@ -105,16 +135,21 @@ func (r *runner) Run(f func() error) error {
 	// The function to execute when leader aquired.
 	lef := func(stopC <-chan struct{}) {
 		r.logger.Infof("lead acquire, starting...")
-		errC <- f() // send the error to the leaderelection creator (leaderelection.Service)
-		<-stopC
+		// Wait until f finishes or leader elector runner stops.
+		select {
+		case <-stopC:
+			errC <- nil
+		case errC <- f():
+		}
+		r.logger.Infof("lead execution stopped")
 	}
 
 	// Create the leader election configuration
 	lec := leaderelection.LeaderElectionConfig{
 		Lock:          r.resourceLock,
-		LeaseDuration: defLeaseDuration,
-		RenewDeadline: defRenewDeadline,
-		RetryPeriod:   defRetryPeriod,
+		LeaseDuration: r.lockCfg.LeaseDuration,
+		RenewDeadline: r.lockCfg.RenewDeadline,
+		RetryPeriod:   r.lockCfg.RetryPeriod,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: lef,
 			OnStoppedLeading: func() {
@@ -131,9 +166,9 @@ func (r *runner) Run(f func() error) error {
 
 	// Execute!
 	r.logger.Infof("running in leader election mode, waiting to acquire leadership...")
+	go le.Run()
 
-	le.Run()
-
+	// Wait until stopping the execution returns the result.
 	err = <-errC
 	return err
 }
