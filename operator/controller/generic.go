@@ -13,22 +13,23 @@ import (
 
 	"github.com/spotahome/kooper/log"
 	"github.com/spotahome/kooper/monitoring/metrics"
+	"github.com/spotahome/kooper/operator/controller/leaderelection"
 	"github.com/spotahome/kooper/operator/handler"
 	"github.com/spotahome/kooper/operator/retrieve"
 )
 
 // generic controller is a controller that can be used to create different kind of controllers.
 type generic struct {
-	queue                workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
-	informer             cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
-	handler              handler.Handler                 // handler is where the logic of resource processing.
-	handlerName          string                          // handlerName will be used to identify and give more insight about metrics.
-	concurrentWorkers    int                             // concurrentWorkers is the number of workers concurrently processing events.
-	running              bool
-	runningMu            sync.Mutex
-	processingJobRetries int
-	metrics              metrics.Recorder
-	logger               log.Logger
+	queue       workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
+	informer    cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
+	handler     handler.Handler                 // handler is where the logic of resource processing.
+	handlerName string                          // handlerName will be used to identify and give more insight about metrics.
+	running     bool
+	runningMu   sync.Mutex
+	cfg         Config
+	metrics     metrics.Recorder
+	leRunner    leaderelection.Runner
+	logger      log.Logger
 }
 
 // NewSequential creates a new controller that will process the received events sequentially.
@@ -38,7 +39,7 @@ func NewSequential(resync time.Duration, handler handler.Handler, retriever retr
 		ConcurrentWorkers: 1,
 		ResyncInterval:    resync,
 	}
-	return New(cfg, handler, retriever, metricRecorder, logger)
+	return New(cfg, handler, retriever, nil, metricRecorder, logger)
 }
 
 // NewConcurrent creates a new controller that will process the received events concurrently.
@@ -52,11 +53,11 @@ func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.
 		ConcurrentWorkers: concurrentWorkers,
 		ResyncInterval:    resync,
 	}
-	return New(cfg, handler, retriever, metricRecorder, logger), nil
+	return New(cfg, handler, retriever, nil, metricRecorder, logger), nil
 }
 
 // New creates a new controller that can be configured using the cfg parameter.
-func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, leaderElector leaderelection.Runner, metricRecorder metrics.Recorder, logger log.Logger) Controller {
 	// Sets the required default configuration.
 	cfg.setDefaults()
 
@@ -110,14 +111,14 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, met
 	}, cfg.ResyncInterval)
 
 	return &generic{
-		queue:                queue,
-		informer:             informer,
-		logger:               logger,
-		metrics:              metricRecorder,
-		handler:              handler,
-		handlerName:          handlerName,
-		concurrentWorkers:    cfg.ConcurrentWorkers,
-		processingJobRetries: cfg.ProcessingJobRetries,
+		queue:       queue,
+		informer:    informer,
+		logger:      logger,
+		metrics:     metricRecorder,
+		handler:     handler,
+		handlerName: handlerName,
+		leRunner:    leaderElector,
+		cfg:         *cfg,
 	}
 }
 
@@ -135,6 +136,18 @@ func (g *generic) setRunning(running bool) {
 
 // Run will run the controller.
 func (g *generic) Run(stopC <-chan struct{}) error {
+	// Check if leader election is required.
+	if g.leRunner != nil {
+		return g.leRunner.Run(func() error {
+			return g.run(stopC)
+		})
+	}
+
+	return g.run(stopC)
+}
+
+// run is the real run of the controller.
+func (g *generic) run(stopC <-chan struct{}) error {
 	if g.isRunning() {
 		return fmt.Errorf("controller already running")
 	}
@@ -158,7 +171,7 @@ func (g *generic) Run(stopC <-chan struct{}) error {
 
 	// Start our resource processing worker, if finishes then restart the worker. The workers should
 	// not end.
-	for i := 0; i < g.concurrentWorkers; i++ {
+	for i := 0; i < g.cfg.ConcurrentWorkers; i++ {
 		go func() {
 			wait.Until(g.runWorker, time.Second, stopC)
 		}()
@@ -196,7 +209,7 @@ func (g *generic) getAndProcessNextJob() bool {
 	// Process the job. If errors then enqueue again.
 	if err := g.processJob(objKey); err == nil {
 		g.queue.Forget(objKey)
-	} else if g.queue.NumRequeues(objKey) < g.processingJobRetries {
+	} else if g.queue.NumRequeues(objKey) < g.cfg.ProcessingJobRetries {
 		// Job processing failed, requeue.
 		g.logger.Warningf("error processing %s job (requeued): %v", objKey, err)
 		g.queue.AddRateLimited(objKey)
