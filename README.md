@@ -21,6 +21,7 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 * Easy to mock and extend functionality (Go interfaces!).
 * Only support CRD, no TPR support (Kubernetes >=1.7).
 * Controller metrics.
+* Leader election.
 
 ## Example
 
@@ -160,6 +161,7 @@ Kooper comes with different topics as documentation.
 
 * [Metrics](docs/metrics.md)
 * [Logger](docs/logger.md)
+* [Leader election](docs/leader-election.md)
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 

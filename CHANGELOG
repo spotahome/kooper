@@ -1,5 +1,6 @@
 ## x.x.x / xxxx-xx-xx
 
+* [FEATURE] Add leader election for controllers and operators.
 * [ENHANCEMENT] Let customizing (using configuration) the retries of event processing errors on controllers.
 * [ENHANCEMENT] Controllers now can be created using a configuration struct.
 * [ENHANCEMENT] Add support for Kubernetes 1.10.

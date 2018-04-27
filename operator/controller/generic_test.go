@@ -20,6 +20,7 @@ import (
 	mhandler "github.com/spotahome/kooper/mocks/operator/handler"
 	"github.com/spotahome/kooper/monitoring/metrics"
 	"github.com/spotahome/kooper/operator/controller"
+	"github.com/spotahome/kooper/operator/controller/leaderelection"
 )
 
 // Namespace knows how to retrieve namespaces.
@@ -283,7 +284,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			cfg := &controller.Config{
 				ProcessingJobRetries: test.retryNumber,
 			}
-			c := controller.New(cfg, mh, nsret, metrics.Dummy, log.Dummy)
+			c := controller.New(cfg, mh, nsret, nil, metrics.Dummy, log.Dummy)
 
 			// Run Controller in background.
 			go func() {
@@ -296,6 +297,87 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 				if assert.NoError(err) {
 					// Check handles from the controller.
 					mh.AssertExpectations(t)
+				}
+			case <-time.After(1 * time.Second):
+				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
+			}
+		})
+	}
+}
+
+func TestGenericControllerWithLeaderElection(t *testing.T) {
+	nsList, _ := createNamespaceList("testing", 5)
+
+	tests := []struct {
+		name        string
+		nsList      *corev1.NamespaceList
+		retryNumber int
+	}{
+		{
+			name:   "",
+			nsList: nsList,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert := assert.New(t)
+			controllerStopperC := make(chan struct{})
+			resultC := make(chan error)
+
+			// Mocks kubernetes  client.
+			mc := fake.NewSimpleClientset(nsList)
+
+			// Mock our handler and set expects.
+			mh1 := &mhandler.Handler{}
+			mh2 := &mhandler.Handler{}
+			mh3 := &mhandler.Handler{}
+
+			// Expect the calls on the lead (mh1) and no calls on the other ones.
+			totalCalls := len(test.nsList.Items)
+			mh1.On("Add", mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
+				totalCalls--
+				// Check last call, if is the last call expected then stop the controller so
+				// we can assert the expectations of the calls and finish the test.
+				if totalCalls <= 0 {
+					close(controllerStopperC)
+				}
+			})
+
+			nsret := newNamespaceRetriever(mc)
+			cfg := &controller.Config{
+				ProcessingJobRetries: test.retryNumber,
+			}
+
+			// Leader election service.
+			rlCfg := &leaderelection.LockConfig{
+				LeaseDuration: 9999 * time.Second,
+				RenewDeadline: 9998 * time.Second,
+				RetryPeriod:   500 * time.Second,
+			}
+			lesvc1, _ := leaderelection.New("test", "default", rlCfg, mc, log.Dummy)
+			lesvc2, _ := leaderelection.New("test", "default", rlCfg, mc, log.Dummy)
+			lesvc3, _ := leaderelection.New("test", "default", rlCfg, mc, log.Dummy)
+
+			c1 := controller.New(cfg, mh1, nsret, lesvc1, metrics.Dummy, log.Dummy)
+			c2 := controller.New(cfg, mh2, nsret, lesvc2, metrics.Dummy, log.Dummy)
+			c3 := controller.New(cfg, mh3, nsret, lesvc3, metrics.Dummy, log.Dummy)
+
+			// Run multiple controller in background.
+			go func() { resultC <- c1.Run(controllerStopperC) }()
+			// Let the first controller became the leader.
+			time.Sleep(200 * time.Microsecond)
+			go func() { resultC <- c2.Run(controllerStopperC) }()
+			go func() { resultC <- c3.Run(controllerStopperC) }()
+
+			// Wait for different results. If no result means error failure.
+			select {
+			case err := <-resultC:
+				if assert.NoError(err) {
+					// Check handles from the controller.
+					mh1.AssertExpectations(t)
+					mh2.AssertExpectations(t)
+					mh3.AssertExpectations(t)
 				}
 			case <-time.After(1 * time.Second):
 				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
