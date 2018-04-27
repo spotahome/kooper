@@ -165,7 +165,7 @@ Kooper comes with different topics as documentation.
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 
-### Who is using kooper
+## Who is using kooper
 
 * [redis-operator](https://github.com/spotahome/redis-operator)
 * [node-labeler-operator](https://github.com/barpilot/node-labeler-operator)
