@@ -2,7 +2,7 @@
 
 Kooper comes with support for leader election.
 
-A controller can be run with multiple instances in HA and only one will be really running the controller logic (the leader9, when the leader stops or loses the leadership another instance will take the leadership and so on.
+A controller can be run with multiple instances in HA and only one will be really running the controller logic (the leader), when the leader stops or loses the leadership another instance will take the leadership and so on.
 
 ## Usage
 
@@ -85,9 +85,9 @@ For a full example check [this][leaderelection-example]
 
 ## Test example in local
 
-You can check how it works locally using docker.
+You can check how it works locally using docker running N controllers in different containers.
 
-Run N controllers in different containers. For example `ctrl1` and `ctrl2`
+For example `ctrl1` and `ctrl2`:
 
 ```bash
 docker run --name ctrl1 \
