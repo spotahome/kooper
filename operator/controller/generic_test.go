@@ -136,7 +136,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 			callHandling := 0 // used to track the number of calls.
 			mh := &mhandler.Handler{}
 			for _, ns := range test.expNSAdds {
-				mh.On("Add", ns).Once().Return(nil).Run(func(args mock.Arguments) {
+				mh.On("Add", mock.Anything, ns).Once().Return(nil).Run(func(args mock.Arguments) {
 					callHandling++
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
@@ -170,6 +170,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 }
 
 func TestGenericControllerHandleDeletes(t *testing.T) {
+
 	startNSList, expNSAdds := createNamespaceList("testing", 10)
 	nsDels := []*corev1.Namespace{expNSAdds[0], expNSAdds[4], expNSAdds[1]}
 
@@ -202,9 +203,9 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 			// Mock our handler and set expects.
 			callHandling := 0 // used to track the number of calls.
 			mh := &mhandler.Handler{}
-			mh.On("Add", mock.Anything).Return(nil)
+			mh.On("Add", mock.Anything, mock.Anything).Return(nil)
 			for _, ns := range test.expDeleteNs {
-				mh.On("Delete", ns.ObjectMeta.Name).Once().Return(nil).Run(func(args mock.Arguments) {
+				mh.On("Delete", mock.Anything, ns.ObjectMeta.Name).Once().Return(nil).Run(func(args mock.Arguments) {
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
 					callHandling++
@@ -270,7 +271,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			// Expect all the retries
 			for range test.nsList.Items {
 				callsPerNS := test.retryNumber + 1 // initial call + retries.
-				mh.On("Add", mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
+				mh.On("Add", mock.Anything, mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
 					totalCalls--
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
@@ -284,7 +285,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			cfg := &controller.Config{
 				ProcessingJobRetries: test.retryNumber,
 			}
-			c := controller.New(cfg, mh, nsret, nil, metrics.Dummy, log.Dummy)
+			c := controller.New(cfg, mh, nsret, nil, nil, metrics.Dummy, log.Dummy)
 
 			// Run Controller in background.
 			go func() {
@@ -335,7 +336,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 
 			// Expect the calls on the lead (mh1) and no calls on the other ones.
 			totalCalls := len(test.nsList.Items)
-			mh1.On("Add", mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
+			mh1.On("Add", mock.Anything, mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
 				totalCalls--
 				// Check last call, if is the last call expected then stop the controller so
 				// we can assert the expectations of the calls and finish the test.
@@ -359,9 +360,9 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 			lesvc2, _ := leaderelection.New("test", "default", rlCfg, mc, log.Dummy)
 			lesvc3, _ := leaderelection.New("test", "default", rlCfg, mc, log.Dummy)
 
-			c1 := controller.New(cfg, mh1, nsret, lesvc1, metrics.Dummy, log.Dummy)
-			c2 := controller.New(cfg, mh2, nsret, lesvc2, metrics.Dummy, log.Dummy)
-			c3 := controller.New(cfg, mh3, nsret, lesvc3, metrics.Dummy, log.Dummy)
+			c1 := controller.New(cfg, mh1, nsret, lesvc1, nil, metrics.Dummy, log.Dummy)
+			c2 := controller.New(cfg, mh2, nsret, lesvc2, nil, metrics.Dummy, log.Dummy)
+			c3 := controller.New(cfg, mh3, nsret, lesvc3, nil, metrics.Dummy, log.Dummy)
 
 			// Run multiple controller in background.
 			go func() { resultC <- c1.Run(controllerStopperC) }()

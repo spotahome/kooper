@@ -1,11 +1,14 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -18,6 +21,25 @@ import (
 	"github.com/spotahome/kooper/operator/retrieve"
 )
 
+// Span tag and log keys.
+const (
+	kubernetesObjectKeyKey         = "kubernetes.object.key"
+	kubernetesObjectNSKey          = "kubernetes.object.namespace"
+	kubernetesObjectNameKey        = "kubernetes.object.name"
+	eventKey                       = "event"
+	kooperControllerKey            = "kooper.controller"
+	processedTimesKey              = "kubernetes.object.total_processed_times"
+	retriesRemainingKey            = "kubernetes.object.retries_remaining"
+	processingRetryKey             = "kubernetes.object.processing_retry"
+	retriesExecutedKey             = "kubernetes.object.retries_consumed"
+	controllerNameKey              = "controller.cfg.name"
+	controllerResyncKey            = "controller.cfg.resync_interval"
+	controllerMaxRetriesKey        = "controller.cfg.max_retries"
+	controllerConcurrentWorkersKey = "controller.cfg.concurrent_workers"
+	successKey                     = "success"
+	messageKey                     = "message"
+)
+
 // generic controller is a controller that can be used to create different kind of controllers.
 type generic struct {
 	queue       workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
@@ -27,6 +49,7 @@ type generic struct {
 	running     bool
 	runningMu   sync.Mutex
 	cfg         Config
+	tracer      opentracing.Tracer // use directly opentracing API because it's not an implementation.
 	metrics     metrics.Recorder
 	leRunner    leaderelection.Runner
 	logger      log.Logger
@@ -39,7 +62,7 @@ func NewSequential(resync time.Duration, handler handler.Handler, retriever retr
 		ConcurrentWorkers: 1,
 		ResyncInterval:    resync,
 	}
-	return New(cfg, handler, retriever, nil, metricRecorder, logger)
+	return New(cfg, handler, retriever, nil, nil, metricRecorder, logger)
 }
 
 // NewConcurrent creates a new controller that will process the received events concurrently.
@@ -53,11 +76,11 @@ func NewConcurrent(concurrentWorkers int, resync time.Duration, handler handler.
 		ConcurrentWorkers: concurrentWorkers,
 		ResyncInterval:    resync,
 	}
-	return New(cfg, handler, retriever, nil, metricRecorder, logger), nil
+	return New(cfg, handler, retriever, nil, nil, metricRecorder, logger), nil
 }
 
 // New creates a new controller that can be configured using the cfg parameter.
-func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, leaderElector leaderelection.Runner, metricRecorder metrics.Recorder, logger log.Logger) Controller {
+func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, leaderElector leaderelection.Runner, tracer opentracing.Tracer, metricRecorder metrics.Recorder, logger log.Logger) Controller {
 	// Sets the required default configuration.
 	cfg.setDefaults()
 
@@ -73,6 +96,11 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 		logger.Warningf("no metrics recorder specified, disabling metrics")
 	}
 
+	// Default tracer.
+	if tracer == nil {
+		tracer = &opentracing.NoopTracer{}
+	}
+
 	// Get a handler name for the metrics based on the type of the handler.
 	handlerName := reflect.TypeOf(handler).String()
 
@@ -84,42 +112,47 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 	store := cache.Indexers{}
 	informer := cache.NewSharedIndexInformer(retriever.GetListerWatcher(), retriever.GetObject(), cfg.ResyncInterval, store)
 
+	// Create our generic controller object.
+	g := &generic{
+		queue:       queue,
+		informer:    informer,
+		logger:      logger,
+		metrics:     metricRecorder,
+		tracer:      tracer,
+		handler:     handler,
+		handlerName: handlerName,
+		leRunner:    leaderElector,
+		cfg:         *cfg,
+	}
+
+	// Set up finally our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
 	// afterwards.
 	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				g.queue.Add(key)
 				metricRecorder.IncResourceAddEventQueued(handlerName)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				queue.Add(key)
+				g.queue.Add(key)
 				metricRecorder.IncResourceAddEventQueued(handlerName)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				g.queue.Add(key)
 				metricRecorder.IncResourceDeleteEventQueued(handlerName)
 			}
 		},
 	}, cfg.ResyncInterval)
 
-	return &generic{
-		queue:       queue,
-		informer:    informer,
-		logger:      logger,
-		metrics:     metricRecorder,
-		handler:     handler,
-		handlerName: handlerName,
-		leRunner:    leaderElector,
-		cfg:         *cfg,
-	}
+	return g
 }
 
 func (g *generic) isRunning() bool {
@@ -199,53 +232,112 @@ func (g *generic) runWorker() {
 // it needs to stop processing.
 func (g *generic) getAndProcessNextJob() bool {
 	// Get next job.
-	key, exit := g.queue.Get()
+	nextJob, exit := g.queue.Get()
 	if exit {
 		return true
 	}
-	objKey := key.(string)
-	defer g.queue.Done(objKey)
+	defer g.queue.Done(nextJob)
+	key := nextJob.(string)
+
+	// Our root span will start here.
+	span := g.tracer.StartSpan("processJob")
+	defer span.Finish()
+	ctx := opentracing.ContextWithSpan(context.Background(), span)
+	g.setRootSpanInfo(key, span)
 
 	// Process the job. If errors then enqueue again.
-	if err := g.processJob(objKey); err == nil {
-		g.queue.Forget(objKey)
-	} else if g.queue.NumRequeues(objKey) < g.cfg.ProcessingJobRetries {
+	if err := g.processJob(ctx, key); err == nil {
+		g.queue.Forget(key)
+
+		span.LogKV(
+			eventKey, "forget",
+			messageKey, "object processed correctly",
+		)
+		span.LogKV(successKey, true)
+
+	} else if g.queue.NumRequeues(key) < g.cfg.ProcessingJobRetries {
 		// Job processing failed, requeue.
-		g.logger.Warningf("error processing %s job (requeued): %v", objKey, err)
-		g.queue.AddRateLimited(objKey)
+		g.logger.Warningf("error processing %s job (requeued): %v", key, err)
+		g.queue.AddRateLimited(key)
+
+		// Mark root span with error.
+		ext.Error.Set(span, true)
+		span.LogKV(
+			eventKey, "error",
+			messageKey, err,
+		)
+
+		rt := g.queue.NumRequeues(key)
+		span.LogKV(
+			eventKey, "reenqueued",
+			retriesRemainingKey, g.cfg.ProcessingJobRetries-rt,
+			retriesExecutedKey, rt,
+			kubernetesObjectKeyKey, key,
+		)
+		span.LogKV(successKey, false)
+
 	} else {
-		g.logger.Errorf("Error processing %s: %v", objKey, err)
-		g.queue.Forget(objKey)
+		g.logger.Errorf("Error processing %s: %v", key, err)
+		g.queue.Forget(key)
+
+		// Mark root span with error.
+		ext.Error.Set(span, true)
+		span.LogKV(
+			eventKey, "error",
+			messageKey, err,
+		)
+		span.LogKV(
+			eventKey, "forget",
+			messageKey, "max number of retries reached after failing, forgetting object key",
+		)
+		span.LogKV(successKey, false)
 	}
 
 	return false
 }
 
 // processJob is where the real processing logic of the item is.
-func (g *generic) processJob(objKey string) error {
-	defer g.queue.Done(objKey)
-
+func (g *generic) processJob(ctx context.Context, key string) error {
 	// Get the object
-	obj, exists, err := g.informer.GetIndexer().GetByKey(objKey)
+	obj, exists, err := g.informer.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
 
 	// handle the object.
 	if !exists { // Deleted resource from the cache.
-		start := time.Now()
-		if err := g.handler.Delete(objKey); err != nil {
-			g.metrics.IncResourceDeleteEventProcessedError(g.handlerName)
-			g.metrics.ObserveDurationResourceDeleteEventProcessedError(g.handlerName, start)
-			return err
-		}
-		g.metrics.IncResourceDeleteEventProcessedSuccess(g.handlerName)
-		g.metrics.ObserveDurationResourceDeleteEventProcessedSuccess(g.handlerName, start)
-		return nil
+		return g.handleDelete(ctx, key)
 	}
 
+	return g.handleAdd(ctx, key, obj.(runtime.Object))
+}
+
+func (g *generic) handleAdd(ctx context.Context, objKey string, obj runtime.Object) error {
 	start := time.Now()
-	if err := g.handler.Add(obj.(runtime.Object)); err != nil {
+
+	// Create the span.
+	pSpan := opentracing.SpanFromContext(ctx)
+	span := g.tracer.StartSpan("handleAddObject", opentracing.ChildOf(pSpan.Context()))
+	ctx = opentracing.ContextWithSpan(ctx, span)
+	defer span.Finish()
+
+	// Set span data.
+	ext.SpanKindConsumer.Set(span)
+	span.SetTag(kubernetesObjectKeyKey, objKey)
+	g.setCommonSpanInfo(span)
+	span.LogKV(
+		eventKey, "add",
+		kubernetesObjectKeyKey, objKey,
+	)
+
+	// Handle the job.
+	if err := g.handler.Add(ctx, obj); err != nil {
+		ext.Error.Set(span, true) // Mark error as true.
+		span.LogKV(
+			eventKey, "error",
+			messageKey, err,
+		)
+
 		g.metrics.IncResourceAddEventProcessedError(g.handlerName)
 		g.metrics.ObserveDurationResourceAddEventProcessedError(g.handlerName, start)
 		return err
@@ -253,4 +345,69 @@ func (g *generic) processJob(objKey string) error {
 	g.metrics.IncResourceAddEventProcessedSuccess(g.handlerName)
 	g.metrics.ObserveDurationResourceAddEventProcessedSuccess(g.handlerName, start)
 	return nil
+}
+
+func (g *generic) handleDelete(ctx context.Context, objKey string) error {
+	start := time.Now()
+
+	// Create the span.
+	pSpan := opentracing.SpanFromContext(ctx)
+	span := g.tracer.StartSpan("handleDeleteObject", opentracing.ChildOf(pSpan.Context()))
+	ctx = opentracing.ContextWithSpan(ctx, span)
+	defer span.Finish()
+
+	// Set span data.
+	ext.SpanKindConsumer.Set(span)
+	span.SetTag(kubernetesObjectKeyKey, objKey)
+	g.setCommonSpanInfo(span)
+	span.LogKV(
+		eventKey, "delete",
+		kubernetesObjectKeyKey, objKey,
+	)
+
+	// Handle the job.
+	if err := g.handler.Delete(ctx, objKey); err != nil {
+		ext.Error.Set(span, true) // Mark error as true.
+		span.LogKV(
+			eventKey, "error",
+			messageKey, err,
+		)
+
+		g.metrics.IncResourceDeleteEventProcessedError(g.handlerName)
+		g.metrics.ObserveDurationResourceDeleteEventProcessedError(g.handlerName, start)
+		return err
+	}
+	g.metrics.IncResourceDeleteEventProcessedSuccess(g.handlerName)
+	g.metrics.ObserveDurationResourceDeleteEventProcessedSuccess(g.handlerName, start)
+	return nil
+}
+
+func (g *generic) setCommonSpanInfo(span opentracing.Span) {
+	ext.Component.Set(span, "kooper")
+	span.SetTag(kooperControllerKey, g.cfg.Name)
+	span.SetTag(controllerNameKey, g.cfg.Name)
+	span.SetTag(controllerResyncKey, g.cfg.ResyncInterval)
+	span.SetTag(controllerMaxRetriesKey, g.cfg.ProcessingJobRetries)
+	span.SetTag(controllerConcurrentWorkersKey, g.cfg.ConcurrentWorkers)
+}
+
+func (g *generic) setRootSpanInfo(key string, span opentracing.Span) {
+	numberRetries := g.queue.NumRequeues(key)
+
+	// Try to set the namespace and resource name.
+	if ns, name, err := cache.SplitMetaNamespaceKey(key); err == nil {
+		span.SetTag(kubernetesObjectNSKey, ns)
+		span.SetTag(kubernetesObjectNameKey, name)
+	}
+
+	g.setCommonSpanInfo(span)
+	span.SetTag(kubernetesObjectKeyKey, key)
+	span.SetTag(processedTimesKey, numberRetries+1)
+	span.SetTag(processingRetryKey, numberRetries > 0)
+	span.SetBaggageItem(kubernetesObjectKeyKey, key)
+	ext.SpanKindConsumer.Set(span)
+	span.LogKV(
+		eventKey, "process_object",
+		kubernetesObjectKeyKey, key,
+	)
 }
