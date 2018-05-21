@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -90,12 +91,12 @@ func Main() error {
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &handler.HandlerFunc{
-		AddFunc: func(obj runtime.Object) error {
+		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			pod := obj.(*corev1.Pod)
 			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
 			return nil
 		},
-		DeleteFunc: func(s string) error {
+		DeleteFunc: func(_ context.Context, s string) error {
 			logger.Infof("Pod deleted: %s", s)
 			return nil
 		},
@@ -113,7 +114,7 @@ func Main() error {
 		ResyncInterval:       time.Duration(fl.ResyncIntervalSeconds) * time.Second,
 		ConcurrentWorkers:    1,
 	}
-	ctrl := controller.New(cfg, hand, retr, lesvc, nil, logger)
+	ctrl := controller.New(cfg, hand, retr, lesvc, nil, nil, logger)
 	stopC := make(chan struct{})
 	errC := make(chan error)
 	go func() {

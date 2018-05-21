@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -130,11 +131,11 @@ func main() {
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &handler.HandlerFunc{
-		AddFunc: func(obj runtime.Object) error {
+		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			sleepRandomly()
 			return errRandomly()
 		},
-		DeleteFunc: func(s string) error {
+		DeleteFunc: func(_ context.Context, s string) error {
 			sleepRandomly()
 			return errRandomly()
 		},
