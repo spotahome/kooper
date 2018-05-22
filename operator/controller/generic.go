@@ -248,49 +248,16 @@ func (g *generic) getAndProcessNextJob() bool {
 	// Process the job. If errors then enqueue again.
 	if err := g.processJob(ctx, key); err == nil {
 		g.queue.Forget(key)
-
-		span.LogKV(
-			eventKey, "forget",
-			messageKey, "object processed correctly",
-		)
-		span.LogKV(successKey, true)
-
+		g.setForgetSpanInfo(key, span, err)
 	} else if g.queue.NumRequeues(key) < g.cfg.ProcessingJobRetries {
 		// Job processing failed, requeue.
 		g.logger.Warningf("error processing %s job (requeued): %v", key, err)
 		g.queue.AddRateLimited(key)
-
-		// Mark root span with error.
-		ext.Error.Set(span, true)
-		span.LogKV(
-			eventKey, "error",
-			messageKey, err,
-		)
-
-		rt := g.queue.NumRequeues(key)
-		span.LogKV(
-			eventKey, "reenqueued",
-			retriesRemainingKey, g.cfg.ProcessingJobRetries-rt,
-			retriesExecutedKey, rt,
-			kubernetesObjectKeyKey, key,
-		)
-		span.LogKV(successKey, false)
-
+		g.setReenqueueSpanInfo(key, span, err)
 	} else {
 		g.logger.Errorf("Error processing %s: %v", key, err)
 		g.queue.Forget(key)
-
-		// Mark root span with error.
-		ext.Error.Set(span, true)
-		span.LogKV(
-			eventKey, "error",
-			messageKey, err,
-		)
-		span.LogKV(
-			eventKey, "forget",
-			messageKey, "max number of retries reached after failing, forgetting object key",
-		)
-		span.LogKV(successKey, false)
+		g.setForgetSpanInfo(key, span, err)
 	}
 
 	return false
@@ -410,4 +377,46 @@ func (g *generic) setRootSpanInfo(key string, span opentracing.Span) {
 		eventKey, "process_object",
 		kubernetesObjectKeyKey, key,
 	)
+}
+
+func (g *generic) setReenqueueSpanInfo(key string, span opentracing.Span, err error) {
+	// Mark root span with error.
+	ext.Error.Set(span, true)
+	span.LogKV(
+		eventKey, "error",
+		messageKey, err,
+	)
+
+	rt := g.queue.NumRequeues(key)
+	span.LogKV(
+		eventKey, "reenqueued",
+		retriesRemainingKey, g.cfg.ProcessingJobRetries-rt,
+		retriesExecutedKey, rt,
+		kubernetesObjectKeyKey, key,
+	)
+	span.LogKV(successKey, false)
+}
+
+func (g *generic) setForgetSpanInfo(key string, span opentracing.Span, err error) {
+	success := true
+	message := "object processed correctly"
+
+	// Error data.
+	if err != nil {
+		// Mark root span with error.
+		ext.Error.Set(span, true)
+		span.LogKV(
+			eventKey, "error",
+			messageKey, err,
+		)
+		success = false
+		message = "max number of retries reached after failing, forgetting object key"
+	}
+
+	span.LogKV(
+		eventKey, "forget",
+		messageKey, message,
+		kubernetesObjectKeyKey, key,
+	)
+	span.LogKV(successKey, success)
 }
