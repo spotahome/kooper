@@ -7,10 +7,13 @@ const (
 	defResyncInterval       = 30 * time.Second
 	defConcurrentWorkers    = 1
 	defProcessingJobRetries = 3
+	defControllerName       = "controller"
 )
 
 // Config is the controller configuration.
 type Config struct {
+	// name of the controller.
+	Name string
 	// ConcurrentWorkers is the number of concurrent workers the controller will have running processing events.
 	ConcurrentWorkers int
 	// ResyncInterval is the interval the controller will process all the selected resources.
@@ -30,5 +33,9 @@ func (c *Config) setDefaults() {
 
 	if c.ProcessingJobRetries <= 0 {
 		c.ProcessingJobRetries = defProcessingJobRetries
+	}
+
+	if c.Name == "" {
+		c.Name = defControllerName
 	}
 }

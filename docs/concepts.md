@@ -65,8 +65,8 @@ The Handler is where our operator/controller logic will be placed. In other word
 
 ```go
 type Handler interface {
-	Add(obj runtime.Object) error
-	Delete(string) error
+	Add(context.Context, runtime.Object) error
+	Delete(context.Context, string) error
 }
 ```
 
@@ -78,6 +78,10 @@ if the resource is new or not, only that the state should be this and eventually
 
 * What happens if it errors my handling?
 The event will be requeued for a new handling in the future until it rate limits the maximum times allowed (if this isn't rate limited you could get stuck forever handling same resources)
+
+* A context as parameter?
+The context can be ignored if you don't need it at all, but if tracing is active the context will have the parent span.
+
 
 ### Operator
 

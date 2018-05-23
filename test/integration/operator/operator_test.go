@@ -3,6 +3,7 @@
 package operator_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -104,10 +105,10 @@ func TestCRDRegister(t *testing.T) {
 
 			// Create the handler.
 			hl := &handler.HandlerFunc{
-				AddFunc: func(obj runtime.Object) error {
+				AddFunc: func(_ context.Context, obj runtime.Object) error {
 					return nil
 				},
-				DeleteFunc: func(id string) error {
+				DeleteFunc: func(_ context.Context, id string) error {
 					return nil
 				},
 			}

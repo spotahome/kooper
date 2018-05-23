@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+
 	"github.com/spotahome/kooper/operator/controller"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -42,11 +44,11 @@ type handler struct {
 	echoSrv service.Echo
 }
 
-func (h *handler) Add(obj runtime.Object) error {
+func (h *handler) Add(_ context.Context, obj runtime.Object) error {
 	h.echoSrv.EchoObj(addPrefix, obj)
 	return nil
 }
-func (h *handler) Delete(s string) error {
+func (h *handler) Delete(_ context.Context, s string) error {
 	h.echoSrv.EchoS(deletePrefix, s)
 	return nil
 }

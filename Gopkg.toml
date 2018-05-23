@@ -14,6 +14,10 @@
   branch = "master"
   name = "github.com/prometheus/client_golang"
 
+[[constraint]]
+  name = "github.com/opentracing/opentracing-go"
+  version = "v1.0.2"
+
 # Kubernetes >= 1.10.
 # Note: Change all at once.
 [[constraint]]

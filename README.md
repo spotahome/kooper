@@ -22,6 +22,7 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 * Only support CRD, no TPR support (Kubernetes >=1.7).
 * Controller metrics.
 * Leader election.
+* Tracing with [Opentracing][opentracing-url].
 
 ## Example
 
@@ -48,12 +49,12 @@ retr := &retrieve.Resource{
 
 // Our domain logic that will print every add/sync/update and delete event.
 hand := &handler.HandlerFunc{
-    AddFunc: func(obj runtime.Object) error {
+    AddFunc: func(_ context.Context, obj runtime.Object) error {
         pod := obj.(*corev1.Pod)
         log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
         return nil
     },
-    DeleteFunc: func(s string) error {
+    DeleteFunc: func(_ context.Context, s string) error {
         log.Infof("Pod deleted: %s", s)
         return nil
     },
@@ -162,6 +163,7 @@ Kooper comes with different topics as documentation.
 * [Metrics](docs/metrics.md)
 * [Logger](docs/logger.md)
 * [Leader election](docs/leader-election.md)
+* [Tracing](docs/tracing.md)
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 
@@ -179,3 +181,4 @@ The starting point would be to check the [concepts](docs/concepts.md) and then c
 [godoc-url]: https://godoc.org/github.com/spotahome/kooper
 [dependency-example]: https://github.com/slok/kooper-as-dependency
 [dep-project]: https://github.com/golang/dep
+[opentracing-url]: http://opentracing.io/

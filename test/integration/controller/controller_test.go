@@ -3,6 +3,7 @@
 package controller_test
 
 import (
+	"context"
 	"strings"
 	"sync"
 	"testing"
@@ -96,7 +97,7 @@ func TestControllerHandleEvents(t *testing.T) {
 
 			// Create the handler.
 			hl := &handler.HandlerFunc{
-				AddFunc: func(obj runtime.Object) error {
+				AddFunc: func(_ context.Context, obj runtime.Object) error {
 					mx.Lock()
 					calledTimes++
 					mx.Unlock()
@@ -108,7 +109,7 @@ func TestControllerHandleEvents(t *testing.T) {
 					}
 					return nil
 				},
-				DeleteFunc: func(id string) error {
+				DeleteFunc: func(_ context.Context, id string) error {
 					mx.Lock()
 					calledTimes++
 					mx.Unlock()
