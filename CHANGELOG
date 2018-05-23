@@ -1,5 +1,9 @@
 ## x.x.x / xxxx-xx-xx
 
+This release breaks handler interface to allow passing a context (used to allow tracing).
+
+* [FEATURE] Add context as first argument to handler interface to pass tracing context (Breaking change).
+* [FEATURE] Add tracing through opentracing.
 * [FEATURE] Add leader election for controllers and operators.
 * [ENHANCEMENT] Let customizing (using configuration) the retries of event processing errors on controllers.
 * [ENHANCEMENT] Controllers now can be created using a configuration struct.
