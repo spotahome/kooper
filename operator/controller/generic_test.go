@@ -466,6 +466,9 @@ func TestGenericControllerTracing(t *testing.T) {
 			// Wait for different results. If no result means error failure.
 			select {
 			case <-done:
+				// Wait until the parent spans are finished.
+				time.Sleep(2 * time.Millisecond)
+
 				// Check we have the correct number of finished spans.
 				finishedSpans := tracer.FinishedSpans()
 				// Process object and add/delete spans.
@@ -498,7 +501,6 @@ func TestGenericControllerTracing(t *testing.T) {
 						}
 					}
 				}
-
 			case <-time.After(1 * time.Second):
 				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
 			}
