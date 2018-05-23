@@ -112,8 +112,35 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 	store := cache.Indexers{}
 	informer := cache.NewSharedIndexInformer(retriever.GetListerWatcher(), retriever.GetObject(), cfg.ResyncInterval, store)
 
+	// Set up our informer event handler.
+	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
+	// afterwards.
+	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			key, err := cache.MetaNamespaceKeyFunc(obj)
+			if err == nil {
+				queue.Add(key)
+				metricRecorder.IncResourceAddEventQueued(handlerName)
+			}
+		},
+		UpdateFunc: func(old interface{}, new interface{}) {
+			key, err := cache.MetaNamespaceKeyFunc(new)
+			if err == nil {
+				queue.Add(key)
+				metricRecorder.IncResourceAddEventQueued(handlerName)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+			if err == nil {
+				queue.Add(key)
+				metricRecorder.IncResourceDeleteEventQueued(handlerName)
+			}
+		},
+	}, cfg.ResyncInterval)
+
 	// Create our generic controller object.
-	g := &generic{
+	return &generic{
 		queue:       queue,
 		informer:    informer,
 		logger:      logger,
@@ -124,35 +151,6 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 		leRunner:    leaderElector,
 		cfg:         *cfg,
 	}
-
-	// Set up finally our informer event handler.
-	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
-	// afterwards.
-	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(obj)
-			if err == nil {
-				g.queue.Add(key)
-				metricRecorder.IncResourceAddEventQueued(handlerName)
-			}
-		},
-		UpdateFunc: func(old interface{}, new interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(new)
-			if err == nil {
-				g.queue.Add(key)
-				metricRecorder.IncResourceAddEventQueued(handlerName)
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			if err == nil {
-				g.queue.Add(key)
-				metricRecorder.IncResourceDeleteEventQueued(handlerName)
-			}
-		},
-	}, cfg.ResyncInterval)
-
-	return g
 }
 
 func (g *generic) isRunning() bool {
