@@ -3,6 +3,7 @@
 package controller_test
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -70,12 +71,12 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	wg.Add(numberOfEvents)
 
 	h := &handler.HandlerFunc{
-		AddFunc: func(_ runtime.Object) error {
+		AddFunc: func(_ context.Context, _ runtime.Object) error {
 			time.Sleep(sleepDuration)
 			wg.Done()
 			return nil
 		},
-		DeleteFunc: func(_ string) error {
+		DeleteFunc: func(_ context.Context, _ string) error {
 			assert.Fail("delete events should not be used on this test")
 			return nil
 		},
