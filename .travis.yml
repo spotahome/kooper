@@ -21,4 +21,4 @@ script:
 env:
   global:
     - MINIKUBE_VERSION=v0.25.2
-    - KUBERNETES_VERSION=v1.9.4
+    - KUBERNETES_VERSION=v1.10.0

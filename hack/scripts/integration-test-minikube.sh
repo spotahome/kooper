@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-KUBERNETES_VERSION=${KUBERNETES_VERSION:-1.9.4}
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-v1.10.0}
 current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 SUDO=''
@@ -20,6 +20,7 @@ trap cleanup EXIT
 
 echo "=> Preparing minikube for running integration tests"
 $SUDO minikube start \
+    --logtostderr \
     --vm-driver=none \
     --feature-gates=CustomResourceSubresources=true \
     --kubernetes-version=${KUBERNETES_VERSION}
