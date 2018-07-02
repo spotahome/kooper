@@ -1,4 +1,4 @@
-## x.x.x / xxxx-xx-xx
+## 0.3.0 / 2018-07-02
 
 This release breaks handler interface to allow passing a context (used to allow tracing).
 
