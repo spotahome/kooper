@@ -104,7 +104,8 @@
 [[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
-  revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
+  version = "1.1.4"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -121,8 +122,8 @@
 [[projects]]
   name = "github.com/modern-go/reflect2"
   packages = ["."]
-  revision = "1df9eeb2bb81f327b96228865c5687bc2194af3f"
-  version = "1.0.0"
+  revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
+  version = "1.0.1"
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
@@ -545,6 +546,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bab7060c393c1528303de8ea5f2f50ad857260b6d8171bd25769aede1d95133c"
+  inputs-digest = "61c44b2a4a927af698c410710deafedea43157a2fdc3f03b72c5a49754c7a1ab"
   solver-name = "gps-cdcl"
   solver-version = 1
