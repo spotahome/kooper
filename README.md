@@ -1,5 +1,4 @@
-Kooper [![Build Status][travis-image]][travis-url] [![Go Report Card][goreport-image]][goreport-url] [![GoDoc][godoc-image]][godoc-url]
-======
+# Kooper [![Build Status][travis-image]][travis-url] [![Go Report Card][goreport-image]][goreport-url] [![GoDoc][godoc-image]][godoc-url]
 
 Kooper is a simple Go library to create Kubernetes [operators](https://coreos.com/operators/) and [controllers](https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md).
 
@@ -7,22 +6,22 @@ Kooper is a simple Go library to create Kubernetes [operators](https://coreos.co
 
 Kooper is a set of utilities packed as a library or framework to easily create Kubernetes controllers and operators.
 
-There is a little of discussion of what a controller and what an operator is, see [here](https://stackoverflow.com/questions/47848258/kubernetes-controller-vs-kubernetes-operator) for more information. 
+There is a little of discussion of what a controller and what an operator is, see [here](https://stackoverflow.com/questions/47848258/kubernetes-controller-vs-kubernetes-operator) for more information.
 
 In Kooper the concepts of controller an operator are very simple, a controller controls the state of a resource in Kubernetes, and an operator is a controller that initializes custom resources (CRD) and controls the state of this custom resource.
 
 ## Features
 
-* Easy and decoupled library.
-* Well structured and a clear API.
-* Remove all duplicated code from every controller and operator.
-* Uses the tooling already created by Kubernetes.
-* Remove complexity from operators and controllers so the focus is on domain logic.
-* Easy to mock and extend functionality (Go interfaces!).
-* Only support CRD, no TPR support (Kubernetes >=1.7).
-* Controller metrics.
-* Leader election.
-* Tracing with [Opentracing][opentracing-url].
+- Easy and decoupled library.
+- Well structured and a clear API.
+- Remove all duplicated code from every controller and operator.
+- Uses the tooling already created by Kubernetes.
+- Remove complexity from operators and controllers so the focus is on domain logic.
+- Easy to mock and extend functionality (Go interfaces!).
+- Only support CRD, no TPR support (Kubernetes >=1.7).
+- Controller metrics.
+- Leader election.
+- Tracing with [Opentracing][opentracing-url].
 
 ## Example
 
@@ -94,13 +93,13 @@ At this moment there is no standard, although there are some projects like [rook
 
 Spotahome studied these projects before developing Kooper and they didn't fit the requirements:
 
-* Clear and maintanable code.
-* Easy to test and mock.
-* Well tested library.
-* Easy and clear programming API.
-* Good abstraction and structure to focus on domain logic (the meat of the controller).
-* Reduce complexity in all the operators and controllers that use the library.
-* Not only operators, controllers as first class citizen also.
+- Clear and maintanable code.
+- Easy to test and mock.
+- Well tested library.
+- Easy and clear programming API.
+- Good abstraction and structure to focus on domain logic (the meat of the controller).
+- Reduce complexity in all the operators and controllers that use the library.
+- Not only operators, controllers as first class citizen also.
 
 ## Installing
 
@@ -116,11 +115,12 @@ Managing a project that uses different kubernetes libs as dependencies can be tr
 
 ## Compatibility matrix
 
-|                     | Kubernetes 1.8 | Kubernetes 1.9 | Kubernetes 1.10 |
-|---------------------|----------------|----------------|-----------------|
-| kooper 0.1          | ✓              | ✓              | ?               |
-| kooper 0.2          | ✓              | ✓              | ?               |
-| kooper HEAD         | ?              | ?              | ✓               |
+|             | Kubernetes 1.8 | Kubernetes 1.9 | Kubernetes 1.10 | Kubernetes 1.11 |
+| ----------- | -------------- | -------------- | --------------- | --------------- |
+| kooper 0.1  | ✓              | ✓              | ?               | ?               |
+| kooper 0.2  | ✓              | ✓              | ?               | ?               |
+| kooper 0.3  | ?              | ?+             | ✓               | ?               |
+| kooper HEAD | ?              | ?              | ?+              | ✓               |
 
 Based on this matrix Kooper needs different versions of Kubernetes dependencies.
 
@@ -154,24 +154,24 @@ Kooper comes with different topics as documentation.
 
 ### Core
 
-* [Basic concepts](docs/concepts.md)
-* [Controller tutorial](docs/controller-tutorial.md)
-* [Operator tutorial](docs/operator-tutorial.md)
+- [Basic concepts](docs/concepts.md)
+- [Controller tutorial](docs/controller-tutorial.md)
+- [Operator tutorial](docs/operator-tutorial.md)
 
 ### Other
 
-* [Metrics](docs/metrics.md)
-* [Logger](docs/logger.md)
-* [Leader election](docs/leader-election.md)
-* [Tracing](docs/tracing.md)
+- [Metrics](docs/metrics.md)
+- [Logger](docs/logger.md)
+- [Leader election](docs/leader-election.md)
+- [Tracing](docs/tracing.md)
 
 The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
 
 ## Who is using kooper
 
-* [redis-operator](https://github.com/spotahome/redis-operator)
-* [node-labeler-operator](https://github.com/barpilot/node-labeler-operator)
-* [source-ranges-controller](https://github.com/jeffersongirao/source-ranges-controller)
+- [redis-operator](https://github.com/spotahome/redis-operator)
+- [node-labeler-operator](https://github.com/barpilot/node-labeler-operator)
+- [source-ranges-controller](https://github.com/jeffersongirao/source-ranges-controller)
 
 [travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
 [travis-url]: https://travis-ci.org/spotahome/kooper
