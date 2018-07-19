@@ -100,7 +100,7 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 		tracer = &opentracing.NoopTracer{}
 	}
 
-	// Get a handler name for the metrics based on the type of the handler.
+	// If no name on controller do our best to infer a name based on the handler.
 	if cfg.Name == "" {
 		cfg.Name = reflect.TypeOf(handler).String()
 		logger.Warningf("controller name not provided, it should have a name, fallback name to: %s", cfg.Name)
