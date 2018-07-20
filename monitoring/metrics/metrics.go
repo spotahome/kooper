@@ -10,6 +10,8 @@ const (
 	AddEvent EventType = "add"
 	// DeleteEvent is the delete event.
 	DeleteEvent EventType = "delete"
+	// RequeueEvent is a requeued event (unknown state when handling again).
+	RequeueEvent EventType = "requeue"
 )
 
 // Recorder knows how to record metrics all over the application.

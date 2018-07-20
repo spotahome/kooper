@@ -252,6 +252,7 @@ func (g *generic) getAndProcessNextJob() bool {
 		// Job processing failed, requeue.
 		g.logger.Warningf("error processing %s job (requeued): %v", key, err)
 		g.queue.AddRateLimited(key)
+		g.metrics.IncResourceEventQueued(g.cfg.Name, metrics.RequeueEvent)
 		g.setReenqueueSpanInfo(key, span, err)
 	} else {
 		g.logger.Errorf("Error processing %s: %v", key, err)

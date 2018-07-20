@@ -1,6 +1,6 @@
 ## 0.x.x / 2018-xx-xx
 
-This release breaks Prometheus metrics interface to allow passing a context (used to allow tracing).
+This release breaks Prometheus metrics.
 
 * [ENHANCEMENT] Refactor metrics in favor of less metrics but simpler and more meaningful.
 
