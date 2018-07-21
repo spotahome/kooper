@@ -120,6 +120,7 @@ Managing a project that uses different kubernetes libs as dependencies can be tr
 | kooper 0.1  | ✓              | ✓              | ?               | ?               |
 | kooper 0.2  | ✓              | ✓              | ?               | ?               |
 | kooper 0.3  | ?              | ?+             | ✓               | ?               |
+| kooper 0.4  | ?              | ?+             | ✓               | ?               |
 | kooper HEAD | ?              | ?              | ?+              | ✓               |
 
 Based on this matrix Kooper needs different versions of Kubernetes dependencies.
