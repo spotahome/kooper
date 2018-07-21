@@ -69,6 +69,11 @@ import (
 
 If you are using the default prometheus methods instead of a custom registry, you could get that from `prometheus.DefaultRegisterer` instead of creating a new registry `reg := prometheus.NewRegistry()`
 
+## Grafana dashboard (For Prometheus metrics)
+
+There is a grafana dashboard for your Kubernetes controllers. You can get it [here][grafana-dashboard]
+
 [metrics-interface]: https://github.com/spotahome/kooper/blob/master/monitoring/metrics/metrics.go
 [metrics-example]: https://github.com/spotahome/kooper/tree/master/examples/metrics-controller
 [prometheus-registerer]: https://godoc.org/github.com/prometheus/client_golang/prometheus#Registerer
+[grafana-dashboard]: https://grafana.com/dashboards/7082
