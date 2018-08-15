@@ -17,13 +17,11 @@ import (
 const (
 	checkCRDInterval = 2 * time.Second
 	crdReadyTimeout  = 3 * time.Minute
-
-	allCategory    = "all"
-	kooperCategory = "kooper"
 )
 
 var (
 	clusterMinVersion = kubeversion.MustParseGeneric("v1.7.0")
+	defCategories     = []string{"all", "kooper"}
 )
 
 // Scope is the scope of a CRD.
@@ -188,29 +186,17 @@ func (c *Client) validClusterForCRDs() error {
 
 // addAllCaregory adds the `all` category if isn't present
 func (c *Client) addDefaultCaregories(categories []string) []string {
-	newCategories := categories
-
-	// Track if kooper categories need to add in the category slice.
-	catsToAppend := map[string]bool{
-		allCategory:    true,
-		kooperCategory: true,
+	currentCats := make(map[string]bool)
+	for _, ca := range categories {
+		currentCats[ca] = true
 	}
 
-	// Check if the default categories are already present.
-	for _, cat := range categories {
-		for newCat := range catsToAppend {
-			// Is already present?.
-			if cat == newCat {
-				catsToAppend[newCat] = false
-			}
+	// Add default categories if required.
+	for _, ca := range defCategories {
+		if _, ok := currentCats[ca]; !ok {
+			categories = append(categories, ca)
 		}
 	}
 
-	// Add the required categories.
-	for newCat, shouldAppend := range catsToAppend {
-		if shouldAppend {
-			newCategories = append(newCategories, newCat)
-		}
-	}
-	return newCategories
+	return categories
 }
