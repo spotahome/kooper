@@ -70,7 +70,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 		expCalls       []kubetesting.Action
 	}{
 		{
-			name:           "Creating a non existen CRD should create a crd without error",
+			name:           "Creating a non existen CRD (using custom categories) should create a crd without error",
 			clusterVersion: goodClusterVersion,
 			crd: crd.Conf{
 				Kind:       "Test",
@@ -78,6 +78,10 @@ func TestCRDEnsurePresent(t *testing.T) {
 				Scope:      crd.ClusterScoped,
 				Group:      "toilettesting",
 				Version:    "v99",
+				Categories: []string{
+					"category1",
+					"categoryA",
+				},
 			},
 			retErr: nil,
 			expErr: false,
@@ -91,8 +95,9 @@ func TestCRDEnsurePresent(t *testing.T) {
 						Version: "v99",
 						Scope:   crd.ClusterScoped,
 						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-							Plural: "tests",
-							Kind:   "Test",
+							Plural:     "tests",
+							Kind:       "Test",
+							Categories: []string{"category1", "categoryA", "all", "kooper"},
 						},
 					},
 				}),
@@ -133,8 +138,9 @@ func TestCRDEnsurePresent(t *testing.T) {
 						Version: "v99",
 						Scope:   crd.ClusterScoped,
 						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-							Plural: "tests",
-							Kind:   "Test",
+							Plural:     "tests",
+							Kind:       "Test",
+							Categories: []string{"all", "kooper"},
 						},
 					},
 				}),

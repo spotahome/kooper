@@ -35,6 +35,7 @@ func (p *podTerminatorCRD) Initialize() error {
 		Group:      chaosv1alpha1.SchemeGroupVersion.Group,
 		Version:    chaosv1alpha1.SchemeGroupVersion.Version,
 		Scope:      chaosv1alpha1.PodTerminatorScope,
+		Categories: []string{"chaos", "podterm"},
 	}
 
 	return p.crdCli.EnsurePresent(crd)
