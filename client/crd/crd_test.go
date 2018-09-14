@@ -24,9 +24,10 @@ import (
 )
 
 var (
-	crdGroup           = schema.GroupVersionResource{Group: "apiextensions.k8s.io", Version: "v1beta1", Resource: "customresourcedefinitions"}
-	goodClusterVersion = "v1.7"
-	badClusterVersion  = "v1.6"
+	crdGroup            = schema.GroupVersionResource{Group: "apiextensions.k8s.io", Version: "v1beta1", Resource: "customresourcedefinitions"}
+	goodClusterVersion  = "v1.7"
+	badClusterVersion   = "v1.6"
+	statusLabelSelector = ".status.labelSelector"
 )
 
 // newClient returns a new mock client.
@@ -146,6 +147,51 @@ func TestCRDEnsurePresent(t *testing.T) {
 				}),
 			},
 			retErr: kubeerrors.NewAlreadyExists(schema.GroupResource{}, ""),
+			expErr: false,
+		},
+		{
+			name:           "Creating a CRD with subresources active should create the CRD with the subresources set.",
+			clusterVersion: goodClusterVersion,
+			crd: crd.Conf{
+				Kind:                    "Test",
+				NamePlural:              "tests",
+				Scope:                   crd.ClusterScoped,
+				Group:                   "toilettesting",
+				Version:                 "v99",
+				EnableStatusSubresource: true,
+				EnableScaleSubresource: &apiextensionsv1beta1.CustomResourceSubresourceScale{
+					SpecReplicasPath:   ".spec.replicas",
+					StatusReplicasPath: ".status.replicas",
+					LabelSelectorPath:  &statusLabelSelector,
+				},
+			},
+			expCalls: []kubetesting.Action{
+				newCRDCreateAction(&apiextensionsv1beta1.CustomResourceDefinition{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "tests.toilettesting",
+					},
+					Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+						Group:   "toilettesting",
+						Version: "v99",
+						Scope:   crd.ClusterScoped,
+						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+							Plural:     "tests",
+							Kind:       "Test",
+							Categories: []string{"all", "kooper"},
+						},
+						Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
+							Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
+							Scale: &apiextensionsv1beta1.CustomResourceSubresourceScale{
+								SpecReplicasPath:   ".spec.replicas",
+								StatusReplicasPath: ".status.replicas",
+								LabelSelectorPath:  &statusLabelSelector,
+							},
+						},
+					},
+				}),
+				newCRDGetAction("tests.toilettesting"),
+			},
+			retErr: nil,
 			expErr: false,
 		},
 		{
