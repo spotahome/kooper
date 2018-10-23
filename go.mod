@@ -9,10 +9,11 @@ require (
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20180203143532-66deaeb636df // indirect
+	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
+	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad // indirect
-	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
 	github.com/imdario/mergo v0.0.0-20180119215619-163f41321a19 // indirect
 	github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be // indirect
 	github.com/kr/pretty v0.1.0 // indirect
@@ -22,6 +23,7 @@ require (
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/opentracing/opentracing-go v1.0.2
 	github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v0.0.0-20180216131253-e69720d204a4
@@ -42,10 +44,10 @@ require (
 	google.golang.org/appengine v1.0.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/inf.v0 v0.9.0 // indirect
-	k8s.io/api v0.0.0-20180621150657-6c0bbc3e58fa
-	k8s.io/apiextensions-apiserver v0.0.0-20180621165922-80db67131e8d
-	k8s.io/apimachinery v0.0.0-20180619225948-e386b2658ed2
-	k8s.io/client-go v2.0.0-alpha.0.0.20180621152933-b0722d92a7c1+incompatible
+	k8s.io/api v0.0.0-20180904230853-4e7be11eab3f
+	k8s.io/apiextensions-apiserver v0.0.0-20180910084140-b05d9bb7cc74
+	k8s.io/apimachinery v0.0.0-20180904193909-def12e63c512
+	k8s.io/client-go v2.0.0-alpha.0.0.20180910083459-2cefa64ff137+incompatible
 	k8s.io/kube-openapi v0.0.0-20180420230433-1e45fb05b063 // indirect
-	k8s.io/kubernetes v1.10.5
+	k8s.io/kubernetes v1.11.3
 )
