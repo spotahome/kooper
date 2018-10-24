@@ -49,6 +49,7 @@ func newVersionedClusterClient(clusterVersion string) *apiextensionscli.Clientse
 	// share the same registry(testing.Fake) and we don't want to mix version check actions with the CRD
 	// actions.
 	cli.Fake = kubetesting.Fake{}
+	fakeDiscovery.Fake = &kubetesting.Fake{}
 
 	return cli
 }
