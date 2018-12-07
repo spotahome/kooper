@@ -1,7 +1,7 @@
 Operator tutorial
 ===================
 
-In this tutorial we will learn how to create an opeator using Kooper.
+In this tutorial we will learn how to create an operator using Kooper.
 
 If you didn't read the [previous tutorial](controller-tutorial.md) about controllers you should read that first.
 
