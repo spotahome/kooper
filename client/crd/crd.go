@@ -40,6 +40,8 @@ type Conf struct {
 	Kind string
 	// NamePlural is the plural name of the CRD (in most cases the plural of Kind).
 	NamePlural string
+	// ShortNames are short names of the CRD.  It must be all lowercase.
+	ShortNames []string
 	// Group is the group of the CRD.
 	Group string
 	// Version is the version of the CRD.
@@ -121,6 +123,7 @@ func (c *Client) EnsurePresent(conf Conf) error {
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural:     conf.NamePlural,
 				Kind:       conf.Kind,
+				ShortNames: conf.ShortNames,
 				Categories: c.addDefaultCaregories(conf.Categories),
 			},
 			Subresources: subres,

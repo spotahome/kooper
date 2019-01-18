@@ -170,6 +170,7 @@ func (p *podTerminatorCRD) Initialize() error {
 	crd := crd.Conf{
 		Kind:       chaosv1alpha1.PodTerminatorKind,
 		NamePlural: chaosv1alpha1.PodTerminatorNamePlural,
+		ShortNames: chaosv1alpha1.PodTerminatorShortNames,
 		Group:      chaosv1alpha1.SchemeGroupVersion.Group,
 		Version:    chaosv1alpha1.SchemeGroupVersion.Version,
 		Scope:      chaosv1alpha1.PodTerminatorScope,
