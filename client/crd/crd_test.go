@@ -77,6 +77,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 			crd: crd.Conf{
 				Kind:       "Test",
 				NamePlural: "tests",
+				ShortNames: []string{"tst"},
 				Scope:      crd.ClusterScoped,
 				Group:      "toilettesting",
 				Version:    "v99",
@@ -99,6 +100,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
+							ShortNames: []string{"tst"},
 							Categories: []string{"category1", "categoryA", "all", "kooper"},
 						},
 					},
@@ -112,6 +114,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 			crd: crd.Conf{
 				Kind:       "Test",
 				NamePlural: "tests",
+				ShortNames: []string{"tst"},
 				Scope:      crd.ClusterScoped,
 				Group:      "toilettesting",
 				Version:    "v99",
@@ -126,6 +129,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 			crd: crd.Conf{
 				Kind:       "Test",
 				NamePlural: "tests",
+				ShortNames: []string{"tst"},
 				Scope:      crd.ClusterScoped,
 				Group:      "toilettesting",
 				Version:    "v99",
@@ -142,6 +146,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
+							ShortNames: []string{"tst"},
 							Categories: []string{"all", "kooper"},
 						},
 					},
@@ -156,6 +161,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 			crd: crd.Conf{
 				Kind:                    "Test",
 				NamePlural:              "tests",
+				ShortNames:              []string{"tst"},
 				Scope:                   crd.ClusterScoped,
 				Group:                   "toilettesting",
 				Version:                 "v99",
@@ -178,6 +184,7 @@ func TestCRDEnsurePresent(t *testing.T) {
 						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
+							ShortNames: []string{"tst"},
 							Categories: []string{"all", "kooper"},
 						},
 						Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
