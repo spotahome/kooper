@@ -65,7 +65,7 @@ github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5 h1:cLL6Now
 github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/common v0.0.0-20180110214958-89604d197083 h1:BVsJT8+ZbyuL3hypz/HmEiM8h2P6hBQGig4el9/MdjA=
 github.com/prometheus/common v0.0.0-20180110214958-89604d197083/go.mod h1:daVV7qP5qjZbuso7PdcryaAu0sAZbrN9i7WWcTMWvro=
-github.com/prometheus/procfs v0.0.0-20180212145926-282c8707aa21 h1:BtGk8UpEtPwdp50zKGXocPgRI3CigPjsKIhVNIS1dtM=
+github.com/prometheus/procfs v0.0.0-20180212145926-282c8707aa21 h1:t1goPR/clmILdOPOVkZytGpQMMTHZ0IkF4+AaZZfMJY=
 github.com/prometheus/procfs v0.0.0-20180212145926-282c8707aa21/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/spf13/pflag v1.0.0 h1:oaPbdDe/x0UncahuwiPxW1GYJyilRAdsPnq3e1yaPcI=
 github.com/spf13/pflag v1.0.0/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
@@ -114,9 +114,9 @@ k8s.io/apiextensions-apiserver v0.0.0-20180910084140-b05d9bb7cc74 h1:7ueW9dpCd0i
 k8s.io/apiextensions-apiserver v0.0.0-20180910084140-b05d9bb7cc74/go.mod h1:IxkesAMoaCRoLrPJdZNZUQp9NfZnzqaVzLhb2VEQzXE=
 k8s.io/apimachinery v0.0.0-20180904193909-def12e63c512 h1:/Z1m/6oEN6hE2SzWP4BHW2yATeUrBRr+1GxNf1Ny58Y=
 k8s.io/apimachinery v0.0.0-20180904193909-def12e63c512/go.mod h1:ccL7Eh7zubPUSh9A3USN90/OzHNSVN6zxzde07TDCL0=
-k8s.io/client-go v2.0.0-alpha.0.0.20180910083459-2cefa64ff137+incompatible h1:OtFD+1WyykBlQ980RTvPQCDP2xMmKWL9h+onvblGVR0=
+k8s.io/client-go v2.0.0-alpha.0.0.20180910083459-2cefa64ff137+incompatible h1:Ch3wIkSY4QNrqRAJqgQIIpwqaCi7bbiIP23BAV9Qq/U=
 k8s.io/client-go v2.0.0-alpha.0.0.20180910083459-2cefa64ff137+incompatible/go.mod h1:7vJpHMYJwNQCWgzmNV+VYUl1zCObLyodBc8nIyt8L5s=
 k8s.io/kube-openapi v0.0.0-20180420230433-1e45fb05b063 h1:E7opvbPzeUhC2yuCj4NVWlvHPFz9wm/LmS+UAlweN4c=
 k8s.io/kube-openapi v0.0.0-20180420230433-1e45fb05b063/go.mod h1:BXM9ceUBTj2QnfH2MK1odQs778ajze1RxcmP6S8RVVc=
-k8s.io/kubernetes v1.11.3 h1:eO7Ia/0gVOFphtPiIt3LUKWRsQJpOk8LucurvvbMzGA=
+k8s.io/kubernetes v1.11.3 h1:49Pz+NOerox7nZ9F0m/fWv2MIuFDU5cDAoYMozurx1k=
 k8s.io/kubernetes v1.11.3/go.mod h1:ocZa8+6APFNC2tX1DZASIbocyYT5jHzqFVsY5aoB7Jk=
