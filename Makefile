@@ -20,7 +20,7 @@ UID := $(shell id -u)
 # cmds
 UNIT_TEST_CMD := ./hack/scripts/unit-test.sh
 INTEGRATION_TEST_CMD := ./hack/scripts/integration-test.sh 
-CI_INTEGRATION_TEST_CMD := ./hack/scripts/integration-test-minikube.sh
+CI_INTEGRATION_TEST_CMD := ./hack/scripts/integration-test-kind.sh
 MOCKS_CMD := ./hack/scripts/mockgen.sh
 DOCKER_RUN_CMD := docker run -v ${PWD}:$(DOCKER_GO_SERVICE_PATH) --rm -it $(SERVICE_NAME)
 RUN_EXAMPLE_POD_ECHO := go run ./examples/echo-pod-controller/cmd/* --development
