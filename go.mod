@@ -3,7 +3,7 @@ module github.com/spotahome/kooper
 require (
 	cloud.google.com/go v0.37.2 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.4.11 // indirect
-	github.com/Azure/go-autorest v11.7.0+incompatible // indirect
+	github.com/Azure/go-autorest v10.14.0+incompatible // indirect
 	github.com/Pallinder/go-randomdata v0.0.0-20180329154440-dab270d296c6
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
