@@ -19,7 +19,10 @@ import (
 	"github.com/spotahome/kooper/operator/controller/leaderelection"
 	"github.com/spotahome/kooper/operator/handler"
 	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/operator/common"
 )
+
+var hasSyncedGlobal bool
 
 // Span tag and log keys.
 const (
@@ -121,21 +124,21 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Add"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				queue.Add(key)
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Update"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Delete"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.DeleteEvent)
 			}
 		},
@@ -200,6 +203,7 @@ func (g *generic) run(stopC <-chan struct{}) error {
 	if !cache.WaitForCacheSync(stopC, g.informer.HasSynced) {
 		return fmt.Errorf("timed out waiting for caches to sync")
 	}
+	hasSyncedGlobal = true
 
 	// Start our resource processing worker, if finishes then restart the worker. The workers should
 	// not end.
@@ -236,50 +240,51 @@ func (g *generic) getAndProcessNextJob() bool {
 		return true
 	}
 	defer g.queue.Done(nextJob)
-	key := nextJob.(string)
+	evt := nextJob.(*common.K8sEvent)
 
 	// Our root span will start here.
 	span := g.tracer.StartSpan("processJob")
 	defer span.Finish()
 	ctx := opentracing.ContextWithSpan(context.Background(), span)
-	g.setRootSpanInfo(key, span)
+	g.setRootSpanInfo(evt.Key, span)
 
 	// Process the job. If errors then enqueue again.
-	if err := g.processJob(ctx, key); err == nil {
-		g.queue.Forget(key)
-		g.setForgetSpanInfo(key, span, err)
-	} else if g.queue.NumRequeues(key) < g.cfg.ProcessingJobRetries {
+	if err := g.processJob(ctx, evt); err == nil {
+		g.queue.Forget(evt.Key)
+		g.setForgetSpanInfo(evt.Key, span, err)
+	} else if g.queue.NumRequeues(evt.Key) < g.cfg.ProcessingJobRetries {
 		// Job processing failed, requeue.
-		g.logger.Warningf("error processing %s job (requeued): %v", key, err)
-		g.queue.AddRateLimited(key)
+		g.logger.Warningf("error processing %s job (requeued): %v", evt.Key, err)
+		g.queue.AddRateLimited(evt.Key)
 		g.metrics.IncResourceEventQueued(g.cfg.Name, metrics.RequeueEvent)
-		g.setReenqueueSpanInfo(key, span, err)
+		g.setReenqueueSpanInfo(evt.Key, span, err)
 	} else {
-		g.logger.Errorf("Error processing %s: %v", key, err)
-		g.queue.Forget(key)
-		g.setForgetSpanInfo(key, span, err)
+		g.logger.Errorf("Error processing %s: %v", evt.Key, err)
+		g.queue.Forget(evt.Key)
+		g.setForgetSpanInfo(evt.Key, span, err)
 	}
 
 	return false
 }
 
 // processJob is where the real processing logic of the item is.
-func (g *generic) processJob(ctx context.Context, key string) error {
+func (g *generic) processJob(ctx context.Context, evt *common.K8sEvent) error {
 	// Get the object
-	obj, exists, err := g.informer.GetIndexer().GetByKey(key)
+	obj, exists, err := g.informer.GetIndexer().GetByKey(evt.Key)
 	if err != nil {
 		return err
 	}
 
 	// handle the object.
 	if !exists { // Deleted resource from the cache.
-		return g.handleDelete(ctx, key)
+		return g.handleDelete(ctx, evt)
 	}
 
-	return g.handleAdd(ctx, key, obj.(runtime.Object))
+	evt.Object = obj.(runtime.Object)
+	return g.handleAdd(ctx, evt)
 }
 
-func (g *generic) handleAdd(ctx context.Context, objKey string, obj runtime.Object) error {
+func (g *generic) handleAdd(ctx context.Context, evt *common.K8sEvent) error {
 	start := time.Now()
 	g.metrics.IncResourceEventProcessed(g.cfg.Name, metrics.AddEvent)
 	defer func() {
@@ -294,15 +299,15 @@ func (g *generic) handleAdd(ctx context.Context, objKey string, obj runtime.Obje
 
 	// Set span data.
 	ext.SpanKindConsumer.Set(span)
-	span.SetTag(kubernetesObjectKeyKey, objKey)
+	span.SetTag(kubernetesObjectKeyKey, evt.Key)
 	g.setCommonSpanInfo(span)
 	span.LogKV(
 		eventKey, "add",
-		kubernetesObjectKeyKey, objKey,
+		kubernetesObjectKeyKey, evt.Key,
 	)
 
 	// Handle the job.
-	if err := g.handler.Add(ctx, obj); err != nil {
+	if err := g.handler.Add(ctx, evt); err != nil {
 		ext.Error.Set(span, true) // Mark error as true.
 		span.LogKV(
 			eventKey, "error",
@@ -315,7 +320,7 @@ func (g *generic) handleAdd(ctx context.Context, objKey string, obj runtime.Obje
 	return nil
 }
 
-func (g *generic) handleDelete(ctx context.Context, objKey string) error {
+func (g *generic) handleDelete(ctx context.Context, evt *common.K8sEvent) error {
 	start := time.Now()
 	g.metrics.IncResourceEventProcessed(g.cfg.Name, metrics.DeleteEvent)
 	defer func() {
@@ -330,15 +335,15 @@ func (g *generic) handleDelete(ctx context.Context, objKey string) error {
 
 	// Set span data.
 	ext.SpanKindConsumer.Set(span)
-	span.SetTag(kubernetesObjectKeyKey, objKey)
+	span.SetTag(kubernetesObjectKeyKey, evt.Key)
 	g.setCommonSpanInfo(span)
 	span.LogKV(
 		eventKey, "delete",
-		kubernetesObjectKeyKey, objKey,
+		kubernetesObjectKeyKey, evt.Key,
 	)
 
 	// Handle the job.
-	if err := g.handler.Delete(ctx, objKey); err != nil {
+	if err := g.handler.Delete(ctx, evt); err != nil {
 		ext.Error.Set(span, true) // Mark error as true.
 		span.LogKV(
 			eventKey, "error",

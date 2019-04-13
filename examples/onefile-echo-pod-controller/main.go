@@ -21,6 +21,7 @@ import (
 	"github.com/spotahome/kooper/operator/controller"
 	"github.com/spotahome/kooper/operator/handler"
 	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/operator/common"
 )
 
 func main() {
@@ -59,13 +60,13 @@ func main() {
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &handler.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			pod := obj.(*corev1.Pod)
-			log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+		AddFunc: func(_ context.Context, evt *common.K8sEvent) error {
+			pod := evt.Object.(*corev1.Pod)
+			log.Infof("Pod added: %s/%s %v", pod.Namespace, pod.Name, evt.HasSynced)
 			return nil
 		},
-		DeleteFunc: func(_ context.Context, s string) error {
-			log.Infof("Pod deleted: %s", s)
+		DeleteFunc: func(_ context.Context, evt *common.K8sEvent) error {
+			log.Infof("Pod deleted: %s", evt.Key)
 			return nil
 		},
 	}
