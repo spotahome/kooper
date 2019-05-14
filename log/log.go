@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 )
 
 // Logger is the interface that the loggers used by the library will use.
@@ -23,17 +23,26 @@ func (d *dummy) Infof(format string, args ...interface{})    {}
 func (d *dummy) Warningf(format string, args ...interface{}) {}
 func (d *dummy) Errorf(format string, args ...interface{})   {}
 
-// Glog is a wrapper for glog logger.
-type Glog struct{}
+// Klog is a wrapper for klog logger.
+type Klog struct{}
 
-func (g *Glog) Infof(format string, args ...interface{}) {
-	glog.Infof(format, args...)
+// NewKlogger initialises the flags for klog
+// If you use klog yourself, do not use this
+// function. Instead, call klog.InitFlags
+// yourself and create the Klog struct
+func NewKlogger() *Klog {
+	klog.InitFlags(nil)
+	return &Klog{}
 }
-func (g *Glog) Warningf(format string, args ...interface{}) {
-	glog.Warningf(format, args...)
+
+func (k *Klog) Infof(format string, args ...interface{}) {
+	klog.Infof(format, args...)
 }
-func (g *Glog) Errorf(format string, args ...interface{}) {
-	glog.Errorf(format, args...)
+func (k *Klog) Warningf(format string, args ...interface{}) {
+	klog.Warningf(format, args...)
+}
+func (k *Klog) Errorf(format string, args ...interface{}) {
+	klog.Errorf(format, args...)
 }
 
 // Std is a wrapper for go standard library logger.
