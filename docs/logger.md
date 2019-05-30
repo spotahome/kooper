@@ -28,7 +28,7 @@ import (
 )
 ...
 
-log := &log.Dummy{}
+log := &log.Std{}
 
 ...
 
