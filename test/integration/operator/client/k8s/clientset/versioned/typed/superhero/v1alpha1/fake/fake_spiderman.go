@@ -119,7 +119,7 @@ func (c *FakeSpidermans) DeleteCollection(options *v1.DeleteOptions, listOptions
 // Patch applies the patch and returns the patched spiderman.
 func (c *FakeSpidermans) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Spiderman, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(spidermansResource, c.ns, name, data, subresources...), &v1alpha1.Spiderman{})
+		Invokes(testing.NewPatchSubresourceAction(spidermansResource, c.ns, name, types.JSONPatchType, data, subresources...), &v1alpha1.Spiderman{})
 
 	if obj == nil {
 		return nil, err

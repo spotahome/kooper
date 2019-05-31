@@ -94,7 +94,7 @@ func (c *FakePodTerminators) DeleteCollection(options *v1.DeleteOptions, listOpt
 // Patch applies the patch and returns the patched podTerminator.
 func (c *FakePodTerminators) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.PodTerminator, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(podterminatorsResource, name, data, subresources...), &v1alpha1.PodTerminator{})
+		Invokes(testing.NewRootPatchSubresourceAction(podterminatorsResource, name, types.JSONPatchType, data, subresources...), &v1alpha1.PodTerminator{})
 	if obj == nil {
 		return nil, err
 	}
