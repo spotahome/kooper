@@ -115,14 +115,15 @@ Managing a project that uses different kubernetes libs as dependencies can be tr
 
 ## Compatibility matrix
 
-|             | Kubernetes 1.8 | Kubernetes 1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 |
-| ----------- | -------------- | -------------- | --------------- | --------------- | --------------- |
-| kooper 0.1  | ✓              | ✓              | ?               | ?               | ?               |
-| kooper 0.2  | ✓              | ✓              | ?               | ?               | ?               |
-| kooper 0.3  | ?              | ?+             | ✓               | ?               | ?               |
-| kooper 0.4  | ?              | ?+             | ✓               | ?               | ?               |
-| kooper 0.5  | ?              | ?              | ?+              | ✓               | ?               |
-| kooper HEAD | ?              | ?              | ?+              | ?+              | ✓               |
+|             | Kubernetes <=1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 | Kubernetes 1.13 | Kubernetes 1.14 |
+| ----------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
+| kooper 0.1  | ✓                | ?               | ?               | ?               | ?               | ?               |
+| kooper 0.2  | ✓                | ?               | ?               | ?               | ?               | ?               |
+| kooper 0.3  | ?+               | ✓               | ?               | ?               | ?               | ?               |
+| kooper 0.4  | ?+               | ✓               | ?               | ?               | ?               | ?               |
+| kooper 0.5  | ?                | ?+              | ✓               | ?               | ?               | ?               |
+| kooper 0.6  | ?                | ?               | ?+              | ✓               | ?               | ?               |
+| kooper HEAD | ?                | ?               | ?               | ?+              | ✓?              | ?               |
 
 Based on this matrix Kooper needs different versions of Kubernetes dependencies.
 
