@@ -2,19 +2,16 @@ module github.com/spotahome/kooper
 
 require (
 	cloud.google.com/go v0.37.2 // indirect
-	github.com/Azure/go-autorest v10.14.0+incompatible // indirect
+	github.com/Azure/go-autorest/autorest v0.2.0 // indirect
 	github.com/Pallinder/go-randomdata v0.0.0-20180329154440-dab270d296c6
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20180203143532-66deaeb636df // indirect
-	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/gophercloud/gophercloud v0.0.0-20190406201114-6c61c88383e4 // indirect
 	github.com/imdario/mergo v0.0.0-20180119215619-163f41321a19 // indirect
 	github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/opentracing/opentracing-go v1.0.2
@@ -28,11 +25,11 @@ require (
 	github.com/uber/jaeger-lib v1.5.0 // indirect
 	go.uber.org/atomic v1.3.2 // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	k8s.io/api v0.0.0-20181128191700-6db15a15d2d3
-	k8s.io/apiextensions-apiserver v0.0.0-20190118124337-a384d17938fe
-	k8s.io/apimachinery v0.0.0-20181128191346-49ce2735e507
-	k8s.io/client-go v2.0.0-alpha.0.0.20190115164855-701b91367003+incompatible
+	k8s.io/api v0.0.0-20190222213804-5cb15d344471
+	k8s.io/apiextensions-apiserver v0.0.0-20190508191920-007dc40467c5
+	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
+	k8s.io/client-go v2.0.0-alpha.0.0.20190507014756-65905f29c17c+incompatible
+	k8s.io/klog v0.3.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20180420230433-1e45fb05b063 // indirect
-	k8s.io/kubernetes v1.12.5
+	sigs.k8s.io/yaml v1.1.0 // indirect
 )

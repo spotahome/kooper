@@ -27,7 +27,7 @@ RUN_EXAMPLE_POD_ECHO := go run ./examples/echo-pod-controller/cmd/* --developmen
 RUN_EXAMPLE_POD_ECHO_ONEFILE := go run ./examples/onefile-echo-pod-controller/main.go --development
 RUN_EXAMPLE_POD_TERM := go run ./examples/pod-terminator-operator/cmd/* --development
 DEPS_CMD := GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor
-K8S_VERSION := "1.12.6"
+K8S_VERSION := "1.13.6"
 SET_K8S_DEPS_CMD := GO111MODULE=on go mod edit \
     -require=k8s.io/apiextensions-apiserver@kubernetes-${K8S_VERSION} \
 	-require=k8s.io/client-go@kubernetes-${K8S_VERSION} \
