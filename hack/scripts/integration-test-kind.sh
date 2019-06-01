@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-KUBERNETES_VERSION=v${KUBERNETES_VERSION:-1.12.5}
+KUBERNETES_VERSION=v${KUBERNETES_VERSION:-1.13.6}
 current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 SUDO=''

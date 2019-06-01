@@ -1,5 +1,7 @@
 ## [unreleased]
 
+- Support for Kubernetes 1.13.
+
 ## [0.6.0] - 2019-06-01
 
 ### Added
@@ -53,10 +55,6 @@ This release breaks handler interface to allow passing a context (used to allow 
 - Let customizing (using configuration) the retries of event processing errors on controllers.
 - Controllers now can be created using a configuration struct.
 - Add support for Kubernetes 1.10.
-
-### Changed
-
-- Update to Kubernetes v1.12.
 
 ## [0.2.0] - 2018-02-24
 
