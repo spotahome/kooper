@@ -250,17 +250,17 @@ func (g *generic) getAndProcessNextJob() bool {
 
 	// Process the job. If errors then enqueue again.
 	if err := g.processJob(ctx, evt); err == nil {
-		g.queue.Forget(evt.Key)
+		g.queue.Forget(evt)
 		g.setForgetSpanInfo(evt.Key, span, err)
-	} else if g.queue.NumRequeues(evt.Key) < g.cfg.ProcessingJobRetries {
+	} else if g.queue.NumRequeues(evt) < g.cfg.ProcessingJobRetries {
 		// Job processing failed, requeue.
 		g.logger.Warningf("error processing %s job (requeued): %v", evt.Key, err)
-		g.queue.AddRateLimited(evt.Key)
+		g.queue.AddRateLimited(evt)
 		g.metrics.IncResourceEventQueued(g.cfg.Name, metrics.RequeueEvent)
 		g.setReenqueueSpanInfo(evt.Key, span, err)
 	} else {
 		g.logger.Errorf("Error processing %s: %v", evt.Key, err)
-		g.queue.Forget(evt.Key)
+		g.queue.Forget(evt)
 		g.setForgetSpanInfo(evt.Key, span, err)
 	}
 
