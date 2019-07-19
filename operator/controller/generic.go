@@ -22,8 +22,6 @@ import (
 	"github.com/spotahome/kooper/operator/common"
 )
 
-var hasSyncedGlobal bool
-
 // Span tag and log keys.
 const (
 	kubernetesObjectKeyKey         = "kubernetes.object.key"
@@ -55,6 +53,7 @@ type generic struct {
 	metrics   metrics.Recorder
 	leRunner  leaderelection.Runner
 	logger    log.Logger
+	hasSynced bool
 }
 
 // NewSequential creates a new controller that will process the received events sequentially.
@@ -117,6 +116,19 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 	store := cache.Indexers{}
 	informer := cache.NewSharedIndexInformer(retriever.GetListerWatcher(), retriever.GetObject(), cfg.ResyncInterval, store)
 
+	// Create our generic controller object.
+	g := &generic{
+		queue:     queue,
+		informer:  informer,
+		logger:    logger,
+		hasSynced: false,
+		metrics:   metricRecorder,
+		tracer:    tracer,
+		handler:   handler,
+		leRunner:  leaderElector,
+		cfg:       *cfg,
+	}
+
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
 	// afterwards.
@@ -124,37 +136,27 @@ func New(cfg *Config, handler handler.Handler, retriever retrieve.Retriever, lea
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Add"})
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: g.hasSynced, Kind: "Add"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Update"})
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: g.hasSynced, Kind: "Update"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(&common.K8sEvent{Key: key, HasSynced: hasSyncedGlobal, Kind: "Delete"})
+				queue.Add(&common.K8sEvent{Key: key, HasSynced: g.hasSynced, Kind: "Delete"})
 				metricRecorder.IncResourceEventQueued(cfg.Name, metrics.DeleteEvent)
 			}
 		},
 	}, cfg.ResyncInterval)
 
-	// Create our generic controller object.
-	return &generic{
-		queue:    queue,
-		informer: informer,
-		logger:   logger,
-		metrics:  metricRecorder,
-		tracer:   tracer,
-		handler:  handler,
-		leRunner: leaderElector,
-		cfg:      *cfg,
-	}
+	return g
 }
 
 func (g *generic) isRunning() bool {
@@ -203,7 +205,7 @@ func (g *generic) run(stopC <-chan struct{}) error {
 	if !cache.WaitForCacheSync(stopC, g.informer.HasSynced) {
 		return fmt.Errorf("timed out waiting for caches to sync")
 	}
-	hasSyncedGlobal = true
+	g.hasSynced = true
 
 	// Start our resource processing worker, if finishes then restart the worker. The workers should
 	// not end.
@@ -427,3 +429,4 @@ func (g *generic) setForgetSpanInfo(key string, span opentracing.Span, err error
 	)
 	span.LogKV(successKey, success)
 }
+
