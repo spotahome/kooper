@@ -28,7 +28,7 @@ require (
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
 	k8s.io/apiextensions-apiserver v0.0.0-20190508191920-007dc40467c5
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
-	k8s.io/client-go v2.0.0-alpha.0.0.20190507014756-65905f29c17c+incompatible
+	k8s.io/client-go v0.0.0-20190507014756-65905f29c17c
 	k8s.io/klog v0.3.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20180420230433-1e45fb05b063 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
