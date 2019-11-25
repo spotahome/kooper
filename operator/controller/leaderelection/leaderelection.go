@@ -116,6 +116,7 @@ func (r *runner) initResourceLock() error {
 		r.namespace,
 		r.key,
 		r.k8scli.CoreV1(),
+		r.k8scli.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      id,
 			EventRecorder: recorder,

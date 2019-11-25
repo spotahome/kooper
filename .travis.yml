@@ -17,5 +17,5 @@ script:
 env:
   global:
     - GO111MODULE=on
-    - KIND_VERSION=v0.5.1
-    - KUBERNETES_VERSION=1.13.10
+    - KIND_VERSION=v0.6.0
+    - KUBERNETES_VERSION=1.14.9
