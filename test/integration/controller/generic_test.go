@@ -16,11 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/monitoring/metrics"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
 )
 
 const (
@@ -53,7 +50,7 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 
 	// Create the faked retriever that will only return N pods.
 	podList := returnPodList(numberOfEvents)
-	r := &retrieve.Resource{
+	r := &controller.Resource{
 		Object: &corev1.Pod{},
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
@@ -70,7 +67,7 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	var wg sync.WaitGroup
 	wg.Add(numberOfEvents)
 
-	h := &handler.HandlerFunc{
+	h := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, _ runtime.Object) error {
 			time.Sleep(sleepDuration)
 			wg.Done()
@@ -83,15 +80,18 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	}
 
 	// Create the controller type depending on the concurrency level.
-	var ctrl controller.Controller
-	var err error
-	if concurrencyLevel < 2 {
-		ctrl = controller.NewSequential(noResync, h, r, metrics.Dummy, log.Dummy)
-	} else {
-		ctrl, err = controller.NewConcurrent(concurrencyLevel, noResync, h, r, metrics.Dummy, log.Dummy)
-		if !assert.NoError(err) {
-			return 0
-		}
+	cfg := &controller.Config{
+		Name:                 "test-controller",
+		Handler:              h,
+		Retriever:            r,
+		Logger:               log.Dummy,
+		ProcessingJobRetries: concurrencyLevel,
+		ResyncInterval:       noResync,
+		ConcurrentWorkers:    concurrencyLevel,
+	}
+	ctrl, err := controller.New(cfg)
+	if !assert.NoError(err) {
+		return 0
 	}
 
 	// Run handling

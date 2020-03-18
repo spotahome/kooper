@@ -17,10 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
 	"github.com/spotahome/kooper/test/integration/helper/cli"
 	"github.com/spotahome/kooper/test/integration/helper/prepare"
 )
@@ -75,7 +73,7 @@ func TestControllerHandleEvents(t *testing.T) {
 			var gotDeletedServices []string
 
 			// Create the kubernetes client.
-			k8scli, _, _, err := cli.GetK8sClients("")
+			k8scli, err := cli.GetK8sClient("")
 
 			require.NoError(err, "kubernetes client is required")
 
@@ -85,7 +83,7 @@ func TestControllerHandleEvents(t *testing.T) {
 			defer prep.TearDown()
 
 			// Create the reitrever.
-			rt := &retrieve.Resource{
+			rt := &controller.Resource{
 				ListerWatcher: cache.NewListWatchFromClient(k8scli.CoreV1().RESTClient(), "services", prep.Namespace().Name, fields.Everything()),
 				Object:        &corev1.Service{},
 			}
@@ -96,7 +94,7 @@ func TestControllerHandleEvents(t *testing.T) {
 			var mx sync.Mutex
 
 			// Create the handler.
-			hl := &handler.HandlerFunc{
+			hl := &controller.HandlerFunc{
 				AddFunc: func(_ context.Context, obj runtime.Object) error {
 					mx.Lock()
 					calledTimes++
@@ -125,8 +123,15 @@ func TestControllerHandleEvents(t *testing.T) {
 			}
 
 			// Create a Pod controller.
-			ctrl := controller.NewSequential(resync, hl, rt, nil, log.Dummy)
-			require.NotNil(ctrl, "controller is required")
+			cfg := &controller.Config{
+				Name:           "test-controller",
+				Handler:        hl,
+				Retriever:      rt,
+				Logger:         log.Dummy,
+				ResyncInterval: resync,
+			}
+			ctrl, err := controller.New(cfg)
+			require.NoError(err, "controller is required, can't have error on creation")
 			go ctrl.Run(stopC)
 
 			// Create the required services.
