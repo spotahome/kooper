@@ -55,7 +55,7 @@ func (in *PodTerminator) DeepCopyObject() runtime.Object {
 func (in *PodTerminatorList) DeepCopyInto(out *PodTerminatorList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]PodTerminator, len(*in))

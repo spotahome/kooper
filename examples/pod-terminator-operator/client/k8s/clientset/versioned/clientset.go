@@ -28,8 +28,6 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ChaosV1alpha1() chaosv1alpha1.ChaosV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Chaos() chaosv1alpha1.ChaosV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -41,12 +39,6 @@ type Clientset struct {
 
 // ChaosV1alpha1 retrieves the ChaosV1alpha1Client
 func (c *Clientset) ChaosV1alpha1() chaosv1alpha1.ChaosV1alpha1Interface {
-	return c.chaosV1alpha1
-}
-
-// Deprecated: Chaos retrieves the default version of ChaosClient.
-// Please explicitly pick a version.
-func (c *Clientset) Chaos() chaosv1alpha1.ChaosV1alpha1Interface {
 	return c.chaosV1alpha1
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -19,35 +20,57 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/controller"
 )
 
 var (
 	concurrentWorkers int
 	sleepMS           int
+	intervalS int
+	retries int
 )
 
 func initFlags() error {
 	fg := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	fg.IntVar(&concurrentWorkers, "concurrency", 0, "The number of concurrent event handling")
+	fg.IntVar(&concurrentWorkers, "concurrency", 3, "The number of concurrent event handling")
 	fg.IntVar(&sleepMS, "sleep-ms", 25, "The number of milliseconds to sleep on each event handling")
-	return fg.Parse(os.Args[1:])
+	fg.IntVar(&intervalS, "interval-s", 300, "The number of seconds to for reconciliation loop intervals")
+	fg.IntVar(&retries, "retries", 3, "The number of retries in case of error")
+	
+	err := fg.Parse(os.Args[1:])
+	if err != nil {
+		return err
+	}
+
+	if concurrentWorkers < 1 {
+		concurrentWorkers = 1
+	}
+
+	if sleepMS < 1 {
+		sleepMS = 25
+	}
+
+	if intervalS < 1 {
+		intervalS = 300
+	}
+	if retries < 0 {
+		retries = 0
+	}
+
+	return nil
 }
 
 func sleep() {
 	time.Sleep(time.Duration(sleepMS) * time.Millisecond)
 }
 
-func main() {
+func run() error {
 	// Initialize logger.
 	log := &log.Std{}
 
 	// Init flags.
 	if err := initFlags(); err != nil {
-		log.Errorf("error parsing arguments: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error parsing arguments: %w", err)
 	}
 
 	// Get k8s client.
@@ -57,18 +80,16 @@ func main() {
 		kubehome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 		k8scfg, err = clientcmd.BuildConfigFromFlags("", kubehome)
 		if err != nil {
-			log.Errorf("error loading kubernetes configuration: %s", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading kubernetes configuration: %w", err)
 		}
 	}
 	k8scli, err := kubernetes.NewForConfig(k8scfg)
 	if err != nil {
-		log.Errorf("error creating kubernetes client: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &retrieve.Resource{
+	retr := &controller.Resource{
 		Object: &corev1.Pod{},
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
@@ -81,7 +102,7 @@ func main() {
 	}
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &handler.HandlerFunc{
+	hand := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			pod := obj.(*corev1.Pod)
 			sleep()
@@ -96,20 +117,35 @@ func main() {
 	}
 
 	// Create the controller that will refresh every 30 seconds.
-	var ctrl controller.Controller
-	if concurrentWorkers < 2 {
-		log.Infof("sequential controller created")
-		ctrl = controller.NewSequential(30*time.Second, hand, retr, nil, log)
-	} else {
-		log.Infof("sequential controller created")
-		ctrl, _ = controller.NewConcurrent(concurrentWorkers, 30*time.Second, hand, retr, nil, log)
+	cfg := &controller.Config{
+		Handler: hand,
+		Retriever: retr,
+		Logger: log,
+
+		ProcessingJobRetries: retries,
+		ResyncInterval:       time.Duration(intervalS) * time.Second,
+		ConcurrentWorkers:    concurrentWorkers,
+	}
+	ctrl, err := controller.New(cfg)
+	if err != nil {
+		return fmt.Errorf("could not create controller: %w", err)
 	}
 
 	// Start our controller.
 	stopC := make(chan struct{})
 	if err := ctrl.Run(stopC); err != nil {
-		log.Errorf("error running controller: %s", err)
+		return fmt.Errorf("error running controller: %w", err)
+	}
+
+	return nil
+}
+
+func main() {
+	err := run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error running app: %s", err)
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }
