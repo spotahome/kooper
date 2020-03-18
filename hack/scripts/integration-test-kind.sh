@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-KUBERNETES_VERSION=v${KUBERNETES_VERSION:-1.15.6}
+KUBERNETES_VERSION=v${KUBERNETES_VERSION:-1.15.10}
 current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PREVIOUS_KUBECTL_CONTEXT=$(kubectl config current-context) || PREVIOUS_KUBECTL_CONTEXT=""
 

@@ -1,6 +1,23 @@
 ## [unreleased]
 
-- Support for Kubernetes 1.13.
+NOTE: Breaking release in controllers.
+
+- Refactor controller package.
+- Refactor metrics package.
+- Refactor log package.
+- Remove operator concept and remove CRD initialization in favor of using only
+  controllers and let the CRD initialization outside Kooper (e.g CRD yaml).
+- Default resync time to 3 minutes.
+- Default workers to 3.
+- Remove tracing.
+
+## [0.8.0] - 2019-12-11
+
+- Support for Kubernetes 1.15.
+
+## [0.7.0] - 2019-11-26
+
+- Support for Kubernetes 1.14.
 
 ## [0.6.0] - 2019-06-01
 
@@ -83,7 +100,9 @@ This release breaks controllers constructors to allow passing a metrics recorder
 - sequential controller implementation.
 - Dependencies managed by dep and vendored.
 
-[unreleased]: https://github.com/spotahome/kooper/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/spotahome/kooper/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/spotahome/kooper/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/spotahome/kooper/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/spotahome/kooper/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/spotahome/kooper/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/spotahome/kooper/compare/v0.4.1...v0.5.0
