@@ -26,14 +26,13 @@ DOCKER_RUN_CMD := docker run -v ${PWD}:$(DOCKER_GO_SERVICE_PATH) --rm -it $(SERV
 RUN_EXAMPLE_POD_ECHO := go run ./examples/echo-pod-controller/cmd/* --development
 RUN_EXAMPLE_POD_ECHO_ONEFILE := go run ./examples/onefile-echo-pod-controller/main.go --development
 RUN_EXAMPLE_POD_TERM := go run ./examples/pod-terminator-operator/cmd/* --development
-DEPS_CMD := GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor
-K8S_VERSION := "1.15.6"
-SET_K8S_DEPS_CMD := GO111MODULE=on go mod edit \
+DEPS_CMD := go mod tidy
+K8S_VERSION := "1.15.10"
+SET_K8S_DEPS_CMD := go mod edit \
     -require=k8s.io/apiextensions-apiserver@kubernetes-${K8S_VERSION} \
 	-require=k8s.io/client-go@kubernetes-${K8S_VERSION} \
 	-require=k8s.io/apimachinery@kubernetes-${K8S_VERSION} \
-	-require=k8s.io/api@kubernetes-${K8S_VERSION} \
-	-require=k8s.io/kubernetes@v${K8S_VERSION} && \
+	-require=k8s.io/api@kubernetes-${K8S_VERSION} && \
 	$(DEPS_CMD)
 
 # environment dirs

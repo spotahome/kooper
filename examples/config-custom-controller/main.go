@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -17,13 +18,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
+	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
 )
 
-func main() {
+func run() error {
 	// Initialize logger.
 	log := &log.Std{}
 
@@ -34,18 +33,16 @@ func main() {
 		kubehome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 		k8scfg, err = clientcmd.BuildConfigFromFlags("", kubehome)
 		if err != nil {
-			log.Errorf("error loading kubernetes configuration: %s", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading kubernetes configuration: %w", err)
 		}
 	}
 	k8scli, err := kubernetes.NewForConfig(k8scfg)
 	if err != nil {
-		log.Errorf("error creating kubernetes client: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &retrieve.Resource{
+	retr := &controller.Resource{
 		Object: &corev1.Pod{},
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
@@ -58,7 +55,7 @@ func main() {
 	}
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &handler.HandlerFunc{
+	hand := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			pod := obj.(*corev1.Pod)
 			log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
@@ -72,17 +69,35 @@ func main() {
 
 	// Create the controller with custom configuration.
 	cfg := &controller.Config{
+		Handler:   hand,
+		Retriever: retr,
+		Logger:    log,
+
 		ProcessingJobRetries: 5,
 		ResyncInterval:       45 * time.Second,
 		ConcurrentWorkers:    1,
 	}
-	ctrl := controller.New(cfg, hand, retr, nil, nil, nil, log)
+	ctrl, err := controller.New(cfg)
+	if err != nil {
+		return fmt.Errorf("could not create controller: %w", err)
+	}
 
 	// Start our controller.
 	stopC := make(chan struct{})
-	if err := ctrl.Run(stopC); err != nil {
-		log.Errorf("error running controller: %s", err)
+	err = ctrl.Run(stopC)
+	if err != nil {
+		return fmt.Errorf("error running controller: %w", err)
+	}
+
+	return nil
+}
+
+func main() {
+	err := run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error running app: %s", err)
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }
