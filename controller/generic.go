@@ -120,6 +120,8 @@ func New(cfg *Config) (Controller, error) {
 	store := cache.Indexers{}
 	informer := cache.NewSharedIndexInformer(cfg.Retriever.GetListerWatcher(), cfg.Retriever.GetObject(), cfg.ResyncInterval, store)
 
+	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricRecorder, cfg.Handler)
+
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
 	// afterwards.
@@ -153,7 +155,7 @@ func New(cfg *Config) (Controller, error) {
 		informer: informer,
 		logger:   cfg.Logger,
 		metrics:  cfg.MetricRecorder,
-		handler:  cfg.Handler,
+		handler:  handler,
 		leRunner: cfg.LeaderElector,
 		cfg:      *cfg,
 	}, nil
@@ -270,38 +272,8 @@ func (g *generic) processJob(ctx context.Context, key string) error {
 
 	// handle the object.
 	if !exists { // Deleted resource from the cache.
-		return g.handleDelete(ctx, key)
+		return g.handler.Delete(ctx, key)
 	}
 
-	return g.handleAdd(ctx, key, obj.(runtime.Object))
-}
-
-func (g *generic) handleAdd(ctx context.Context, objKey string, obj runtime.Object) error {
-	start := time.Now()
-	g.metrics.IncResourceEventProcessed(g.cfg.Name, metrics.AddEvent)
-	defer func() {
-		g.metrics.ObserveDurationResourceEventProcessed(g.cfg.Name, metrics.AddEvent, start)
-	}()
-
-	// Handle the job.
-	if err := g.handler.Add(ctx, obj); err != nil {
-		g.metrics.IncResourceEventProcessedError(g.cfg.Name, metrics.AddEvent)
-		return err
-	}
-	return nil
-}
-
-func (g *generic) handleDelete(ctx context.Context, objKey string) error {
-	start := time.Now()
-	g.metrics.IncResourceEventProcessed(g.cfg.Name, metrics.DeleteEvent)
-	defer func() {
-		g.metrics.ObserveDurationResourceEventProcessed(g.cfg.Name, metrics.DeleteEvent, start)
-	}()
-
-	// Handle the job.
-	if err := g.handler.Delete(ctx, objKey); err != nil {
-		g.metrics.IncResourceEventProcessedError(g.cfg.Name, metrics.DeleteEvent)
-		return err
-	}
-	return nil
+	return g.handler.Add(ctx, obj.(runtime.Object))
 }
