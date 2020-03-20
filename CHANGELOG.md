@@ -9,7 +9,9 @@ NOTE: Breaking release in controllers.
   controllers and let the CRD initialization outside Kooper (e.g CRD yaml).
 - Default resync time to 3 minutes.
 - Default workers to 3.
+- Disable retry handling on controllers in case of error by default.
 - Remove tracing.
+- Minimum Go version v1.13 (error wrapping required).
 
 ## [0.8.0] - 2019-12-11
 

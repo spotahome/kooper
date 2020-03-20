@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -26,7 +25,7 @@ var (
 const (
 	defResyncInterval       = 3 * time.Minute
 	defConcurrentWorkers    = 3
-	defProcessingJobRetries = 3
+	defProcessingJobRetries = 0
 )
 
 // Config is the controller configuration.
@@ -84,7 +83,7 @@ func (c *Config) setDefaults() error {
 		c.ResyncInterval = defResyncInterval
 	}
 
-	if c.ProcessingJobRetries <= 0 {
+	if c.ProcessingJobRetries < 0 {
 		c.ProcessingJobRetries = defProcessingJobRetries
 	}
 
@@ -95,7 +94,8 @@ func (c *Config) setDefaults() error {
 type generic struct {
 	queue     workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
 	informer  cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
-	handler   Handler                         // handler is where the logic of resource processing.
+	processor processor                       // processor will call the user handler (logic).
+
 	running   bool
 	runningMu sync.Mutex
 	cfg       Config
@@ -119,8 +119,6 @@ func New(cfg *Config) (Controller, error) {
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}
 	informer := cache.NewSharedIndexInformer(cfg.Retriever.GetListerWatcher(), cfg.Retriever.GetObject(), cfg.ResyncInterval, store)
-
-	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricRecorder, cfg.Handler)
 
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
@@ -149,15 +147,22 @@ func New(cfg *Config) (Controller, error) {
 		},
 	}, cfg.ResyncInterval)
 
+	// Create processing chain processor(+middlewares) -> handler(+middlewares).
+	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricRecorder, cfg.Handler)
+	processor := newIndexerProcessor(informer.GetIndexer(), handler)
+	if cfg.ProcessingJobRetries > 0 {
+		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, cfg.MetricRecorder, queue, processor)
+	}
+
 	// Create our generic controller object.
 	return &generic{
-		queue:    queue,
-		informer: informer,
-		logger:   cfg.Logger,
-		metrics:  cfg.MetricRecorder,
-		handler:  handler,
-		leRunner: cfg.LeaderElector,
-		cfg:      *cfg,
+		queue:     queue,
+		informer:  informer,
+		metrics:   cfg.MetricRecorder,
+		processor: processor,
+		leRunner:  cfg.LeaderElector,
+		cfg:       *cfg,
+		logger:    cfg.Logger,
 	}, nil
 }
 
@@ -227,16 +232,18 @@ func (g *generic) run(stopC <-chan struct{}) error {
 // runWorker will start a processing loop on event queue.
 func (g *generic) runWorker() {
 	for {
-		// Process newxt queue job, if needs to stop processing it will return true.
-		if g.getAndProcessNextJob() {
+		// Process next queue job, if needs to stop processing it will return true.
+		if g.processNextJob() {
 			break
 		}
 	}
 }
 
-// getAndProcessNextJob job will process the next job of the queue job and returns if
+// processNextJob job will process the next job of the queue job and returns if
 // it needs to stop processing.
-func (g *generic) getAndProcessNextJob() bool {
+//
+// If the queue has been closed then it will end the processing.
+func (g *generic) processNextJob() bool {
 	// Get next job.
 	nextJob, exit := g.queue.Get()
 	if exit {
@@ -247,33 +254,16 @@ func (g *generic) getAndProcessNextJob() bool {
 
 	// Process the job. If errors then enqueue again.
 	ctx := context.Background()
-	if err := g.processJob(ctx, key); err == nil {
-		g.queue.Forget(key)
-	} else if g.queue.NumRequeues(key) < g.cfg.ProcessingJobRetries {
-		// Job processing failed, requeue.
-		g.logger.Warningf("error processing %s job (requeued): %v", key, err)
-		g.queue.AddRateLimited(key)
-		g.metrics.IncResourceEventQueued(g.cfg.Name, metrics.RequeueEvent)
-	} else {
-		g.logger.Errorf("Error processing %s: %v", key, err)
-		g.queue.Forget(key)
+	err := g.processor.Process(ctx, key)
+
+	switch {
+	case err == nil:
+		g.logger.Infof("object with key %s processed", key)
+	case errors.Is(err, errRequeued):
+		g.logger.Warningf("error on object with key %s processing, retrying", key)
+	default:
+		g.logger.Errorf("error on object with key %s processing", key)
 	}
 
 	return false
-}
-
-// processJob is where the real processing logic of the item is.
-func (g *generic) processJob(ctx context.Context, key string) error {
-	// Get the object
-	obj, exists, err := g.informer.GetIndexer().GetByKey(key)
-	if err != nil {
-		return err
-	}
-
-	// handle the object.
-	if !exists { // Deleted resource from the cache.
-		return g.handler.Delete(ctx, key)
-	}
-
-	return g.handler.Add(ctx, obj.(runtime.Object))
 }
