@@ -12,6 +12,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
@@ -89,7 +91,8 @@ func getMetricRecorder(backend string, logger log.Logger) (metrics.Recorder, err
 
 func run() error {
 	// Initialize logger.
-	log := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "metrics-controller"})
 
 	// Init flags.
 	if err := initFlags(); err != nil {
@@ -137,16 +140,17 @@ func run() error {
 	}
 
 	// Create the controller that will refresh every 30 seconds.
-	m, err := getMetricRecorder(metricsBackend, log)
+	m, err := getMetricRecorder(metricsBackend, logger)
 	if err != nil {
 		return fmt.Errorf("errors getting metrics backend: %w", err)
 	}
 	cfg := &controller.Config{
-		Name:           "metricsControllerTest",
-		Handler:        hand,
-		Retriever:      retr,
-		MetricRecorder: m,
-		Logger:         log,
+		Name:                 "metricsControllerTest",
+		Handler:              hand,
+		Retriever:            retr,
+		MetricRecorder:       m,
+		Logger:               logger,
+		ProcessingJobRetries: 3,
 	}
 	ctrl, err := controller.New(cfg)
 	if err != nil {

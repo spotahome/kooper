@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -20,11 +22,13 @@ import (
 
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 )
 
 func run() error {
 	// Initialize logger.
-	log := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "config-custom-controller"})
 
 	// Get k8s client.
 	k8scfg, err := rest.InClusterConfig()
@@ -43,7 +47,7 @@ func run() error {
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
 	retr := &controller.Resource{
-		Object: &corev1.Pod{},
+		Object: &unstructured.Unstructured{},
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				return k8scli.CoreV1().Pods("").List(options)
@@ -58,20 +62,21 @@ func run() error {
 	hand := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			pod := obj.(*corev1.Pod)
-			log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
 			return nil
 		},
 		DeleteFunc: func(_ context.Context, s string) error {
-			log.Infof("Pod deleted: %s", s)
+			logger.Infof("Pod deleted: %s", s)
 			return nil
 		},
 	}
 
 	// Create the controller with custom configuration.
 	cfg := &controller.Config{
+		Name:      "config-custom-controller",
 		Handler:   hand,
 		Retriever: retr,
-		Logger:    log,
+		Logger:    logger,
 
 		ProcessingJobRetries: 5,
 		ResyncInterval:       45 * time.Second,
