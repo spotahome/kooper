@@ -12,6 +12,8 @@ NOTE: Breaking release in controllers.
 - Disable retry handling on controllers in case of error by default.
 - Remove tracing.
 - Minimum Go version v1.13 (error wrapping required).
+- Refactor Logger with structured logging.
+- Add Logrus helper wrapper.
 
 ## [0.8.0] - 2019-12-11
 

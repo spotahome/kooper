@@ -263,11 +263,11 @@ func (g *generic) processNextJob() bool {
 	logger := g.logger.WithKV(log.KV{"object-key": key})
 	switch {
 	case err == nil:
-		logger.Debugf("object with key processed")
+		logger.Debugf("object processed")
 	case errors.Is(err, errRequeued):
-		logger.Warningf("error on object key processing, retrying")
+		logger.Warningf("error on object processing, retrying: %v", err)
 	default:
-		logger.Errorf("error on object key processing")
+		logger.Errorf("error on object processing: %v", err)
 	}
 
 	return false
