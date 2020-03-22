@@ -82,11 +82,8 @@ func TestControllerHandleEvents(t *testing.T) {
 			prep.SetUp()
 			defer prep.TearDown()
 
-			// Create the reitrever.
-			rt := &controller.Resource{
-				ListerWatcher: cache.NewListWatchFromClient(k8scli.CoreV1().RESTClient(), "services", prep.Namespace().Name, fields.Everything()),
-				Object:        &corev1.Service{},
-			}
+			// Create the retriever.
+			rt := controller.MustRetrieverFromListerWatcher(cache.NewListWatchFromClient(k8scli.CoreV1().RESTClient(), "services", prep.Namespace().Name, fields.Everything()))
 
 			// Call times are the number of times the handler should be called before sending the termination signal.
 			stopCallTimes := len(test.addServices) + len(test.updateServices) + len(test.delServices)

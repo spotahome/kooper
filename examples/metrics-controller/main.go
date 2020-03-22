@@ -12,7 +12,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -25,6 +25,7 @@ import (
 
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
@@ -89,7 +90,8 @@ func getMetricRecorder(backend string, logger log.Logger) (metrics.Recorder, err
 
 func run() error {
 	// Initialize logger.
-	log := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "metrics-controller"})
 
 	// Init flags.
 	if err := initFlags(); err != nil {
@@ -112,17 +114,14 @@ func run() error {
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &controller.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
-			},
+	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return k8scli.CoreV1().Pods("").List(options)
 		},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return k8scli.CoreV1().Pods("").Watch(options)
+		},
+	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &controller.HandlerFunc{
@@ -137,16 +136,17 @@ func run() error {
 	}
 
 	// Create the controller that will refresh every 30 seconds.
-	m, err := getMetricRecorder(metricsBackend, log)
+	m, err := getMetricRecorder(metricsBackend, logger)
 	if err != nil {
 		return fmt.Errorf("errors getting metrics backend: %w", err)
 	}
 	cfg := &controller.Config{
-		Name:           "metricsControllerTest",
-		Handler:        hand,
-		Retriever:      retr,
-		MetricRecorder: m,
-		Logger:         log,
+		Name:                 "metricsControllerTest",
+		Handler:              hand,
+		Retriever:            retr,
+		MetricRecorder:       m,
+		Logger:               logger,
+		ProcessingJobRetries: 3,
 	}
 	ctrl, err := controller.New(cfg)
 	if err != nil {

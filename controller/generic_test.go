@@ -17,10 +17,10 @@ import (
 	kubetesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/log"
-	mcontroller "github.com/spotahome/kooper/mocks/controller"
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/controller/leaderelection"
+	"github.com/spotahome/kooper/log"
+	mcontroller "github.com/spotahome/kooper/mocks/controller"
 )
 
 // Namespace knows how to retrieve namespaces.
@@ -30,18 +30,15 @@ type namespaceRetriever struct {
 }
 
 // NewNamespace returns a Namespace retriever.
-func newNamespaceRetriever(client kubernetes.Interface) *namespaceRetriever {
-	return &namespaceRetriever{
-		lw: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return client.CoreV1().Namespaces().List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return client.CoreV1().Namespaces().Watch(options)
-			},
+func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
+	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return client.CoreV1().Namespaces().List(options)
 		},
-		obj: &corev1.Namespace{},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return client.CoreV1().Namespaces().Watch(options)
+		},
+	})
 }
 
 // GetListerWatcher knows how to retrieve Namespaces.
@@ -151,6 +148,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 				Name:      "test",
 				Handler:   mh,
 				Retriever: newNamespaceRetriever(mc),
+				Logger:    log.Dummy,
 			})
 			require.NoError(err)
 
@@ -225,6 +223,7 @@ func TestGenericControllerHandleDeletes(t *testing.T) {
 				Name:      "test",
 				Handler:   mh,
 				Retriever: newNamespaceRetriever(mc),
+				Logger:    log.Dummy,
 			})
 			require.NoError(err)
 
@@ -297,6 +296,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 				Handler:              mh,
 				Retriever:            newNamespaceRetriever(mc),
 				ProcessingJobRetries: test.retryNumber,
+				Logger:               log.Dummy,
 			})
 			require.NoError(err)
 
@@ -377,6 +377,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 				Retriever:            nsret,
 				LeaderElector:        lesvc1,
 				ProcessingJobRetries: test.retryNumber,
+				Logger:               log.Dummy,
 			})
 			require.NoError(err)
 
@@ -386,6 +387,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 				Retriever:            nsret,
 				LeaderElector:        lesvc2,
 				ProcessingJobRetries: test.retryNumber,
+				Logger:               log.Dummy,
 			})
 			require.NoError(err)
 
@@ -395,6 +397,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 				Retriever:            nsret,
 				LeaderElector:        lesvc3,
 				ProcessingJobRetries: test.retryNumber,
+				Logger:               log.Dummy,
 			})
 			require.NoError(err)
 

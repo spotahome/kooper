@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -27,7 +27,7 @@ import (
 func run() error {
 	// Initialize logger.
 	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
-		WithKV(log.KV{"example": "config-custom-controller"})
+		WithKV(log.KV{"example": "multi-resource-controller"})
 
 	// Get k8s client.
 	k8scfg, err := rest.InClusterConfig()
@@ -44,32 +44,59 @@ func run() error {
 		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
-	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
-		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return k8scli.CoreV1().Pods("").List(options)
-		},
-		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return k8scli.CoreV1().Pods("").Watch(options)
-		},
-	})
+	// Create our retriever so the controller knows how to get/listen for deployments and statefulsets.
+	retr, err := controller.NewMultiRetriever(
+		controller.MustRetrieverFromListerWatcher(
+			&cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().Deployments("").List(options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().Deployments("").Watch(options)
+				},
+			},
+		),
+		controller.MustRetrieverFromListerWatcher(
+			&cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().StatefulSets("").List(options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().StatefulSets("").Watch(options)
+				},
+			},
+		),
+	)
+
+	if err != nil {
+		return fmt.Errorf("could not create a multi retriever: %w", err)
+	}
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			pod := obj.(*corev1.Pod)
-			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+			dep, ok := obj.(*appsv1.Deployment)
+			if ok {
+				logger.Infof("Deployment added: %s/%s", dep.Namespace, dep.Name)
+				return nil
+			}
+
+			st, ok := obj.(*appsv1.StatefulSet)
+			if ok {
+				logger.Infof("Statefulset added: %s/%s", st.Namespace, st.Name)
+				return nil
+			}
+
 			return nil
 		},
 		DeleteFunc: func(_ context.Context, s string) error {
-			logger.Infof("Pod deleted: %s", s)
 			return nil
 		},
 	}
 
 	// Create the controller with custom configuration.
 	cfg := &controller.Config{
-		Name:      "config-custom-controller",
+		Name:      "multi-resource-controller",
 		Handler:   hand,
 		Retriever: retr,
 		Logger:    logger,

@@ -74,7 +74,10 @@ func New(key, namespace string, lockCfg *LockConfig, k8scli kubernetes.Interface
 		key:       key,
 		namespace: namespace,
 		k8scli:    k8scli,
-		logger:    logger,
+		logger: logger.WithKV(log.KV{
+			"source-service":     "kooper/leader-election",
+			"leader-election-id": fmt.Sprintf("%s/%s", namespace, key),
+		}),
 	}
 
 	if err := r.validate(); err != nil {

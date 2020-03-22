@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,6 +25,7 @@ import (
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/controller/leaderelection"
 	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 )
 
 const (
@@ -56,7 +58,8 @@ func run() error {
 	fl := NewFlags()
 
 	// Initialize logger.
-	logger := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "leader-election-controller"})
 
 	// Get k8s client.
 	k8scfg, err := rest.InClusterConfig()
@@ -74,17 +77,14 @@ func run() error {
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &controller.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
-			},
+	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return k8scli.CoreV1().Pods("").List(options)
 		},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return k8scli.CoreV1().Pods("").Watch(options)
+		},
+	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &controller.HandlerFunc{
@@ -107,6 +107,7 @@ func run() error {
 
 	// Create the controller and run.
 	cfg := &controller.Config{
+		Name:          "leader-election-controller",
 		Handler:       hand,
 		Retriever:     retr,
 		LeaderElector: lesvc,

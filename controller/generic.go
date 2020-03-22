@@ -7,7 +7,10 @@ import (
 	"sync"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -66,9 +69,13 @@ func (c *Config) setDefaults() error {
 	}
 
 	if c.Logger == nil {
-		c.Logger = &log.Std{}
+		c.Logger = log.NewStd(false)
 		c.Logger.Warningf("no logger specified, fallback to default logger, to disable logging use a explicit Noop logger")
 	}
+	c.Logger = c.Logger.WithKV(log.KV{
+		"source-service": "kooper/controller",
+		"controller-id":  c.Name,
+	})
 
 	if c.MetricRecorder == nil {
 		c.MetricRecorder = metrics.Dummy
@@ -104,6 +111,18 @@ type generic struct {
 	logger    log.Logger
 }
 
+func listerWatcherFromRetriever(ret Retriever) cache.ListerWatcher {
+	// TODO(slok): pass context when Kubernetes updates its ListerWatchers ¯\_(ツ)_/¯.
+	return &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return ret.List(context.TODO(), options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return ret.Watch(context.TODO(), options)
+		},
+	}
+}
+
 // New creates a new controller that can be configured using the cfg parameter.
 func New(cfg *Config) (Controller, error) {
 	// Sets the required default configuration.
@@ -118,7 +137,8 @@ func New(cfg *Config) (Controller, error) {
 
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}
-	informer := cache.NewSharedIndexInformer(cfg.Retriever.GetListerWatcher(), cfg.Retriever.GetObject(), cfg.ResyncInterval, store)
+	lw := listerWatcherFromRetriever(cfg.Retriever)
+	informer := cache.NewSharedIndexInformer(lw, nil, cfg.ResyncInterval, store)
 
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
@@ -256,13 +276,14 @@ func (g *generic) processNextJob() bool {
 	ctx := context.Background()
 	err := g.processor.Process(ctx, key)
 
+	logger := g.logger.WithKV(log.KV{"object-key": key})
 	switch {
 	case err == nil:
-		g.logger.Infof("object with key %s processed", key)
+		logger.Debugf("object processed")
 	case errors.Is(err, errRequeued):
-		g.logger.Warningf("error on object with key %s processing, retrying", key)
+		logger.Warningf("error on object processing, retrying: %v", err)
 	default:
-		g.logger.Errorf("error on object with key %s processing", key)
+		logger.Errorf("error on object processing: %v", err)
 	}
 
 	return false
