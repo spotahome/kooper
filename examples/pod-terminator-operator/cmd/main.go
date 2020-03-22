@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	applogger "github.com/spotahome/kooper/log"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -16,6 +16,8 @@ import (
 	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
 	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
+	kooperlog "github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 )
 
 // Main is the main program.
@@ -89,7 +91,8 @@ func (m *Main) getKubernetesClients() (podtermk8scli.Interface, kubernetes.Inter
 }
 
 func main() {
-	logger := &applogger.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(kooperlog.KV{"example": "pod-terminator-operator"})
 
 	stopC := make(chan struct{})
 	finishC := make(chan error)

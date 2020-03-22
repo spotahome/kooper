@@ -66,9 +66,13 @@ func (c *Config) setDefaults() error {
 	}
 
 	if c.Logger == nil {
-		c.Logger = &log.Std{}
+		c.Logger = log.NewStd(false)
 		c.Logger.Warningf("no logger specified, fallback to default logger, to disable logging use a explicit Noop logger")
 	}
+	c.Logger = c.Logger.WithKV(log.KV{
+		"source-service": "kooper/controller",
+		"controller-id":  c.Name,
+	})
 
 	if c.MetricRecorder == nil {
 		c.MetricRecorder = metrics.Dummy
@@ -256,13 +260,14 @@ func (g *generic) processNextJob() bool {
 	ctx := context.Background()
 	err := g.processor.Process(ctx, key)
 
+	logger := g.logger.WithKV(log.KV{"object-key": key})
 	switch {
 	case err == nil:
-		g.logger.Infof("object with key %s processed", key)
+		logger.Debugf("object processed")
 	case errors.Is(err, errRequeued):
-		g.logger.Warningf("error on object with key %s processing, retrying", key)
+		logger.Warningf("error on object processing, retrying: %v", err)
 	default:
-		g.logger.Errorf("error on object with key %s processing", key)
+		logger.Errorf("error on object processing: %v", err)
 	}
 
 	return false

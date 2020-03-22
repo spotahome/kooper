@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,6 +25,7 @@ import (
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/controller/leaderelection"
 	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 )
 
 const (
@@ -56,7 +58,8 @@ func run() error {
 	fl := NewFlags()
 
 	// Initialize logger.
-	logger := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "leader-election-controller"})
 
 	// Get k8s client.
 	k8scfg, err := rest.InClusterConfig()
@@ -107,6 +110,7 @@ func run() error {
 
 	// Create the controller and run.
 	cfg := &controller.Config{
+		Name:          "leader-election-controller",
 		Handler:       hand,
 		Retriever:     retr,
 		LeaderElector: lesvc,

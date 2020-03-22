@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,24 +20,25 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/spotahome/kooper/log"
 	"github.com/spotahome/kooper/controller"
+	"github.com/spotahome/kooper/log"
+	kooperlogrus "github.com/spotahome/kooper/log/logrus"
 )
 
 var (
 	concurrentWorkers int
 	sleepMS           int
-	intervalS int
-	retries int
+	intervalS         int
+	retries           int
 )
 
 func initFlags() error {
 	fg := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fg.IntVar(&concurrentWorkers, "concurrency", 3, "The number of concurrent event handling")
 	fg.IntVar(&sleepMS, "sleep-ms", 25, "The number of milliseconds to sleep on each event handling")
-	fg.IntVar(&intervalS, "interval-s", 300, "The number of seconds to for reconciliation loop intervals")
+	fg.IntVar(&intervalS, "interval-s", 45, "The number of seconds to for reconciliation loop intervals")
 	fg.IntVar(&retries, "retries", 3, "The number of retries in case of error")
-	
+
 	err := fg.Parse(os.Args[1:])
 	if err != nil {
 		return err
@@ -66,7 +68,8 @@ func sleep() {
 
 func run() error {
 	// Initialize logger.
-	log := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "controller-concurrency-handling"})
 
 	// Init flags.
 	if err := initFlags(); err != nil {
@@ -101,26 +104,27 @@ func run() error {
 		},
 	}
 
-	// Our domain logic that will print every add/sync/update and delete event we .
+	// Our domain logic that will print every add/sync/update and delete event we.
 	hand := &controller.HandlerFunc{
 		AddFunc: func(_ context.Context, obj runtime.Object) error {
 			pod := obj.(*corev1.Pod)
 			sleep()
-			log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
 			return nil
 		},
 		DeleteFunc: func(_ context.Context, s string) error {
 			sleep()
-			log.Infof("Pod deleted: %s", s)
+			logger.Infof("Pod deleted: %s", s)
 			return nil
 		},
 	}
 
-	// Create the controller that will refresh every 30 seconds.
+	// Create the controller.
 	cfg := &controller.Config{
-		Handler: hand,
+		Name:      "controller-concurrency-handling",
+		Handler:   hand,
 		Retriever: retr,
-		Logger: log,
+		Logger:    logger,
 
 		ProcessingJobRetries: retries,
 		ResyncInterval:       time.Duration(intervalS) * time.Second,
