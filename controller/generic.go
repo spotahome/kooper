@@ -7,7 +7,10 @@ import (
 	"sync"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -108,6 +111,18 @@ type generic struct {
 	logger    log.Logger
 }
 
+func listerWatcherFromRetriever(ret Retriever) cache.ListerWatcher {
+	// TODO(slok): pass context when Kubernetes updates its ListerWatchers ¯\_(ツ)_/¯.
+	return &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return ret.List(context.TODO(), options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return ret.Watch(context.TODO(), options)
+		},
+	}
+}
+
 // New creates a new controller that can be configured using the cfg parameter.
 func New(cfg *Config) (Controller, error) {
 	// Sets the required default configuration.
@@ -122,7 +137,8 @@ func New(cfg *Config) (Controller, error) {
 
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}
-	informer := cache.NewSharedIndexInformer(cfg.Retriever.GetListerWatcher(), cfg.Retriever.GetObject(), cfg.ResyncInterval, store)
+	lw := listerWatcherFromRetriever(cfg.Retriever)
+	informer := cache.NewSharedIndexInformer(lw, nil, cfg.ResyncInterval, store)
 
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed

@@ -13,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -115,17 +114,14 @@ func run() error {
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &controller.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
-			},
+	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return k8scli.CoreV1().Pods("").List(options)
 		},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return k8scli.CoreV1().Pods("").Watch(options)
+		},
+	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := &controller.HandlerFunc{

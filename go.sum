@@ -168,6 +168,7 @@ gopkg.in/yaml.v2 v2.2.8 h1:obN1ZagJSUGI0Ek/LBmuj4SNLPfIny3KsKFopxRdj10=
 gopkg.in/yaml.v2 v2.2.8/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 k8s.io/api v0.15.10 h1:g6t2OLNjupSeoepE0zlIcvoT6Q+QDfdfEUwk5lwHXAo=
 k8s.io/api v0.15.10/go.mod h1:PffiEKNf0aFiv2naEYSGTFHIGA9V8Qwt22DZIAokOzQ=
+k8s.io/api v0.17.4 h1:HbwOhDapkguO8lTAE8OX3hdF2qp8GtpC9CW/MQATXXo=
 k8s.io/apimachinery v0.15.10/go.mod h1:ZRw+v83FjgEqlzqaBkxL3XB21MSLYdzjsY9Bgxclhdw=
 k8s.io/apimachinery v0.15.12-beta.0 h1:aGvobE1kXnMyyAgzsYe6bfyyAcoIy2vqwPtSO/PgGBg=
 k8s.io/apimachinery v0.15.12-beta.0/go.mod h1:ZRw+v83FjgEqlzqaBkxL3XB21MSLYdzjsY9Bgxclhdw=

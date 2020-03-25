@@ -17,7 +17,7 @@ type Logger interface {
 	WithKV(KV) Logger
 }
 
-// Dummy logger doesn't log anything
+// Dummy logger doesn't log anything.
 const Dummy = dummy(0)
 
 type dummy int

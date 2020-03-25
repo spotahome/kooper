@@ -50,17 +50,14 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 
 	// Create the faked retriever that will only return N pods.
 	podList := returnPodList(numberOfEvents)
-	r := &controller.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
-				return podList, nil
-			},
-			WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
-				return watch.NewFake(), nil
-			},
+	r := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
+			return podList, nil
 		},
-	}
+		WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
+			return watch.NewFake(), nil
+		},
+	})
 
 	// Create the handler that will wait on each event T duration and will
 	// end when all the wanted quantity of events have been processed.
