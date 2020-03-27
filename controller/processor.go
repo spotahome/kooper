@@ -7,8 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-
-	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
 // processor knows how to process object keys.
@@ -57,12 +55,12 @@ var errRequeued = fmt.Errorf("requeued after receiving error")
 type retryProcessor struct {
 	name       string
 	maxRetries int
-	mrec       metrics.Recorder
+	mrec       MetricsRecorder
 	queue      workqueue.RateLimitingInterface
 	next       processor
 }
 
-func newRetryProcessor(name string, maxRetries int, mrec metrics.Recorder, queue workqueue.RateLimitingInterface, next processor) processor {
+func newRetryProcessor(name string, maxRetries int, mrec MetricsRecorder, queue workqueue.RateLimitingInterface, next processor) processor {
 	return retryProcessor{
 		name:       name,
 		maxRetries: maxRetries,
@@ -78,7 +76,7 @@ func (r retryProcessor) Process(ctx context.Context, key string) error {
 	// If there was an error and we have retries pending then requeue.
 	if err != nil && r.queue.NumRequeues(key) < r.maxRetries {
 		r.queue.AddRateLimited(key)
-		r.mrec.IncResourceEventQueued(r.name, metrics.RequeueEvent)
+		r.mrec.IncResourceEventQueued(ctx, r.name, RequeueEvent)
 		return fmt.Errorf("%w: %s", errRequeued, err)
 	}
 

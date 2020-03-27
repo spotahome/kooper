@@ -16,7 +16,6 @@ import (
 
 	"github.com/spotahome/kooper/controller/leaderelection"
 	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
 var (
@@ -41,7 +40,7 @@ type Config struct {
 	// leader election will be ignored
 	LeaderElector leaderelection.Runner
 	// MetricsRecorder will record the controller metrics.
-	MetricRecorder metrics.Recorder
+	MetricsRecorder MetricsRecorder
 	// Logger will log messages of the controller.
 	Logger log.Logger
 
@@ -77,8 +76,8 @@ func (c *Config) setDefaults() error {
 		"controller-id":  c.Name,
 	})
 
-	if c.MetricRecorder == nil {
-		c.MetricRecorder = metrics.Dummy
+	if c.MetricsRecorder == nil {
+		c.MetricsRecorder = DummyMetricsRecorder
 		c.Logger.Warningf("no metrics recorder specified, disabling metrics")
 	}
 
@@ -106,7 +105,7 @@ type generic struct {
 	running   bool
 	runningMu sync.Mutex
 	cfg       Config
-	metrics   metrics.Recorder
+	metrics   MetricsRecorder
 	leRunner  leaderelection.Runner
 	logger    log.Logger
 }
@@ -148,37 +147,37 @@ func New(cfg *Config) (Controller, error) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
-				cfg.MetricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
+				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, AddEvent)
 			}
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
 				queue.Add(key)
-				cfg.MetricRecorder.IncResourceEventQueued(cfg.Name, metrics.AddEvent)
+				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, AddEvent)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
 				queue.Add(key)
-				cfg.MetricRecorder.IncResourceEventQueued(cfg.Name, metrics.DeleteEvent)
+				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, DeleteEvent)
 			}
 		},
 	}, cfg.ResyncInterval)
 
 	// Create processing chain processor(+middlewares) -> handler(+middlewares).
-	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricRecorder, cfg.Handler)
+	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricsRecorder, cfg.Handler)
 	processor := newIndexerProcessor(informer.GetIndexer(), handler)
 	if cfg.ProcessingJobRetries > 0 {
-		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, cfg.MetricRecorder, queue, processor)
+		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, cfg.MetricsRecorder, queue, processor)
 	}
 
 	// Create our generic controller object.
 	return &generic{
 		queue:     queue,
 		informer:  informer,
-		metrics:   cfg.MetricRecorder,
+		metrics:   cfg.MetricsRecorder,
 		processor: processor,
 		leRunner:  cfg.LeaderElector,
 		cfg:       *cfg,

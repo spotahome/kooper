@@ -1,6 +1,7 @@
-package metrics_test
+package prometheus_test
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
@@ -10,28 +11,29 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/spotahome/kooper/monitoring/metrics"
+	"github.com/spotahome/kooper/controller"
+	kooperprometheus "github.com/spotahome/kooper/metrics/prometheus"
 )
 
-func TestPrometheusMetrics(t *testing.T) {
-	controller := "test"
+func TestPrometheusRecorder(t *testing.T) {
+	controllerID := "test"
 
 	tests := []struct {
 		name       string
-		addMetrics func(*metrics.Prometheus)
+		addMetrics func(*kooperprometheus.Recorder)
 		expMetrics []string
 		expCode    int
 	}{
 		{
 			name: "Incrementing different kind of queued events should measure the queued events counter",
-			addMetrics: func(p *metrics.Prometheus) {
-				p.IncResourceEventQueued(controller, metrics.AddEvent)
-				p.IncResourceEventQueued(controller, metrics.AddEvent)
-				p.IncResourceEventQueued(controller, metrics.AddEvent)
-				p.IncResourceEventQueued(controller, metrics.AddEvent)
-				p.IncResourceEventQueued(controller, metrics.DeleteEvent)
-				p.IncResourceEventQueued(controller, metrics.DeleteEvent)
-				p.IncResourceEventQueued(controller, metrics.DeleteEvent)
+			addMetrics: func(r *kooperprometheus.Recorder) {
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventQueued(context.TODO(), controllerID, controller.DeleteEvent)
 			},
 			expMetrics: []string{
 				`kooper_controller_queued_events_total{controller="test",type="add"} 4`,
@@ -41,17 +43,17 @@ func TestPrometheusMetrics(t *testing.T) {
 		},
 		{
 			name: "Incrementing different kind of processed events should measure the processed events counter",
-			addMetrics: func(p *metrics.Prometheus) {
-				p.IncResourceEventProcessed(controller, metrics.AddEvent)
-				p.IncResourceEventProcessedError(controller, metrics.AddEvent)
-				p.IncResourceEventProcessedError(controller, metrics.AddEvent)
-				p.IncResourceEventProcessed(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessed(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessed(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
-				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
+			addMetrics: func(r *kooperprometheus.Recorder) {
+				r.IncResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.AddEvent)
+				r.IncResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.DeleteEvent)
+				r.IncResourceEventProcessedError(context.TODO(), controllerID, controller.DeleteEvent)
 
 			},
 			expMetrics: []string{
@@ -64,20 +66,20 @@ func TestPrometheusMetrics(t *testing.T) {
 		},
 		{
 			name: "Measuring the duration of processed events return the correct buckets.",
-			addMetrics: func(p *metrics.Prometheus) {
+			addMetrics: func(r *kooperprometheus.Recorder) {
 				now := time.Now()
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-2*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-3*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-11*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-280*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-1*time.Second))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.AddEvent, now.Add(-5*time.Second))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-110*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-560*time.Millisecond))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-4*time.Second))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-7*time.Second))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-12*time.Second))
-				p.ObserveDurationResourceEventProcessed(controller, metrics.DeleteEvent, now.Add(-30*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-2*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-3*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-11*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-280*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-1*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.AddEvent, now.Add(-5*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-110*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-560*time.Millisecond))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-4*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-7*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-12*time.Second))
+				r.ObserveDurationResourceEventProcessed(context.TODO(), controllerID, controller.DeleteEvent, now.Add(-30*time.Second))
 			},
 			expMetrics: []string{
 				`kooper_controller_processed_event_duration_seconds_bucket{controller="test",type="add",le="0.005"} 2`,
@@ -118,7 +120,9 @@ func TestPrometheusMetrics(t *testing.T) {
 
 			// Create a new prometheus empty registry and a kooper prometheus recorder.
 			reg := prometheus.NewRegistry()
-			m := metrics.NewPrometheus(reg)
+			m := kooperprometheus.New(kooperprometheus.Config{
+				Registerer: reg,
+			})
 
 			// Add desired metrics
 			test.addMetrics(m)

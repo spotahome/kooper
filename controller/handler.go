@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
-
-	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
 // Handler knows how to handle the received resources from a kubernetes cluster.
@@ -47,11 +45,11 @@ func (h *HandlerFunc) Delete(ctx context.Context, s string) error {
 
 type metricsMeasuredHandler struct {
 	id   string
-	mrec metrics.Recorder
+	mrec MetricsRecorder
 	next Handler
 }
 
-func newMetricsMeasuredHandler(id string, mrec metrics.Recorder, next Handler) Handler {
+func newMetricsMeasuredHandler(id string, mrec MetricsRecorder, next Handler) Handler {
 	return metricsMeasuredHandler{
 		id:   id,
 		mrec: mrec,
@@ -61,28 +59,28 @@ func newMetricsMeasuredHandler(id string, mrec metrics.Recorder, next Handler) H
 
 func (m metricsMeasuredHandler) Add(ctx context.Context, obj runtime.Object) (err error) {
 	defer func(start time.Time) {
-		m.mrec.ObserveDurationResourceEventProcessed(m.id, metrics.AddEvent, start)
+		m.mrec.ObserveDurationResourceEventProcessed(ctx, m.id, AddEvent, start)
 
 		if err != nil {
-			m.mrec.IncResourceEventProcessedError(m.id, metrics.AddEvent)
+			m.mrec.IncResourceEventProcessedError(ctx, m.id, AddEvent)
 		}
 	}(time.Now())
 
-	m.mrec.IncResourceEventProcessed(m.id, metrics.AddEvent)
+	m.mrec.IncResourceEventProcessed(ctx, m.id, AddEvent)
 
 	return m.next.Add(ctx, obj)
 }
 
 func (m metricsMeasuredHandler) Delete(ctx context.Context, objKey string) (err error) {
 	defer func(start time.Time) {
-		m.mrec.ObserveDurationResourceEventProcessed(m.id, metrics.DeleteEvent, start)
+		m.mrec.ObserveDurationResourceEventProcessed(ctx, m.id, DeleteEvent, start)
 
 		if err != nil {
-			m.mrec.IncResourceEventProcessedError(m.id, metrics.DeleteEvent)
+			m.mrec.IncResourceEventProcessedError(ctx, m.id, DeleteEvent)
 		}
 	}(time.Now())
 
-	m.mrec.IncResourceEventProcessed(m.id, metrics.DeleteEvent)
+	m.mrec.IncResourceEventProcessed(ctx, m.id, DeleteEvent)
 
 	return m.next.Delete(ctx, objKey)
 }
