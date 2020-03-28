@@ -26,7 +26,7 @@ import (
 	"github.com/spotahome/kooper/controller"
 	"github.com/spotahome/kooper/log"
 	kooperlogrus "github.com/spotahome/kooper/log/logrus"
-	"github.com/spotahome/kooper/monitoring/metrics"
+	kooperprometheus "github.com/spotahome/kooper/metrics/prometheus"
 )
 
 const (
@@ -62,11 +62,11 @@ func errRandomly() error {
 }
 
 // creates prometheus recorder and starts serving metrics in background.
-func createPrometheusRecorder(logger log.Logger) metrics.Recorder {
+func createPrometheusRecorder(logger log.Logger) *kooperprometheus.Recorder {
 	// We could use also prometheus global registry (the default one)
 	// prometheus.DefaultRegisterer instead of creating a new one
 	reg := prometheus.NewRegistry()
-	m := metrics.NewPrometheus(reg)
+	rec := kooperprometheus.New(kooperprometheus.Config{Registerer: reg})
 
 	// Start serving metrics in background.
 	h := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
@@ -75,17 +75,7 @@ func createPrometheusRecorder(logger log.Logger) metrics.Recorder {
 		http.ListenAndServe(metricsAddr, h)
 	}()
 
-	return m
-}
-
-func getMetricRecorder(backend string, logger log.Logger) (metrics.Recorder, error) {
-	switch backend {
-	case prometheusBackend:
-		logger.Infof("using Prometheus metrics recorder")
-		return createPrometheusRecorder(logger), nil
-	}
-
-	return nil, fmt.Errorf("wrong metrics backend")
+	return rec
 }
 
 func run() error {
@@ -136,15 +126,11 @@ func run() error {
 	}
 
 	// Create the controller that will refresh every 30 seconds.
-	m, err := getMetricRecorder(metricsBackend, logger)
-	if err != nil {
-		return fmt.Errorf("errors getting metrics backend: %w", err)
-	}
 	cfg := &controller.Config{
 		Name:                 "metricsControllerTest",
 		Handler:              hand,
 		Retriever:            retr,
-		MetricRecorder:       m,
+		MetricsRecorder:      createPrometheusRecorder(logger),
 		Logger:               logger,
 		ProcessingJobRetries: 3,
 	}
