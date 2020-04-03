@@ -98,9 +98,9 @@ func (c *Config) setDefaults() error {
 
 // generic controller is a controller that can be used to create different kind of controllers.
 type generic struct {
-	queue     workqueue.RateLimitingInterface // queue will have the jobs that the controller will get and send to handlers.
-	informer  cache.SharedIndexInformer       // informer will notify be inform us about resource changes.
-	processor processor                       // processor will call the user handler (logic).
+	queue     blockingQueue             // queue will have the jobs that the controller will get and send to handlers.
+	informer  cache.SharedIndexInformer // informer will notify be inform us about resource changes.
+	processor processor                 // processor will call the user handler (logic).
 
 	running   bool
 	runningMu sync.Mutex
@@ -130,9 +130,17 @@ func New(cfg *Config) (Controller, error) {
 		return nil, fmt.Errorf("could no create controller: %w: %v", ErrControllerNotValid, err)
 	}
 
-	// Create the queue that will have our received job changes. It's rate limited so we don't have problems when
-	// a job processing errors every time is processed in a loop.
-	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	// Create the queue that will have our received job changes.
+	queue := newRateLimitingBlockingQueue(
+		cfg.ProcessingJobRetries,
+		workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+	)
+	queue = newMetricsBlockingQueue(
+		cfg.Name,
+		cfg.MetricsRecorder,
+		queue,
+		cfg.Logger,
+	)
 
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}
@@ -145,33 +153,36 @@ func New(cfg *Config) (Controller, error) {
 	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
-			if err == nil {
-				queue.Add(key)
-				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, AddEvent)
+			if err != nil {
+				cfg.Logger.Warningf("could not add item from 'add' event to queue: %s", err)
+				return
 			}
+			queue.Add(context.TODO(), key)
 		},
 		UpdateFunc: func(old interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
-			if err == nil {
-				queue.Add(key)
-				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, AddEvent)
+			if err != nil {
+				cfg.Logger.Warningf("could not add item from 'update' event to queue: %s", err)
+				return
 			}
+			queue.Add(context.TODO(), key)
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			if err == nil {
-				queue.Add(key)
-				cfg.MetricsRecorder.IncResourceEventQueued(context.TODO(), cfg.Name, DeleteEvent)
+			if err != nil {
+				cfg.Logger.Warningf("could not add item from 'delete' event to queue: %s", err)
+				return
 			}
+			queue.Add(context.TODO(), key)
 		},
 	}, cfg.ResyncInterval)
 
-	// Create processing chain processor(+middlewares) -> handler(+middlewares).
-	handler := newMetricsMeasuredHandler(cfg.Name, cfg.MetricsRecorder, cfg.Handler)
-	processor := newIndexerProcessor(informer.GetIndexer(), handler)
+	// Create processing chain: processor(+middlewares) -> handler(+middlewares).
+	processor := newIndexerProcessor(informer.GetIndexer(), cfg.Handler)
 	if cfg.ProcessingJobRetries > 0 {
-		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, cfg.MetricsRecorder, queue, processor)
+		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, queue, cfg.Logger, processor)
 	}
+	processor = newMetricsProcessor(cfg.Name, cfg.MetricsRecorder, processor)
 
 	// Create our generic controller object.
 	return &generic{
@@ -222,7 +233,7 @@ func (g *generic) run(stopC <-chan struct{}) error {
 
 	// Shutdown when Run is stopped so we can process the last items and the queue doesn't
 	// accept more jobs.
-	defer g.queue.ShutDown()
+	defer g.queue.ShutDown(context.TODO())
 
 	// Run the informer so it starts listening to resource events.
 	go g.informer.Run(stopC)
@@ -263,16 +274,18 @@ func (g *generic) runWorker() {
 //
 // If the queue has been closed then it will end the processing.
 func (g *generic) processNextJob() bool {
+	ctx := context.Background()
+
 	// Get next job.
-	nextJob, exit := g.queue.Get()
+	nextJob, exit := g.queue.Get(ctx)
 	if exit {
 		return true
 	}
-	defer g.queue.Done(nextJob)
+
+	defer g.queue.Done(ctx, nextJob)
 	key := nextJob.(string)
 
-	// Process the job. If errors then enqueue again.
-	ctx := context.Background()
+	// Process the job.
 	err := g.processor.Process(ctx, key)
 
 	logger := g.logger.WithKV(log.KV{"object-key": key})

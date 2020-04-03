@@ -16,8 +16,8 @@ NOTE: Breaking release in controllers.
 - Add Logrus helper wrapper.
 - Refactor to simplify the retrievers.
 - Add multiretriever to retriever different resource types on the same controller.
-- Refactor metrics recorder implementation including the prometheus backend, the
-  output prometheus metrics have not been changed.
+- Refactor metrics recorder implementation including the prometheus backend.
+- Refactor internal controller queue into a decorator implementation approach.
 
 ## [0.8.0] - 2019-12-11
 
