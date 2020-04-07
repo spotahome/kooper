@@ -114,16 +114,10 @@ func run() error {
 	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &controller.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			sleepRandomly()
-			return errRandomly()
-		},
-		DeleteFunc: func(_ context.Context, s string) error {
-			sleepRandomly()
-			return errRandomly()
-		},
-	}
+	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		sleepRandomly()
+		return errRandomly()
+	})
 
 	// Create the controller that will refresh every 30 seconds.
 	cfg := &controller.Config{

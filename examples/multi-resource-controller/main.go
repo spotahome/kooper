@@ -73,26 +73,21 @@ func run() error {
 	}
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &controller.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			dep, ok := obj.(*appsv1.Deployment)
-			if ok {
-				logger.Infof("Deployment added: %s/%s", dep.Namespace, dep.Name)
-				return nil
-			}
-
-			st, ok := obj.(*appsv1.StatefulSet)
-			if ok {
-				logger.Infof("Statefulset added: %s/%s", st.Namespace, st.Name)
-				return nil
-			}
-
+	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		dep, ok := obj.(*appsv1.Deployment)
+		if ok {
+			logger.Infof("Deployment added: %s/%s", dep.Namespace, dep.Name)
 			return nil
-		},
-		DeleteFunc: func(_ context.Context, s string) error {
+		}
+
+		st, ok := obj.(*appsv1.StatefulSet)
+		if ok {
+			logger.Infof("Statefulset added: %s/%s", st.Namespace, st.Name)
 			return nil
-		},
-	}
+		}
+
+		return nil
+	})
 
 	// Create the controller with custom configuration.
 	cfg := &controller.Config{

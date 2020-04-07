@@ -104,7 +104,7 @@ func createNamespaceList(prefix string, q int) (*corev1.NamespaceList, []*corev1
 	return nsl, nss
 }
 
-func TestGenericControllerHandleAdds(t *testing.T) {
+func TestGenericControllerHandle(t *testing.T) {
 	nsList, expNSAdds := createNamespaceList("testing", 10)
 
 	tests := []struct {
@@ -113,7 +113,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 		expNSAdds []*corev1.Namespace
 	}{
 		{
-			name:      "Listing multiple namespaces should call as add handlers for every namespace on list.",
+			name:      "Listing multiple namespaces should execute the handling for every namespace on list.",
 			nsList:    nsList,
 			expNSAdds: expNSAdds,
 		},
@@ -134,7 +134,7 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 			callHandling := 0 // used to track the number of calls.
 			mh := &mcontroller.Handler{}
 			for _, ns := range test.expNSAdds {
-				mh.On("Add", mock.Anything, ns).Once().Return(nil).Run(func(args mock.Arguments) {
+				mh.On("Handle", mock.Anything, ns).Once().Return(nil).Run(func(args mock.Arguments) {
 					callHandling++
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
@@ -167,80 +167,6 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 			case <-time.After(1 * time.Second):
 				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
 
-			}
-		})
-	}
-}
-
-func TestGenericControllerHandleDeletes(t *testing.T) {
-
-	startNSList, expNSAdds := createNamespaceList("testing", 10)
-	nsDels := []*corev1.Namespace{expNSAdds[0], expNSAdds[4], expNSAdds[1]}
-
-	tests := []struct {
-		name        string
-		startNSList *corev1.NamespaceList
-		deleteNs    []*corev1.Namespace
-		expDeleteNs []*corev1.Namespace
-	}{
-		{
-			name:        "Deleting multiple namespaces should call as delete handlers for every namespace on deleted.",
-			startNSList: startNSList,
-			deleteNs:    nsDels,
-			expDeleteNs: nsDels,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			assert := assert.New(t)
-			require := require.New(t)
-			controllerStopperC := make(chan struct{})
-			resultC := make(chan error)
-
-			// Mocks kubernetes  client.
-			mc := &fake.Clientset{}
-			// Populate cache so we ensure deletes are correctly delivered.
-			onKubeClientListNamespaceReturn(mc, test.startNSList)
-			onKubeClientWatchNamespaceReturn(mc, nil, nil, test.deleteNs)
-
-			// Mock our handler and set expects.
-			callHandling := 0 // used to track the number of calls.
-			mh := &mcontroller.Handler{}
-			mh.On("Add", mock.Anything, mock.Anything).Return(nil)
-			for _, ns := range test.expDeleteNs {
-				mh.On("Delete", mock.Anything, ns.ObjectMeta.Name).Once().Return(nil).Run(func(args mock.Arguments) {
-					// Check last call, if is the last call expected then stop the controller so
-					// we can assert the expectations of the calls and finish the test.
-					callHandling++
-					if callHandling == len(test.expDeleteNs) {
-						close(controllerStopperC)
-					}
-				})
-			}
-
-			c, err := controller.New(&controller.Config{
-				Name:      "test",
-				Handler:   mh,
-				Retriever: newNamespaceRetriever(mc),
-				Logger:    log.Dummy,
-			})
-			require.NoError(err)
-
-			// Run Controller in background.
-			go func() {
-				resultC <- c.Run(controllerStopperC)
-			}()
-
-			// Wait for different results. If no result means error failure.
-			select {
-			case err := <-resultC:
-				if assert.NoError(err) {
-					// Check handles from the controller.
-					mh.AssertExpectations(t)
-				}
-			case <-time.After(1 * time.Second):
-				assert.Fail("timeout waiting for controller handling, this could mean the controller is not receiving resources")
 			}
 		})
 	}
@@ -281,7 +207,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			// Expect all the retries
 			for range test.nsList.Items {
 				callsPerNS := test.retryNumber + 1 // initial call + retries.
-				mh.On("Add", mock.Anything, mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
+				mh.On("Handle", mock.Anything, mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
 					totalCalls--
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
@@ -350,7 +276,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 
 			// Expect the calls on the lead (mh1) and no calls on the other ones.
 			totalCalls := len(test.nsList.Items)
-			mh1.On("Add", mock.Anything, mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
+			mh1.On("Handle", mock.Anything, mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
 				totalCalls--
 				// Check last call, if is the last call expected then stop the controller so
 				// we can assert the expectations of the calls and finish the test.

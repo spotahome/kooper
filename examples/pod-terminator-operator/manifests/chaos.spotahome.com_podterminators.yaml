@@ -10,11 +10,17 @@ metadata:
 spec:
   group: chaos.spotahome.com
   names:
+    categories:
+    - terminators
+    - killers
+    - gc
     kind: PodTerminator
     listKind: PodTerminatorList
     plural: podterminators
+    shortNames:
+    - pt
     singular: podterminator
-  scope: Namespaced
+  scope: Cluster
   validation:
     openAPIV3Schema:
       description: PodTerminator represents a pod terminator.
