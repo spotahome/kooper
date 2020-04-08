@@ -18,6 +18,7 @@ NOTE: Breaking release in controllers.
 - Add multiretriever to retriever different resource types on the same controller.
 - Refactor metrics recorder implementation including the prometheus backend.
 - Refactor internal controller queue into a decorator implementation approach.
+- Remove `Delete` method from `controller.Handler` and simplify to only `Handle` method
 
 ## [0.8.0] - 2019-12-11
 

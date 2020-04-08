@@ -27,7 +27,8 @@ type Config struct {
 // New returns pod terminator operator.
 func New(cfg Config, podTermCli podtermk8scli.Interface, kubeCli kubernetes.Interface, logger log.Logger) (controller.Controller, error) {
 	return controller.New(&controller.Config{
-		Handler:   newHandler(kubeCli, logger),
+		Name:      "pod-terminator",
+		Handler:   newHandler(kubeCli, podTermCli, logger),
 		Retriever: newRetriever(podTermCli),
 		Logger:    logger,
 
@@ -46,27 +47,66 @@ func newRetriever(cli podtermk8scli.Interface) controller.Retriever {
 	})
 }
 
-type handler struct {
-	chaosService chaos.Syncer
-	logger       log.Logger
+func newHandler(k8sCli kubernetes.Interface, ptCli podtermk8scli.Interface, logger log.Logger) controller.Handler {
+	const finalizer = "finalizer.chaos.spotahome.com/podKiller"
+	chaossvc := chaos.NewChaos(k8sCli, logger)
+
+	return controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		pt, ok := obj.(*chaosv1alpha1.PodTerminator)
+		if !ok {
+			return fmt.Errorf("%v is not a pod terminator object", obj.GetObjectKind())
+		}
+
+		switch {
+		// Handle deletion and remove finalizer.
+		case !pt.DeletionTimestamp.IsZero() && stringPresentInSlice(pt.Finalizers, finalizer):
+			logger.Infof("handling pod termination deletion...")
+			err := chaossvc.DeletePodTerminator(pt.ObjectMeta.Name)
+			if err != nil {
+				return fmt.Errorf("could not handle PodTerminator deletion: %w", err)
+			}
+
+			pt.Finalizers = removeStringFromSlice(pt.Finalizers, finalizer)
+			_, err = ptCli.ChaosV1alpha1().PodTerminators().Update(pt)
+			if err != nil {
+				return fmt.Errorf("could not update pod terminator: %w", err)
+			}
+
+			return nil
+
+		// Deletion already handled, don't do anything.
+		case !pt.DeletionTimestamp.IsZero() && !stringPresentInSlice(pt.Finalizers, finalizer):
+			logger.Infof("handling pod termination deletion already handled, skipping...")
+			return nil
+
+		// Add finalizer to the object.
+		case pt.DeletionTimestamp.IsZero() && !stringPresentInSlice(pt.Finalizers, finalizer):
+			pt.Finalizers = append(pt.Finalizers, finalizer)
+			_, err := ptCli.ChaosV1alpha1().PodTerminators().Update(pt)
+			if err != nil {
+				return fmt.Errorf("could not update pod termiantor: %w", err)
+			}
+		}
+
+		// Handle.
+		return chaossvc.EnsurePodTerminator(pt)
+	})
 }
 
-func newHandler(k8sCli kubernetes.Interface, logger log.Logger) *handler {
-	return &handler{
-		chaosService: chaos.NewChaos(k8sCli, logger),
-		logger:       logger,
+func stringPresentInSlice(ss []string, s string) bool {
+	for _, f := range ss {
+		if f == s {
+			return true
+		}
 	}
+	return false
 }
 
-func (h handler) Add(_ context.Context, obj runtime.Object) error {
-	pt, ok := obj.(*chaosv1alpha1.PodTerminator)
-	if !ok {
-		return fmt.Errorf("%v is not a pod terminator object", obj.GetObjectKind())
+func removeStringFromSlice(ss []string, s string) []string {
+	for i, f := range ss {
+		if f == s {
+			return append(ss[:i], ss[i+1:]...)
+		}
 	}
-
-	return h.chaosService.EnsurePodTerminator(pt)
-}
-
-func (h handler) Delete(_ context.Context, name string) error {
-	return h.chaosService.DeletePodTerminator(name)
+	return ss
 }

@@ -102,19 +102,12 @@ func run() error {
 	})
 
 	// Our domain logic that will print every add/sync/update and delete event we.
-	hand := &controller.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			pod := obj.(*corev1.Pod)
-			sleep()
-			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
-			return nil
-		},
-		DeleteFunc: func(_ context.Context, s string) error {
-			sleep()
-			logger.Infof("Pod deleted: %s", s)
-			return nil
-		},
-	}
+	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		pod := obj.(*corev1.Pod)
+		sleep()
+		logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+		return nil
+	})
 
 	// Create the controller.
 	cfg := &controller.Config{

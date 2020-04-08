@@ -32,12 +32,11 @@ func newIndexerProcessor(indexer cache.Indexer, handler Handler) processor {
 			return err
 		}
 
-		// Handle the object.
 		if !exists {
-			return handler.Delete(ctx, key)
+			return nil
 		}
 
-		return handler.Add(ctx, obj.(runtime.Object))
+		return handler.Handle(ctx, obj.(runtime.Object))
 	})
 }
 

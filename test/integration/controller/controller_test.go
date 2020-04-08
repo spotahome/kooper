@@ -4,7 +4,6 @@ package controller_test
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -27,12 +26,10 @@ import (
 // events are received and handled correctly.
 func TestControllerHandleEvents(t *testing.T) {
 	tests := []struct {
-		name               string
-		addServices        []*corev1.Service
-		updateServices     []string
-		delServices        []string
-		expAddedServices   []string
-		expDeletedServices []string
+		name             string
+		addServices      []*corev1.Service
+		updateServices   []string
+		expAddedServices []string
 	}{
 		{
 			name: "If a controller is watching services it should react to the service change events.",
@@ -56,10 +53,8 @@ func TestControllerHandleEvents(t *testing.T) {
 					},
 				},
 			},
-			updateServices:     []string{"svc1"},
-			delServices:        []string{"svc1", "svc2"},
-			expAddedServices:   []string{"svc1", "svc2", "svc1"},
-			expDeletedServices: []string{"svc1", "svc2"},
+			updateServices:   []string{"svc1"},
+			expAddedServices: []string{"svc1", "svc2", "svc1"},
 		},
 	}
 
@@ -70,7 +65,6 @@ func TestControllerHandleEvents(t *testing.T) {
 			resync := 30 * time.Second
 			stopC := make(chan struct{})
 			var gotAddedServices []string
-			var gotDeletedServices []string
 
 			// Create the kubernetes client.
 			k8scli, err := cli.GetK8sClient("")
@@ -86,38 +80,23 @@ func TestControllerHandleEvents(t *testing.T) {
 			rt := controller.MustRetrieverFromListerWatcher(cache.NewListWatchFromClient(k8scli.CoreV1().RESTClient(), "services", prep.Namespace().Name, fields.Everything()))
 
 			// Call times are the number of times the handler should be called before sending the termination signal.
-			stopCallTimes := len(test.addServices) + len(test.updateServices) + len(test.delServices)
+			stopCallTimes := len(test.addServices) + len(test.updateServices)
 			calledTimes := 0
 			var mx sync.Mutex
 
 			// Create the handler.
-			hl := &controller.HandlerFunc{
-				AddFunc: func(_ context.Context, obj runtime.Object) error {
-					mx.Lock()
-					calledTimes++
-					mx.Unlock()
+			hl := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+				mx.Lock()
+				calledTimes++
+				mx.Unlock()
 
-					svc := obj.(*corev1.Service)
-					gotAddedServices = append(gotAddedServices, svc.Name)
-					if calledTimes >= stopCallTimes {
-						close(stopC)
-					}
-					return nil
-				},
-				DeleteFunc: func(_ context.Context, id string) error {
-					mx.Lock()
-					calledTimes++
-					mx.Unlock()
-
-					// Ignore namespace.
-					id = strings.Split(id, "/")[1]
-					gotDeletedServices = append(gotDeletedServices, id)
-					if calledTimes >= stopCallTimes {
-						close(stopC)
-					}
-					return nil
-				},
-			}
+				svc := obj.(*corev1.Service)
+				gotAddedServices = append(gotAddedServices, svc.Name)
+				if calledTimes >= stopCallTimes {
+					close(stopC)
+				}
+				return nil
+			})
 
 			// Create a Pod controller.
 			cfg := &controller.Config{
@@ -149,13 +128,6 @@ func TestControllerHandleEvents(t *testing.T) {
 				}
 			}
 
-			// Delete the required services.
-			for _, svc := range test.delServices {
-				err := k8scli.CoreV1().Services(prep.Namespace().Name).Delete(svc, &metav1.DeleteOptions{})
-				assert.NoError(err)
-				time.Sleep(1 * time.Second)
-			}
-
 			// Wait until we have finished.
 			select {
 			// Timeout.
@@ -166,7 +138,6 @@ func TestControllerHandleEvents(t *testing.T) {
 
 			// Check.
 			assert.Equal(test.expAddedServices, gotAddedServices)
-			assert.Equal(test.expDeletedServices, gotDeletedServices)
 		})
 	}
 }

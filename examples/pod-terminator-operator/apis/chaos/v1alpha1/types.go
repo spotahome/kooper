@@ -4,11 +4,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// PodTerminator represents a pod terminator.
+//
 // +genclient
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// PodTerminator represents a pod terminator.
+// +kubebuilder:resource:singular=podterminator,path=podterminators,shortName=pt,scope=Cluster,categories=terminators;killers;gc
 type PodTerminator struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.

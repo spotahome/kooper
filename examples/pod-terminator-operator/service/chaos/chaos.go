@@ -59,7 +59,6 @@ func (c *Chaos) EnsurePodTerminator(pt *chaosv1alpha1.PodTerminator) error {
 	pk = NewPodKiller(ptCopy, c.k8sCli, c.logger)
 	c.reg.Store(pt.Name, pk)
 	return pk.Start()
-	// TODO: garbage collection.
 }
 
 // DeletePodTerminator satisfies ChaosSyncer interface.

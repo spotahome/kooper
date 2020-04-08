@@ -64,17 +64,11 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	var wg sync.WaitGroup
 	wg.Add(numberOfEvents)
 
-	h := &controller.HandlerFunc{
-		AddFunc: func(_ context.Context, _ runtime.Object) error {
-			time.Sleep(sleepDuration)
-			wg.Done()
-			return nil
-		},
-		DeleteFunc: func(_ context.Context, _ string) error {
-			assert.Fail("delete events should not be used on this test")
-			return nil
-		},
-	}
+	h := controller.HandlerFunc(func(_ context.Context, _ runtime.Object) error {
+		time.Sleep(sleepDuration)
+		wg.Done()
+		return nil
+	})
 
 	// Create the controller type depending on the concurrency level.
 	cfg := &controller.Config{
