@@ -117,6 +117,9 @@ func (m *metricsBlockingQueue) Requeue(ctx context.Context, item interface{}) er
 func (m *metricsBlockingQueue) Get(ctx context.Context) (interface{}, bool) {
 	// Here should get blocked, warning with the mutexes.
 	item, shutdown := m.queue.Get(ctx)
+	if shutdown {
+		return item, shutdown
+	}
 
 	m.mu.Lock()
 	queuedAt, ok := m.itemsQueuedAt[item]
