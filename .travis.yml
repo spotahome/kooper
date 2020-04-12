@@ -5,7 +5,7 @@ services:
 
 language: go
 go:
-  - "1.13"
+  - "1.14"
 
 before_install:
   - curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
@@ -16,6 +16,11 @@ script:
 
 env:
   global:
-    - GO111MODULE=on
     - KIND_VERSION=v0.7.0
-    - KUBERNETES_VERSION=1.15.7
+
+matrix:
+  include:
+    - env: KUBERNETES_VERSION=1.15.7
+    - env: KUBERNETES_VERSION=1.16.4
+    - env: KUBERNETES_VERSION=1.17.0
+    - env: KUBERNETES_VERSION=1.18.0
