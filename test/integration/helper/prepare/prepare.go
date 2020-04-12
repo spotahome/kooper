@@ -1,10 +1,10 @@
 package prepare
 
 import (
-	"strings"
+	"fmt"
 	"testing"
+	"time"
 
-	randomdata "github.com/Pallinder/go-randomdata"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ type Preparer struct {
 func New(cli kubernetes.Interface, t *testing.T) *Preparer {
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: strings.ToLower(randomdata.SillyName()),
+			Name: fmt.Sprintf("kooper-integration-test-%d", time.Now().UTC().UnixNano()),
 		},
 	}
 	return &Preparer{
