@@ -4,6 +4,16 @@ Kooper is a Go library to create simple and flexible [controllers]/operators, in
 
 In other words, is a small alternative to big frameworks like [Kubebuilder] or [operator-framework].
 
+## Features
+
+- Easy usage and fast to get it working.
+- Extensible (Kooper doesn't get in your way).
+- Simple core concepts (`Retriever` + `Handler` == controller && controller == operator).
+- Metrics (extensible with Prometheus already implementated).
+- Ready for core Kubernetes resources (pods, ingress, deployments...) and CRDs.
+- Optional leader election system for controllers.
+- Optional MultiResource controllers (e.g deployments and pods).
+
 ## Getting started
 
 The simplest example that prints pods would be this:
