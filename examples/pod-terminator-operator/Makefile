@@ -1,5 +1,5 @@
 
-CODE_GENERATOR_IMAGE := quay.io/slok/kube-code-generator:v1.15.10
+CODE_GENERATOR_IMAGE := quay.io/slok/kube-code-generator:v1.17.3
 CRD_GENERATOR_IMAGE :=  quay.io/slok/kube-code-generator:latest
 DIRECTORY := $(PWD)
 ROOT_DIRECTORY := $(DIRECTORY)/../..
