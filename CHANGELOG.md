@@ -15,7 +15,6 @@ NOTE: Breaking release in controllers.
 - Refactor Logger with structured logging.
 - Add Logrus helper wrapper.
 - Refactor to simplify the retrievers.
-- Add multiretriever to retriever different resource types on the same controller.
 - Refactor metrics recorder implementation including the prometheus backend.
 - Refactor internal controller queue into a decorator implementation approach.
 - Remove `Delete` method from `controller.Handler` and simplify to only `Handle` method

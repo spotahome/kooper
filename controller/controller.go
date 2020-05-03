@@ -160,7 +160,7 @@ func New(cfg *Config) (Controller, error) {
 			}
 			queue.Add(context.TODO(), key)
 		},
-		UpdateFunc: func(old interface{}, new interface{}) {
+		UpdateFunc: func(_ interface{}, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err != nil {
 				cfg.Logger.Warningf("could not add item from 'update' event to queue: %s", err)
