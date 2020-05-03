@@ -30,6 +30,7 @@ var (
 	sleepMS           int
 	intervalS         int
 	retries           int
+	disableResync     bool
 )
 
 func initFlags() error {
@@ -38,25 +39,11 @@ func initFlags() error {
 	fg.IntVar(&sleepMS, "sleep-ms", 25, "The number of milliseconds to sleep on each event handling")
 	fg.IntVar(&intervalS, "interval-s", 45, "The number of seconds to for reconciliation loop intervals")
 	fg.IntVar(&retries, "retries", 3, "The number of retries in case of error")
+	fg.BoolVar(&disableResync, "disable-resync", false, "Disables the resync")
 
 	err := fg.Parse(os.Args[1:])
 	if err != nil {
 		return err
-	}
-
-	if concurrentWorkers < 1 {
-		concurrentWorkers = 1
-	}
-
-	if sleepMS < 1 {
-		sleepMS = 25
-	}
-
-	if intervalS < 1 {
-		intervalS = 300
-	}
-	if retries < 0 {
-		retries = 0
 	}
 
 	return nil
@@ -119,6 +106,7 @@ func run() error {
 		ProcessingJobRetries: retries,
 		ResyncInterval:       time.Duration(intervalS) * time.Second,
 		ConcurrentWorkers:    concurrentWorkers,
+		DisableResync:        disableResync,
 	}
 	ctrl, err := controller.New(cfg)
 	if err != nil {

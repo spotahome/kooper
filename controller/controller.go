@@ -53,6 +53,10 @@ type Config struct {
 	ResyncInterval time.Duration
 	// ProcessingJobRetries is the number of times the job will try to reprocess the event before returning a real error.
 	ProcessingJobRetries int
+	// DisableResync will disable resyncing, if disabled the controller only will react on event updates and resync
+	// all when it runs for the first time.
+	// This is useful for secondary resource controllers (e.g pod controller of a primary controller based on deployments).
+	DisableResync bool
 }
 
 func (c *Config) setDefaults() error {
@@ -88,6 +92,10 @@ func (c *Config) setDefaults() error {
 
 	if c.ResyncInterval <= 0 {
 		c.ResyncInterval = 3 * time.Minute
+	}
+
+	if c.DisableResync {
+		c.ResyncInterval = 0 // 0 == resync disabled.
 	}
 
 	if c.ProcessingJobRetries < 0 {
@@ -149,7 +157,7 @@ func New(cfg *Config) (Controller, error) {
 	informer := cache.NewSharedIndexInformer(lw, nil, cfg.ResyncInterval, store)
 
 	// Set up our informer event handler.
-	// Objects are already in our local store. Add only keys/jobs on the queue so they can bre processed
+	// Objects are already in our local store. Add only keys/jobs on the queue so they can re processed
 	// afterwards.
 	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {

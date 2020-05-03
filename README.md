@@ -161,6 +161,8 @@ The solution to this problems embraces simplicity once again, and mainly is to c
 - One of the type retrieval fails, the other type controller continues working (running in degradation mode).
 - Flexibility, e.g leader election for the primary type, no leader election for the secondary type.
 
+Controller config has a handy flag to disable resync (`DisableResync`), sometimes this can be useful on secondary resources.
+
 ## Compatibility matrix
 
 |             | Kubernetes <=1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 | Kubernetes 1.13 | Kubernetes 1.14 |
