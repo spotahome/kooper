@@ -44,34 +44,6 @@ func run() error {
 		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
-	// Create our retriever so the controller knows how to get/listen for deployments and statefulsets.
-	retr, err := controller.NewMultiRetriever(
-		controller.MustRetrieverFromListerWatcher(
-			&cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					return k8scli.AppsV1().Deployments("").List(options)
-				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					return k8scli.AppsV1().Deployments("").Watch(options)
-				},
-			},
-		),
-		controller.MustRetrieverFromListerWatcher(
-			&cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					return k8scli.AppsV1().StatefulSets("").List(options)
-				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					return k8scli.AppsV1().StatefulSets("").Watch(options)
-				},
-			},
-		),
-	)
-
-	if err != nil {
-		return fmt.Errorf("could not create a multi retriever: %w", err)
-	}
-
 	// Our domain logic that will print every add/sync/update and delete event we .
 	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
 		dep, ok := obj.(*appsv1.Deployment)
@@ -89,27 +61,71 @@ func run() error {
 		return nil
 	})
 
-	// Create the controller with custom configuration.
-	cfg := &controller.Config{
-		Name:      "multi-resource-controller",
-		Handler:   hand,
-		Retriever: retr,
-		Logger:    logger,
+	const (
+		retries        = 5
+		resyncInterval = 45 * time.Second
+		workers        = 1
+	)
 
-		ProcessingJobRetries: 5,
-		ResyncInterval:       45 * time.Second,
-		ConcurrentWorkers:    1,
-	}
-	ctrl, err := controller.New(cfg)
+	// Create the controller for deployments.
+	ctrlDep, err := controller.New(&controller.Config{
+		Name:    "multi-resource-controller-deployments",
+		Handler: hand,
+		Retriever: controller.MustRetrieverFromListerWatcher(
+			&cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().Deployments("").List(options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().Deployments("").Watch(options)
+				},
+			},
+		),
+		Logger:               logger,
+		ProcessingJobRetries: retries,
+		ResyncInterval:       resyncInterval,
+		ConcurrentWorkers:    workers,
+	})
 	if err != nil {
-		return fmt.Errorf("could not create controller: %w", err)
+		return fmt.Errorf("could not create deployment resource controller: %w", err)
 	}
 
-	// Start our controller.
+	// Create the controller for statefulsets.
+	ctrlSt, err := controller.New(&controller.Config{
+		Name:    "multi-resource-controller-statefulsets",
+		Handler: hand,
+		Retriever: controller.MustRetrieverFromListerWatcher(
+			&cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().StatefulSets("").List(options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().StatefulSets("").Watch(options)
+				},
+			},
+		),
+		Logger:               logger,
+		ProcessingJobRetries: retries,
+		ResyncInterval:       resyncInterval,
+		ConcurrentWorkers:    workers,
+	})
+
+	// Start our controllers.
 	stopC := make(chan struct{})
-	err = ctrl.Run(stopC)
+	defer close(stopC)
+	errC := make(chan error)
+	go func() {
+		errC <- ctrlDep.Run(stopC)
+	}()
+
+	go func() {
+		errC <- ctrlSt.Run(stopC)
+	}()
+
+	// Wait until one finishes.
+	err = <-errC
 	if err != nil {
-		return fmt.Errorf("error running controller: %w", err)
+		return fmt.Errorf("error running controllers: %w", err)
 	}
 
 	return nil

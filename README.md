@@ -12,7 +12,6 @@ In other words, is a small alternative to big frameworks like [Kubebuilder] or [
 - Metrics (extensible with Prometheus already implementated).
 - Ready for core Kubernetes resources (pods, ingress, deployments...) and CRDs.
 - Optional leader election system for controllers.
-- Optional MultiResource controllers (e.g deployments and pods).
 
 ## Getting started
 
@@ -101,10 +100,9 @@ A controller is based on 3 simple concepts:
 
 ### Retriever
 
-The component that lists and watch the resources the controller will handle when there is a change. Kooper comes with some helpers to create fast retrievers and combination of multiple of them:
+The component that lists and watch the resources the controller will handle when there is a change. Kooper comes with some helpers to create fast retrievers:
 
 - `Retriever`: The core retriever it needs to implement list (list objects), and watch, subscribe to object changes.
-- `MultiRetriever`: A retriever that can combine multiple retriever of different types to handle changes on the same controller `Handler`.
 - `RetrieverFromListerWatcher`: Converts a Kubernetes ListerWatcher into a kooper Retriever.
 
 The `Retriever` can be based on Kubernetes base resources (Pod, Deployment, Service...) or based on CRDs, theres no distinction.
@@ -142,6 +140,27 @@ If your controller creates as a side effect new Kubernetes resources you can use
 
 On the other hand if you want a more flexible clean up process (e.g clean from a database or a 3rd party service) you can use [finalizers], check the [pod-terminator-operator][finalizer-example] example.
 
+### Multiresource or secondary resources
+
+Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods that belong to the deployment handled.
+
+After using them and experiencing with controllers, we though that is not necesary becase:
+
+- Adds complexity.
+- Adds corner cases, this translates in bugs, e.g
+  - Internal cache based on IDs of `{namespace}/{name}` scheme.
+    - Receiving a deletion watch event of one type removes the other type object with the same name from the cache
+    - The different resources that share name and ns, will only process one of the types (sometimes is useful, others adds bugs and corner cases).
+- An error on one of the retrieval types stops all the controller process and not only the one based on that type.
+- The benefit of having this is to reuse the handler (we already can do this, a `Handler` is easy to reuse).
+
+The solution to this problems embraces simplicity once again, and mainly is to create multiple controllers using the same `Handler` but with a different `ListerWatcher`, the `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example] of creating a multiresource controller(s). Also, this comes with extra benefits:
+
+- Different controller interval depending on the type (fast changing secondary objects can reconcile faster than the primary one, or viceversa).
+- Wrap the controller handler with a middlewre only for a particular type.
+- One of the type retrieval fails, the other type controller continues working (running in degradation mode).
+- Flexibility, e.g leader election for the primary type, no leader election for the secondary type.
+
 ## Compatibility matrix
 
 |             | Kubernetes <=1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 | Kubernetes 1.13 | Kubernetes 1.14 |
@@ -171,3 +190,4 @@ On the other hand if you want a more flexible clean up process (e.g clean from a
 [owner-ref]: https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents
 [finalizers]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#finalizers
 [finalizer-example]: examples/pod-terminator-operator/operator/operator.go
+[multiresource-example]: examples/multi-resource-controller

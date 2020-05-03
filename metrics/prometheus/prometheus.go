@@ -63,7 +63,7 @@ func New(cfg Config) *Recorder {
 		inQueueEventDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: promNamespace,
 			Subsystem: promControllerSubsystem,
-			Name:      "event_in_queue_duration_total",
+			Name:      "event_in_queue_duration_seconds",
 			Help:      "The duration of an event in the queue.",
 			Buckets:   cfg.InQueueBuckets,
 		}, []string{"controller"}),
