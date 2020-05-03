@@ -61,6 +61,12 @@ func run() error {
 		return nil
 	})
 
+	const (
+		retries        = 5
+		resyncInterval = 45 * time.Second
+		workers        = 1
+	)
+
 	// Create the controller for deployments.
 	ctrlDep, err := controller.New(&controller.Config{
 		Name:    "multi-resource-controller-deployments",
@@ -75,11 +81,10 @@ func run() error {
 				},
 			},
 		),
-		Logger: logger,
-
-		ProcessingJobRetries: 5,
-		ResyncInterval:       45 * time.Second,
-		ConcurrentWorkers:    1,
+		Logger:               logger,
+		ProcessingJobRetries: retries,
+		ResyncInterval:       resyncInterval,
+		ConcurrentWorkers:    workers,
 	})
 	if err != nil {
 		return fmt.Errorf("could not create deployment resource controller: %w", err)
@@ -99,11 +104,10 @@ func run() error {
 				},
 			},
 		),
-		Logger: logger,
-
-		ProcessingJobRetries: 5,
-		ResyncInterval:       45 * time.Second,
-		ConcurrentWorkers:    1,
+		Logger:               logger,
+		ProcessingJobRetries: retries,
+		ResyncInterval:       resyncInterval,
+		ConcurrentWorkers:    workers,
 	})
 
 	// Start our controllers.
@@ -118,7 +122,7 @@ func run() error {
 		errC <- ctrlSt.Run(stopC)
 	}()
 
-	// Wait unitl one finishes
+	// Wait until one finishes.
 	err = <-errC
 	if err != nil {
 		return fmt.Errorf("error running controllers: %w", err)

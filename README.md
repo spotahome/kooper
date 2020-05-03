@@ -142,18 +142,19 @@ On the other hand if you want a more flexible clean up process (e.g clean from a
 
 ### Multiresource or secondary resources
 
-Sometimes we have contorllers that work on a main or primary resource and we want to also handle the events of a secondary resource that is based on the first one. For example a deployment controller that watches the pods that belong to the deployment handled.
+Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods that belong to the deployment handled.
 
-After experiencing with controllers and implementing a way of creating multiresource controllers we though that is not necesary becase:
+After using them and experiencing with controllers, we though that is not necesary becase:
 
 - Adds complexity.
-- Adds corner cases and bugs, e.g
-  - Internal cache be based on IDs of `{namespace}/{name}` receiving a deletion watch event of one type removes the other type object with the same name from the cache
-  - Internal cache be based on IDs of `{namespace}/{name}`, the different resources that share name, only processsing one of the types.
-  - An error on one of the retrieval types stops all the controller process and not only the one based on that type.
+- Adds corner cases, this translates in bugs, e.g
+  - Internal cache based on IDs of `{namespace}/{name}` scheme.
+    - Receiving a deletion watch event of one type removes the other type object with the same name from the cache
+    - The different resources that share name and ns, will only process one of the types (sometimes is useful, others adds bugs and corner cases).
+- An error on one of the retrieval types stops all the controller process and not only the one based on that type.
 - The benefit of having this is to reuse the handler (we already can do this, a `Handler` is easy to reuse).
 
-The solution to this embraces simplicity once again, is to create multiple controllers using the same `Handler` but with a different `ListerWatcher`, the `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example] of creating a multiresource controller. This has more benefits:
+The solution to this problems embraces simplicity once again, and mainly is to create multiple controllers using the same `Handler` but with a different `ListerWatcher`, the `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example] of creating a multiresource controller(s). Also, this comes with extra benefits:
 
 - Different controller interval depending on the type (fast changing secondary objects can reconcile faster than the primary one, or viceversa).
 - Wrap the controller handler with a middlewre only for a particular type.
@@ -189,4 +190,4 @@ The solution to this embraces simplicity once again, is to create multiple contr
 [owner-ref]: https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents
 [finalizers]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#finalizers
 [finalizer-example]: examples/pod-terminator-operator/operator/operator.go
-[multiresource-example]: examples/pod-terminator-operator/multi-resource-controller
+[multiresource-example]: examples/multi-resource-controller
