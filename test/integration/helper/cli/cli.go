@@ -11,7 +11,6 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-
 // GetK8sClient returns k8s client.
 func GetK8sClient(kubehome string) (kubernetes.Interface, error) {
 	// Try fallbacks.

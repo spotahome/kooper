@@ -23,12 +23,6 @@ import (
 	mcontroller "github.com/spotahome/kooper/mocks/controller"
 )
 
-// Namespace knows how to retrieve namespaces.
-type namespaceRetriever struct {
-	lw  cache.ListerWatcher
-	obj runtime.Object
-}
-
 // NewNamespace returns a Namespace retriever.
 func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
@@ -39,38 +33,6 @@ func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 			return client.CoreV1().Namespaces().Watch(options)
 		},
 	})
-}
-
-// GetListerWatcher knows how to retrieve Namespaces.
-func (n *namespaceRetriever) GetListerWatcher() cache.ListerWatcher {
-	return n.lw
-}
-
-// GetObject returns the namespace Object.
-func (n *namespaceRetriever) GetObject() runtime.Object {
-	return n.obj
-}
-
-func onKubeClientWatchNamespaceReturn(client *fake.Clientset, adds []*corev1.Namespace, updates []*corev1.Namespace, deletes []*corev1.Namespace) {
-	w := watch.NewFake()
-	client.AddWatchReactor("namespaces", func(action kubetesting.Action) (bool, watch.Interface, error) {
-		return true, w, nil
-	})
-
-	go func() {
-		// Adds.
-		for _, obj := range adds {
-			w.Add(obj)
-		}
-		// Updates.
-		for _, obj := range updates {
-			w.Modify(obj)
-		}
-		// Deletes.
-		for _, obj := range deletes {
-			w.Delete(obj)
-		}
-	}()
 }
 
 func onKubeClientListNamespaceReturn(client *fake.Clientset, nss *corev1.NamespaceList) {
