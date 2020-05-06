@@ -162,17 +162,6 @@ The solution to these problems embrace simplicity once again, and mainly is crea
 
 Controller config has a handy flag to disable resync (`DisableResync`), sometimes this can be useful on secondary resources.
 
-## Compatibility matrix
-
-|             | Kubernetes <=1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 | Kubernetes 1.13 | Kubernetes 1.14 |
-| ----------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
-| kooper 0.1  | ✓                | ?               | ?               | ?               | ?               | ?               |
-| kooper 0.2  | ✓                | ?               | ?               | ?               | ?               | ?               |
-| kooper 0.3  | ?+               | ✓               | ?               | ?               | ?               | ?               |
-| kooper 0.4  | ?+               | ✓               | ?               | ?               | ?               | ?               |
-| kooper 0.5  | ?                | ?+              | ✓               | ?               | ?               | ?               |
-| kooper 0.6  | ?                | ?               | ?+              | ✓               | ?               | ?               |
-| kooper HEAD | ?                | ?               | ?               | ?+              | ✓?              | ?               |
 
 [travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
 [travis-url]: https://travis-ci.org/spotahome/kooper
