@@ -2,6 +2,7 @@ package controller_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -95,9 +96,14 @@ func TestGenericControllerHandle(t *testing.T) {
 			// Mock our handler and set expects.
 			callHandling := 0 // used to track the number of calls.
 			mh := &mcontroller.Handler{}
+
+			var mu sync.Mutex
 			for _, ns := range test.expNSAdds {
 				mh.On("Handle", mock.Anything, ns).Once().Return(nil).Run(func(args mock.Arguments) {
+					mu.Lock()
+					defer mu.Unlock()
 					callHandling++
+
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
 					if callHandling == len(test.expNSAdds) {
@@ -167,9 +173,12 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			err := fmt.Errorf("wanted error")
 
 			// Expect all the retries
+			var mu sync.Mutex
 			for range test.nsList.Items {
 				callsPerNS := test.retryNumber + 1 // initial call + retries.
 				mh.On("Handle", mock.Anything, mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
+					mu.Lock()
+					defer mu.Unlock()
 					totalCalls--
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
