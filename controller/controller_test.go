@@ -2,6 +2,7 @@ package controller_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,12 +24,6 @@ import (
 	mcontroller "github.com/spotahome/kooper/mocks/controller"
 )
 
-// Namespace knows how to retrieve namespaces.
-type namespaceRetriever struct {
-	lw  cache.ListerWatcher
-	obj runtime.Object
-}
-
 // NewNamespace returns a Namespace retriever.
 func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
@@ -39,38 +34,6 @@ func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 			return client.CoreV1().Namespaces().Watch(options)
 		},
 	})
-}
-
-// GetListerWatcher knows how to retrieve Namespaces.
-func (n *namespaceRetriever) GetListerWatcher() cache.ListerWatcher {
-	return n.lw
-}
-
-// GetObject returns the namespace Object.
-func (n *namespaceRetriever) GetObject() runtime.Object {
-	return n.obj
-}
-
-func onKubeClientWatchNamespaceReturn(client *fake.Clientset, adds []*corev1.Namespace, updates []*corev1.Namespace, deletes []*corev1.Namespace) {
-	w := watch.NewFake()
-	client.AddWatchReactor("namespaces", func(action kubetesting.Action) (bool, watch.Interface, error) {
-		return true, w, nil
-	})
-
-	go func() {
-		// Adds.
-		for _, obj := range adds {
-			w.Add(obj)
-		}
-		// Updates.
-		for _, obj := range updates {
-			w.Modify(obj)
-		}
-		// Deletes.
-		for _, obj := range deletes {
-			w.Delete(obj)
-		}
-	}()
 }
 
 func onKubeClientListNamespaceReturn(client *fake.Clientset, nss *corev1.NamespaceList) {
@@ -133,9 +96,14 @@ func TestGenericControllerHandle(t *testing.T) {
 			// Mock our handler and set expects.
 			callHandling := 0 // used to track the number of calls.
 			mh := &mcontroller.Handler{}
+
+			var mu sync.Mutex
 			for _, ns := range test.expNSAdds {
 				mh.On("Handle", mock.Anything, ns).Once().Return(nil).Run(func(args mock.Arguments) {
+					mu.Lock()
+					defer mu.Unlock()
 					callHandling++
+
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
 					if callHandling == len(test.expNSAdds) {
@@ -205,9 +173,12 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 			err := fmt.Errorf("wanted error")
 
 			// Expect all the retries
+			var mu sync.Mutex
 			for range test.nsList.Items {
 				callsPerNS := test.retryNumber + 1 // initial call + retries.
 				mh.On("Handle", mock.Anything, mock.Anything).Return(err).Times(callsPerNS).Run(func(args mock.Arguments) {
+					mu.Lock()
+					defer mu.Unlock()
 					totalCalls--
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.

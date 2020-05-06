@@ -134,17 +134,16 @@ Check [Leader election](docs/leader-election.md).
 
 ### Garbage collection
 
-Kooper only handles the events of resources that exist that are triggered when these resources change or are created. There is no delete event, so in order to clean the resources you have 2 ways of doing these:
+Kooper only handles the events of resources that exist, these are triggered when the resources being watched are updated or created. There is no delete event, so in order to clean the resources you have 2 ways of doing these:
 
-If your controller creates as a side effect new Kubernetes resources you can use [owner references][owner-ref] on the created objects.
-
-On the other hand if you want a more flexible clean up process (e.g clean from a database or a 3rd party service) you can use [finalizers], check the [pod-terminator-operator][finalizer-example] example.
+- If your controller creates as a side effect new Kubernetes resources you can use [owner references][owner-ref] on the created objects.
+- If you want a more flexible clean up process (e.g clean from a database or a 3rd party service) you can use [finalizers], check the [pod-terminator-operator][finalizer-example] example.
 
 ### Multiresource or secondary resources
 
-Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods that belong to the deployment handled.
+Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods (secondary) that belong to the deployment (primary) handled.
 
-After using them and experiencing with controllers, we though that is not necesary becase:
+After using multiresource controllers/retrievers, we though that we don't need a multiresource controller is not necesary becase:
 
 - Adds complexity.
 - Adds corner cases, this translates in bugs, e.g
@@ -154,7 +153,7 @@ After using them and experiencing with controllers, we though that is not necesa
 - An error on one of the retrieval types stops all the controller process and not only the one based on that type.
 - The benefit of having this is to reuse the handler (we already can do this, a `Handler` is easy to reuse).
 
-The solution to this problems embraces simplicity once again, and mainly is to create multiple controllers using the same `Handler` but with a different `ListerWatcher`, the `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example] of creating a multiresource controller(s). Also, this comes with extra benefits:
+The solution to these problems embrace simplicity once again, and mainly is creating multiple controllers using the same `Handler`, each controller with a different `ListerWatcher`. The `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example]. Also, this comes with extra benefits:
 
 - Different controller interval depending on the type (fast changing secondary objects can reconcile faster than the primary one, or viceversa).
 - Wrap the controller handler with a middlewre only for a particular type.
