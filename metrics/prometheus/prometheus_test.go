@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 
-	kooperprometheus "github.com/spotahome/kooper/metrics/prometheus"
+	kooperprometheus "github.com/spotahome/kooper/v2/metrics/prometheus"
 )
 
 func TestPrometheusRecorder(t *testing.T) {

@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned/scheme"
+	v1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/client/k8s/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

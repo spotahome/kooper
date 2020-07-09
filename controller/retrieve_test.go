@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/spotahome/kooper/controller"
+	"github.com/spotahome/kooper/v2/controller"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

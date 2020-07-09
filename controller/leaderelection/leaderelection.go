@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 const (

@@ -16,8 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/controller"
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 const (

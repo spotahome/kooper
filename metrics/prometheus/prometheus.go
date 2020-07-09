@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spotahome/kooper/controller"
+	"github.com/spotahome/kooper/v2/controller"
 )
 
 const (

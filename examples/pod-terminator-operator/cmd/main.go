@@ -13,11 +13,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
-	kooperlog "github.com/spotahome/kooper/log"
-	kooperlogrus "github.com/spotahome/kooper/log/logrus"
+	podtermk8scli "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/client/k8s/clientset/versioned"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/operator"
+	kooperlog "github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
 )
 
 // Main is the main program.

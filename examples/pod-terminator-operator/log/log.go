@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 // Logger is the interface of the operator logger. This is an example

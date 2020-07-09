@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 // processor knows how to process object keys.

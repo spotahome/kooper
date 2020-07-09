@@ -8,7 +8,7 @@ import (
 
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 // blockingQueue is a queue that any of its implementations should

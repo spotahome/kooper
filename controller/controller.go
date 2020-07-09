@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/spotahome/kooper/controller/leaderelection"
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/controller/leaderelection"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 var (

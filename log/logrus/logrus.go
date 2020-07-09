@@ -3,7 +3,7 @@ package logrus
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 type logger struct {

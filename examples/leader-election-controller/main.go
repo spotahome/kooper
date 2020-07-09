@@ -22,10 +22,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/spotahome/kooper/controller"
-	"github.com/spotahome/kooper/controller/leaderelection"
-	"github.com/spotahome/kooper/log"
-	kooperlogrus "github.com/spotahome/kooper/log/logrus"
+	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/controller/leaderelection"
+	"github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
 )
 
 const (
