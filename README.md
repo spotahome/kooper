@@ -4,6 +4,8 @@ Kooper is a Go library to create simple and flexible [controllers]/operators, in
 
 In other words, is a small alternative to big frameworks like [Kubebuilder] or [operator-framework].
 
+**Library refactored (`v2`), for `v2` use `import "github.com/spotahome/kooper/v2"`**
+
 ## Features
 
 - Easy usage and fast to get it working.
@@ -12,6 +14,27 @@ In other words, is a small alternative to big frameworks like [Kubebuilder] or [
 - Metrics (extensible with Prometheus already implementated).
 - Ready for core Kubernetes resources (pods, ingress, deployments...) and CRDs.
 - Optional leader election system for controllers.
+
+## V0 vs V2
+
+First of all, we used `v2` instead of `v[01]`, because it changes the library as a whole, theres no backwards compatibility,
+`v0` is stable and used in production, although you eventually will want to update to `v2` becasuse `v0` will not be updated.
+
+Import with:
+
+```golang
+import "github.com/spotahome/kooper/v2"
+```
+
+Regarding the changes... To know all of them check the changelog but mainly we simplified everything. The
+most relevant changes you will need to be aware and could impact are:
+
+- Before there were concepts like `operator` and `controller`, now only `controller` (this is at library level, you can continue creating controllers/operators).
+- Before the CRD management was inside the library, now this should be managed outside Kooper.
+  - You can use [this][kube-code-generator] to generate these manifests to register outside Kooper.
+  - This is because controllers and CRDs have different lifecycles.
+- Refactored Prometheus metrics to be more reliable, so you will need to change dashboards/alerts.
+- `Delete` event removed because wasn't reliable (Check `Garbage-collection` section).
 
 ## Getting started
 
@@ -51,6 +74,10 @@ The simplest example that prints pods would be this:
     ctrl.Run(make(chan struct{}))
 ```
 
+## Kubernetes version compatibility
+
+Kooper at this moment uses as base `v1.17`. But [check the integration test in CI][ci] to know the supported versions.
+
 ## When should I use Kooper?
 
 ### Alternatives
@@ -84,9 +111,9 @@ Kooper instead solves most of the core controller/operator problems but as a sim
 
 For example Kubebuilder sacrifies API simplicity/client in favor of aggresive cache usage. Kooper instead embraces simplicity over optimization:
 
-- Most of the controller/operators don't need this kind of optimization. Adding complexity on all controllers for a small optimized controller use cases doesn't make sense.
+- Most of the controller/operators don't need this kind of optimizations. Adding complexity on all controllers for a small portion of the controllers out there is not the best approach for most of the developers.
 - If you need optimization related with Kubernetes resources, you can use Kubebuilder or implement your own solution for that specific use case like a cache based Kubernetes client or service.
-- If you need otimization and is not related with Kubernetes API itself, it doesn't matter the controller library optimization.
+- If you need optimization and is not related with Kubernetes API itself, it doesn't matter the controller library optimization.
 
 ## More examples
 
@@ -143,25 +170,23 @@ Kooper only handles the events of resources that exist, these are triggered when
 
 Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods (secondary) that belong to the deployment (primary) handled.
 
-After using multiresource controllers/retrievers, we though that we don't need a multiresource controller is not necesary becase:
+After using multiresource controllers/retrievers, we though that we don't need a multiresource controller, this is not necesary becase:
 
 - Adds complexity.
 - Adds corner cases, this translates in bugs, e.g
-  - Internal cache based on IDs of `{namespace}/{name}` scheme.
-    - Receiving a deletion watch event of one type removes the other type object with the same name from the cache
-    - The different resources that share name and ns, will only process one of the types (sometimes is useful, others adds bugs and corner cases).
-- An error on one of the retrieval types stops all the controller process and not only the one based on that type.
-- The benefit of having this is to reuse the handler (we already can do this, a `Handler` is easy to reuse).
+  - Internal object cache based on IDs of `{namespace}/{name}` scheme (ignoring types).
+    - Receiving a deletion watch event of one type removes the other type object with the same name from the cache (service and deployment have same ns and same name).
+    - The different resources that share name and ns, will be only process one of the types (sometimes is useful, others adds bugs and corner cases).
+- An error on one of the retrieval types stops all the controller handling process and not only the one based on that type.
+- Programatically speaking, you can reuse the `Handler` in multiple controllers.
 
-The solution to these problems embrace simplicity once again, and mainly is creating multiple controllers using the same `Handler`, each controller with a different `ListerWatcher`. The `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example]. Also, this comes with extra benefits:
+The solution to these problems, is to embrace simplicity once again, and mainly is creating multiple controllers using the same `Handler`, each controller with a different `ListerWatcher`. The `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example]. Also, this comes with extra benefits:
 
 - Different controller interval depending on the type (fast changing secondary objects can reconcile faster than the primary one, or viceversa).
 - Wrap the controller handler with a middlewre only for a particular type.
 - One of the type retrieval fails, the other type controller continues working (running in degradation mode).
 - Flexibility, e.g leader election for the primary type, no leader election for the secondary type.
-
-Controller config has a handy flag to disable resync (`DisableResync`), sometimes this can be useful on secondary resources.
-
+- Controller config has a handy flag to disable resync (`DisableResync`), sometimes this can be useful on secondary resources (only act on changes).
 
 [travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
 [travis-url]: https://travis-ci.org/spotahome/kooper
@@ -169,15 +194,15 @@ Controller config has a handy flag to disable resync (`DisableResync`), sometime
 [goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
 [godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
 [godoc-url]: https://godoc.org/github.com/spotahome/kooper
-
 [examples]: examples/
 [grafana-dashboard]: https://grafana.com/dashboards/7082
 [controllers]: https://kubernetes.io/docs/concepts/architecture/controller/
-[Kubebuilder]: https://github.com/kubernetes-sigs/kubebuilder
+[kubebuilder]: https://github.com/kubernetes-sigs/kubebuilder
 [operator-framework]: https://github.com/operator-framework
-[Kubewebhook]: https://github.com/slok/kubewebhook
+[kubewebhook]: https://github.com/slok/kubewebhook
 [kube-code-generator]: https://github.com/slok/kube-code-generator
 [owner-ref]: https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents
 [finalizers]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#finalizers
 [finalizer-example]: examples/pod-terminator-operator/operator/operator.go
 [multiresource-example]: examples/multi-resource-controller
+[ci]: https://github.com/spotahome/kooper/actions
