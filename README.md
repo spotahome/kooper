@@ -29,9 +29,11 @@ import "github.com/spotahome/kooper/v2"
 Regarding the changes... To know all of them check the changelog but mainly we simplified everything. The
 most relevant changes you will need to be aware and could impact are:
 
-- Before there were operators and controllers, now only controllers (one single concept).
-- Before CRD management in the library, CRDs now should be already registered when the controller starts (you can use [this][kube-code-generator] to generate these manifests).
-- Refactor Prometheus metrics, so you will need to change dashboards/alerts.
+- Before there were concepts like `operator` and `controller`, now only `controller` (this is at library level, you can continue creating controllers/operators).
+- Before the CRD management was inside the library, now this should be managed outside Kooper.
+  - You can use [this][kube-code-generator] to generate these manifests to register outside Kooper.
+  - This is because controllers and CRDs have different lifecycles.
+- Refactored Prometheus metrics to be more reliable, so you will need to change dashboards/alerts.
 - `Delete` event removed because wasn't reliable (Check `Garbage-collection` section).
 
 ## Getting started
