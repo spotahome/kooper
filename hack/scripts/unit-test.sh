@@ -3,4 +3,5 @@
 set -o errexit
 set -o nounset
 
-go test `go list ./... | grep -v vendor` -v
+go test -race -coverprofile=.test_coverage.txt ./...
+go tool cover -func=.test_coverage.txt | tail -n1 | awk '{print "Total test coverage: " $3}'

@@ -8,12 +8,12 @@ A controller can be run with multiple instances in HA and only one will be reall
 
 The default controllers don't run in leader election mode:
 
-* `controller.NewSequential`
-* `controller.NewConcurrent`
+- `controller.NewSequential`
+- `controller.NewConcurrent`
 
 To use the leader election you can use:
 
-* `controller.New`
+- `controller.New`
 
 These method accepts a [`leaderelection.Runner`][leaderelection-src] service that manages the leader election of the controller, if this service is a `nil` object the controller will fallback to a regular controller mode.
 
@@ -24,7 +24,7 @@ Lets take and example of creating using the default leader election service.
 ```golang
 import (
     ...
-    "github.com/spotahome/kooper/operator/controller/leaderelection"
+    "github.com/spotahome/kooper/v2/operator/controller/leaderelection"
     ...
 )
 
@@ -40,7 +40,7 @@ Another example customizing the lock would be:
 ```golang
 import (
     ...
-    "github.com/spotahome/kooper/operator/controller/leaderelection"
+    "github.com/spotahome/kooper/v2/operator/controller/leaderelection"
     ...
 )
 
@@ -109,11 +109,10 @@ docker run --name ctrl2 \
 
 Now you can test disconnecting and connecting them using these commands and checking the results.
 
-* `docker network disconnect bridge ctrl2`
-* `docker network disconnect bridge ctrl1`
-* `docker network connect bridge ctrl2`
-* `docker network connect bridge ctrl1`
-
+- `docker network disconnect bridge ctrl2`
+- `docker network disconnect bridge ctrl1`
+- `docker network connect bridge ctrl2`
+- `docker network connect bridge ctrl1`
 
 [leaderelection-src]: https://github.com/spotahome/kooper/tree/master/operator/controller/leaderelection
 [leaderelection-example]: https://github.com/spotahome/kooper/tree/master/examples/leader-election-controller

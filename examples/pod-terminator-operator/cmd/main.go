@@ -7,17 +7,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spotahome/kooper/client/crd"
-	applogger "github.com/spotahome/kooper/log"
-	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/operator"
+	podtermk8scli "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/client/k8s/clientset/versioned"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/operator"
+	kooperlog "github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
 )
 
 // Main is the main program.
@@ -42,13 +42,13 @@ func (m *Main) Run(stopC <-chan struct{}) error {
 	m.logger.Infof("initializing pod termination operator")
 
 	// Get kubernetes rest client.
-	ptCli, crdCli, k8sCli, err := m.getKubernetesClients()
+	ptCli, k8sCli, err := m.getKubernetesClients()
 	if err != nil {
 		return err
 	}
 
 	// Create the operator and run
-	op, err := operator.New(m.config, ptCli, crdCli, k8sCli, m.logger)
+	op, err := operator.New(m.config, ptCli, k8sCli, m.logger)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (m *Main) Run(stopC <-chan struct{}) error {
 
 // getKubernetesClients returns all the required clients to communicate with
 // kubernetes cluster: CRD type client, pod terminator types client, kubernetes core types client.
-func (m *Main) getKubernetesClients() (podtermk8scli.Interface, crd.Interface, kubernetes.Interface, error) {
+func (m *Main) getKubernetesClients() (podtermk8scli.Interface, kubernetes.Interface, error) {
 	var err error
 	var cfg *rest.Config
 
@@ -66,39 +66,33 @@ func (m *Main) getKubernetesClients() (podtermk8scli.Interface, crd.Interface, k
 	if m.flags.Development {
 		cfg, err = clientcmd.BuildConfigFromFlags("", m.flags.KubeConfig)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("could not load configuration: %s", err)
+			return nil, nil, fmt.Errorf("could not load configuration: %s", err)
 		}
 	} else {
 		cfg, err = rest.InClusterConfig()
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("error loading kubernetes configuration inside cluster, check app is running outside kubernetes cluster or run in development mode: %s", err)
+			return nil, nil, fmt.Errorf("error loading kubernetes configuration inside cluster, check app is running outside kubernetes cluster or run in development mode: %s", err)
 		}
 	}
 
 	// Create clients.
 	k8sCli, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// App CRD k8s types client.
 	ptCli, err := podtermk8scli.NewForConfig(cfg)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	// CRD cli.
-	aexCli, err := apiextensionscli.NewForConfig(cfg)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	crdCli := crd.NewClient(aexCli, m.logger)
-
-	return ptCli, crdCli, k8sCli, nil
+	return ptCli, k8sCli, nil
 }
 
 func main() {
-	logger := &applogger.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(kooperlog.KV{"example": "pod-terminator-operator"})
 
 	stopC := make(chan struct{})
 	finishC := make(chan error)

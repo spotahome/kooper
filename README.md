@@ -1,180 +1,192 @@
 # Kooper [![Build Status][travis-image]][travis-url] [![Go Report Card][goreport-image]][goreport-url] [![GoDoc][godoc-image]][godoc-url]
 
-Kooper is a simple Go library to create Kubernetes [operators](https://coreos.com/operators/) and [controllers](https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md).
+Kooper is a Go library to create simple and flexible [controllers]/operators, in a fast, decoupled and easy way.
 
-## What is Kooper?
+In other words, is a small alternative to big frameworks like [Kubebuilder] or [operator-framework].
 
-Kooper is a set of utilities packed as a library or framework to easily create Kubernetes controllers and operators.
-
-There is a little of discussion of what a controller and what an operator is, see [here](https://stackoverflow.com/questions/47848258/kubernetes-controller-vs-kubernetes-operator) for more information.
-
-In Kooper the concepts of controller an operator are very simple, a controller controls the state of a resource in Kubernetes, and an operator is a controller that initializes custom resources (CRD) and controls the state of this custom resource.
+**Library refactored (`v2`), for `v2` use `import "github.com/spotahome/kooper/v2"`**
 
 ## Features
 
-- Easy and decoupled library.
-- Well structured and a clear API.
-- Remove all duplicated code from every controller and operator.
-- Uses the tooling already created by Kubernetes.
-- Remove complexity from operators and controllers so the focus is on domain logic.
-- Easy to mock and extend functionality (Go interfaces!).
-- Only support CRD, no TPR support (Kubernetes >=1.7).
-- Controller metrics (with a [Grafana dashboard][grafana-dashboard] based on Prometheus metrics backend).
-- Leader election.
-- Tracing with [Opentracing][opentracing-url].
+- Easy usage and fast to get it working.
+- Extensible (Kooper doesn't get in your way).
+- Simple core concepts (`Retriever` + `Handler` == controller && controller == operator).
+- Metrics (extensible with Prometheus already implementated).
+- Ready for core Kubernetes resources (pods, ingress, deployments...) and CRDs.
+- Optional leader election system for controllers.
 
-## Example
+## V0 vs V2
 
-It can be seen how easy is to develop a controller or an operator in kooper looking at the [documentation](docs).
+First of all, we used `v2` instead of `v[01]`, because it changes the library as a whole, theres no backwards compatibility,
+`v0` is stable and used in production, although you eventually will want to update to `v2` becasuse `v0` will not be updated.
 
-This is a simple pod log controller example ([full running example here](https://github.com/spotahome/kooper/blob/master/examples/onefile-echo-pod-controller/main.go)):
+Import with:
+
+```golang
+import "github.com/spotahome/kooper/v2"
+```
+
+Regarding the changes... To know all of them check the changelog but mainly we simplified everything. The
+most relevant changes you will need to be aware and could impact are:
+
+- Before there were concepts like `operator` and `controller`, now only `controller` (this is at library level, you can continue creating controllers/operators).
+- Before the CRD management was inside the library, now this should be managed outside Kooper.
+  - You can use [this][kube-code-generator] to generate these manifests to register outside Kooper.
+  - This is because controllers and CRDs have different lifecycles.
+- Refactored Prometheus metrics to be more reliable, so you will need to change dashboards/alerts.
+- `Delete` event removed because wasn't reliable (Check `Garbage-collection` section).
+
+## Getting started
+
+The simplest example that prints pods would be this:
 
 ```go
-// Initialize resources like logger and kubernetes client
-//...
-
-// Create our retriever so the controller knows how to get/listen for pod events.
-retr := &retrieve.Resource{
-    Object: &corev1.Pod{},
-    ListerWatcher: &cache.ListWatch{
+    // Create our retriever so the controller knows how to get/listen for pod events.
+    retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
         ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
             return k8scli.CoreV1().Pods("").List(options)
         },
         WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
             return k8scli.CoreV1().Pods("").Watch(options)
         },
-    },
-}
+    })
 
-// Our domain logic that will print every add/sync/update and delete event.
-hand := &handler.HandlerFunc{
-    AddFunc: func(_ context.Context, obj runtime.Object) error {
+    // Our domain logic that will print all pod events.
+    hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
         pod := obj.(*corev1.Pod)
-        log.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+        logger.Infof("Pod event: %s/%s", pod.Namespace, pod.Name)
         return nil
-    },
-    DeleteFunc: func(_ context.Context, s string) error {
-        log.Infof("Pod deleted: %s", s)
-        return nil
-    },
-}
+    })
 
-// Create the controller that will refresh every 30 seconds.
-ctrl := controller.NewSequential(30*time.Second, hand, retr, nil, log)
-stopC := make(chan struct{})
-if err := ctrl.Run(stopC); err != nil {
-    log.Errorf("error running controller: %s", err)
-    os.Exit(1)
-}
-os.Exit(0)
+    // Create the controller with custom configuration.
+    cfg := &controller.Config{
+        Name:      "example-controller",
+        Handler:   hand,
+        Retriever: retr,
+        Logger:    logger,
+    }
+    ctrl, err := controller.New(cfg)
+    if err != nil {
+        return fmt.Errorf("could not create controller: %w", err)
+    }
+
+    // Start our controller.
+    ctrl.Run(make(chan struct{}))
 ```
 
-The above shows that it is very easy to get a controller working in less than 100 lines of code. How it works can be demonstrated by running the controller from this repository.
+## Kubernetes version compatibility
 
-```bash
-go run ./examples/onefile-echo-pod-controller/main.go
-```
+Kooper at this moment uses as base `v1.17`. But [check the integration test in CI][ci] to know the supported versions.
 
-or directly using docker (Note you are binding kubernetes configuration on the container so kooper can connect to kubernetes cluster).
+## When should I use Kooper?
 
-```bash
-docker run \
-    --rm -it \
-    -v ${HOME}/.kube:/root/.kube:ro \
-    golang:1.10 \
-    /bin/bash -c "go get github.com/spotahome/kooper/... && cd /go/src/github.com/spotahome/kooper && go run ./examples/onefile-echo-pod-controller/main.go"
-```
+### Alternatives
 
-## Motivation
+What is the difference between kooper and alternatives like [Kubebuilder] or [operator-framework]?
 
-The state of art in the operators/controllers moves fast, a lot of new operators are being published every day. Most of them have the same "infrastructure" code refering Kubernetes operators/controllers and bootstrapping a new operator can be slow or repetitive.
+Kooper embraces the Go philosophy of having small simple components/libs and use them as you wish in combination of others, instead of trying to solve every use case and imposing everything by sacriying flexbility and adding complexity.
 
-At this moment there is no standard, although there are some projects like [rook operator kit](https://github.com/rook/operator-kit) or [Giantswarm operator kit](https://github.com/giantswarm/operatorkit) that are trying to create it.
+As an example using the web applications world as reference: We could say that Kooper is more like Go HTTP router/libs, on the other side, Kubebuilder and operator-framework are like Ruby on rails/Django style frameworks.
 
-Spotahome studied these projects before developing Kooper and they didn't fit the requirements:
+For example Kubebuilder comes with:
 
-- Clear and maintanable code.
-- Easy to test and mock.
-- Well tested library.
-- Easy and clear programming API.
-- Good abstraction and structure to focus on domain logic (the meat of the controller).
-- Reduce complexity in all the operators and controllers that use the library.
-- Not only operators, controllers as first class citizen also.
+- Admission webhooks.
+- Folder/package structure conventions.
+- CRD clients generation.
+- RBAC manifest generation.
+- Not pluggable/flexible usage of metrics, logging, HTTP/K8s API clients...
+- ...
 
-## Installing
+Kooper instead solves most of the core controller/operator problems but as a simple, small and flexible library, and let the other problems (like admission webhooks) be solved by other libraries specialiced on that. e.g
 
-Any dependency manager can get Kooper or directly with go get the latest version:
+- Use whatever you want to create your CRD clients, maybe you don't have CRDs at all! (e.g [kube-code-generator]).
+- You can setup your admission webhooks outside your controller by using other libraries like (e.g [Kubewebhook]).
+- You can create your RBAC manifests as you wish and evolve while you develop your controller.
+- Set you prefered logging system/style (comes with logrus implementation).
+- Implement your prefered metrics backend (comes with Prometheus implementaion).
+- Use your own Kubernetes clients (Kubernetes go library, implemented by your own for a special case...).
+- ...
 
-```bash
-go get -u github.com/spotahome/kooper
-```
+### Simplicty VS optimization
 
-## Using Kooper as a dependency
+For example Kubebuilder sacrifies API simplicity/client in favor of aggresive cache usage. Kooper instead embraces simplicity over optimization:
 
-Managing a project that uses different kubernetes libs as dependencies can be tricky at first because of the different versions of all these libraries(apimachinery, client-go, api...). [Here][dependency-example] you have an example of how would you use kooper as a dependency in a project and setting the kubernetes libraries to the version that you want along with kooper (using [dep][dep-project]).
+- Most of the controller/operators don't need this kind of optimizations. Adding complexity on all controllers for a small portion of the controllers out there is not the best approach for most of the developers.
+- If you need optimization related with Kubernetes resources, you can use Kubebuilder or implement your own solution for that specific use case like a cache based Kubernetes client or service.
+- If you need optimization and is not related with Kubernetes API itself, it doesn't matter the controller library optimization.
 
-## Compatibility matrix
+## More examples
 
-|             | Kubernetes <=1.9 | Kubernetes 1.10 | Kubernetes 1.11 | Kubernetes 1.12 | Kubernetes 1.13 | Kubernetes 1.14 |
-| ----------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
-| kooper 0.1  | ✓                | ?               | ?               | ?               | ?               | ?               |
-| kooper 0.2  | ✓                | ?               | ?               | ?               | ?               | ?               |
-| kooper 0.3  | ?+               | ✓               | ?               | ?               | ?               | ?               |
-| kooper 0.4  | ?+               | ✓               | ?               | ?               | ?               | ?               |
-| kooper 0.5  | ?                | ?+              | ✓               | ?               | ?               | ?               |
-| kooper 0.6  | ?                | ?               | ?+              | ✓               | ?               | ?               |
-| kooper HEAD | ?                | ?               | ?               | ?+              | ✓?              | ?               |
+On the [examples] folder you have different examples, like regular controllers, operators, metrics based, leader election, multiresource type controllers...
 
-Based on this matrix Kooper needs different versions of Kubernetes dependencies.
+## Core concepts
 
-An example would be. If the cluster that will use kooper operators/controllers is a 1.9.x Kubernetes cluster, the version of kooper would be `0.2.x` and the kubernetes libraries in `1.9.x` compatibility style. For example the project that uses kooper as a dependency, its dep file would be something like this:
+Concept doesn't do a distinction between Operators and controllers, all are controllers, the difference of both is on what resources are retrieved.
 
-```yaml
-...
+A controller is based on 3 simple concepts:
 
-[[override]]
-  name = "k8s.io/api"
-  version = "kubernetes-1.9.6"
+### Retriever
 
-[[override]]
-  name = "k8s.io/apimachinery"
-  version = "kubernetes-1.9.6"
+The component that lists and watch the resources the controller will handle when there is a change. Kooper comes with some helpers to create fast retrievers:
 
-[[override]]
-  name = "k8s.io/client-go"
-  version = "kubernetes-1.9.6"
+- `Retriever`: The core retriever it needs to implement list (list objects), and watch, subscribe to object changes.
+- `RetrieverFromListerWatcher`: Converts a Kubernetes ListerWatcher into a kooper Retriever.
 
-[[constraint]]
-  name = "github.com/spotahome/kooper"
-  version = "0.2.0"
+The `Retriever` can be based on Kubernetes base resources (Pod, Deployment, Service...) or based on CRDs, theres no distinction.
 
-...
-```
+The `Retriever` is an interface so you can use the middleware/wrapper/decorator pattern to extend (e.g add custom metrics).
 
-## Documentation
+### Handler
 
-Kooper comes with different topics as documentation.
+Kooper handles all the events on the same handler:
 
-### Core
+- `Handler`: The interface that knows how to handle kubernetes objects.
+- `HandlerFunc`: A helper that gets a `Handler` from a function so you don't need to create a new type to define your `Handler`.
 
-- [Basic concepts](docs/concepts.md)
-- [Controller tutorial](docs/controller-tutorial.md)
-- [Operator tutorial](docs/operator-tutorial.md)
+The `Handler` is an interface so you can use the middleware/wrapper/decorator pattern to extend (e.g add custom metrics).
 
-### Other
+### Controller
 
-- [Metrics](docs/metrics.md)
-- [Logger](docs/logger.md)
-- [Leader election](docs/leader-election.md)
-- [Tracing](docs/tracing.md)
+The controller is the component that uses the `Handler` and `Retriever` to start a feedback loop controller process:
 
-The starting point would be to check the [concepts](docs/concepts.md) and then continue with the controller and operator tutorials.
+- On the first start it will use `controller.Retriever.List` to get all the resources and pass them to the `controller.Handler`.
+- Then it will call `controller.Handler` for every change done in the resources using the `controller.Retriever.Watcher`.
+- At regular intervals (3 minute by default) it will call `controller.Handler` with all resources in case we have missed a `Watch` event.
 
-## Who is using kooper
+## Other concepts
 
-- [redis-operator](https://github.com/spotahome/redis-operator)
-- [node-labeler-operator](https://github.com/barpilot/node-labeler-operator)
-- [source-ranges-controller](https://github.com/jeffersongirao/source-ranges-controller)
+### Leader election
+
+Check [Leader election](docs/leader-election.md).
+
+### Garbage collection
+
+Kooper only handles the events of resources that exist, these are triggered when the resources being watched are updated or created. There is no delete event, so in order to clean the resources you have 2 ways of doing these:
+
+- If your controller creates as a side effect new Kubernetes resources you can use [owner references][owner-ref] on the created objects.
+- If you want a more flexible clean up process (e.g clean from a database or a 3rd party service) you can use [finalizers], check the [pod-terminator-operator][finalizer-example] example.
+
+### Multiresource or secondary resources
+
+Sometimes we have controllers that work on a main or primary resource and we also want to handle the events of a secondary resource that is based on the first one. For example, a deployment controller that watches the pods (secondary) that belong to the deployment (primary) handled.
+
+After using multiresource controllers/retrievers, we though that we don't need a multiresource controller, this is not necesary becase:
+
+- Adds complexity.
+- Adds corner cases, this translates in bugs, e.g
+  - Internal object cache based on IDs of `{namespace}/{name}` scheme (ignoring types).
+    - Receiving a deletion watch event of one type removes the other type object with the same name from the cache (service and deployment have same ns and same name).
+    - The different resources that share name and ns, will be only process one of the types (sometimes is useful, others adds bugs and corner cases).
+- An error on one of the retrieval types stops all the controller handling process and not only the one based on that type.
+- Programatically speaking, you can reuse the `Handler` in multiple controllers.
+
+The solution to these problems, is to embrace simplicity once again, and mainly is creating multiple controllers using the same `Handler`, each controller with a different `ListerWatcher`. The `Handler` API is easy enough to reuse it across multiple controllers, check an [example][multiresource-example]. Also, this comes with extra benefits:
+
+- Different controller interval depending on the type (fast changing secondary objects can reconcile faster than the primary one, or viceversa).
+- Wrap the controller handler with a middlewre only for a particular type.
+- One of the type retrieval fails, the other type controller continues working (running in degradation mode).
+- Flexibility, e.g leader election for the primary type, no leader election for the secondary type.
+- Controller config has a handy flag to disable resync (`DisableResync`), sometimes this can be useful on secondary resources (only act on changes).
 
 [travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
 [travis-url]: https://travis-ci.org/spotahome/kooper
@@ -182,7 +194,15 @@ The starting point would be to check the [concepts](docs/concepts.md) and then c
 [goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
 [godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
 [godoc-url]: https://godoc.org/github.com/spotahome/kooper
-[dependency-example]: https://github.com/slok/kooper-as-dependency
-[dep-project]: https://github.com/golang/dep
-[opentracing-url]: http://opentracing.io/
+[examples]: examples/
 [grafana-dashboard]: https://grafana.com/dashboards/7082
+[controllers]: https://kubernetes.io/docs/concepts/architecture/controller/
+[kubebuilder]: https://github.com/kubernetes-sigs/kubebuilder
+[operator-framework]: https://github.com/operator-framework
+[kubewebhook]: https://github.com/slok/kubewebhook
+[kube-code-generator]: https://github.com/slok/kube-code-generator
+[owner-ref]: https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/#owners-and-dependents
+[finalizers]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#finalizers
+[finalizer-example]: examples/pod-terminator-operator/operator/operator.go
+[multiresource-example]: examples/multi-resource-controller
+[ci]: https://github.com/spotahome/kooper/actions

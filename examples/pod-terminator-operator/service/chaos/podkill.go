@@ -13,8 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
+	chaosv1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
 )
 
 // TimeWrapper is a wrapper around time so it can be mocked

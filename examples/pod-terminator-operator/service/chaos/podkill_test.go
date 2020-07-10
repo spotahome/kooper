@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/v2/log"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,8 +13,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	kubetesting "k8s.io/client-go/testing"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/service/chaos"
+	chaosv1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/service/chaos"
 )
 
 type timeMock struct {

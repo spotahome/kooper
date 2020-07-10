@@ -5,8 +5,8 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
+	chaosv1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
 )
 
 // Syncer is the interface that every chaos service implementation
@@ -59,7 +59,6 @@ func (c *Chaos) EnsurePodTerminator(pt *chaosv1alpha1.PodTerminator) error {
 	pk = NewPodKiller(ptCopy, c.k8sCli, c.logger)
 	c.reg.Store(pt.Name, pk)
 	return pk.Start()
-	// TODO: garbage collection.
 }
 
 // DeletePodTerminator satisfies ChaosSyncer interface.

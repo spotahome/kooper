@@ -12,7 +12,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -23,11 +23,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/monitoring/metrics"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
+	kooperprometheus "github.com/spotahome/kooper/v2/metrics/prometheus"
 )
 
 const (
@@ -63,11 +62,11 @@ func errRandomly() error {
 }
 
 // creates prometheus recorder and starts serving metrics in background.
-func createPrometheusRecorder(logger log.Logger) metrics.Recorder {
+func createPrometheusRecorder(logger log.Logger) *kooperprometheus.Recorder {
 	// We could use also prometheus global registry (the default one)
 	// prometheus.DefaultRegisterer instead of creating a new one
 	reg := prometheus.NewRegistry()
-	m := metrics.NewPrometheus(reg)
+	rec := kooperprometheus.New(kooperprometheus.Config{Registerer: reg})
 
 	// Start serving metrics in background.
 	h := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
@@ -76,27 +75,17 @@ func createPrometheusRecorder(logger log.Logger) metrics.Recorder {
 		http.ListenAndServe(metricsAddr, h)
 	}()
 
-	return m
+	return rec
 }
 
-func getMetricRecorder(backend string, logger log.Logger) (metrics.Recorder, error) {
-	switch backend {
-	case prometheusBackend:
-		logger.Infof("using Prometheus metrics recorder")
-		return createPrometheusRecorder(logger), nil
-	}
-
-	return nil, fmt.Errorf("wrong metrics backend")
-}
-
-func main() {
+func run() error {
 	// Initialize logger.
-	log := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "metrics-controller"})
 
 	// Init flags.
 	if err := initFlags(); err != nil {
-		log.Errorf("error parsing arguments: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error parsing arguments: %w", err)
 	}
 
 	// Get k8s client.
@@ -106,57 +95,59 @@ func main() {
 		kubehome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 		k8scfg, err = clientcmd.BuildConfigFromFlags("", kubehome)
 		if err != nil {
-			log.Errorf("error loading kubernetes configuration: %s", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading kubernetes configuration: %w", err)
 		}
 	}
 	k8scli, err := kubernetes.NewForConfig(k8scfg)
 	if err != nil {
-		log.Errorf("error creating kubernetes client: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error creating kubernetes client: %w", err)
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &retrieve.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
-			},
+	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return k8scli.CoreV1().Pods("").List(options)
 		},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return k8scli.CoreV1().Pods("").Watch(options)
+		},
+	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &handler.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			sleepRandomly()
-			return errRandomly()
-		},
-		DeleteFunc: func(_ context.Context, s string) error {
-			sleepRandomly()
-			return errRandomly()
-		},
-	}
+	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		sleepRandomly()
+		return errRandomly()
+	})
 
 	// Create the controller that will refresh every 30 seconds.
-	m, err := getMetricRecorder(metricsBackend, log)
-	if err != nil {
-		log.Errorf("errors getting metrics backend: %s", err)
-		os.Exit(1)
-	}
 	cfg := &controller.Config{
-		Name: "metricsControllerTest",
+		Name:                 "metricsControllerTest",
+		Handler:              hand,
+		Retriever:            retr,
+		MetricsRecorder:      createPrometheusRecorder(logger),
+		Logger:               logger,
+		ProcessingJobRetries: 3,
 	}
-	ctrl := controller.New(cfg, hand, retr, nil, nil, m, log)
+	ctrl, err := controller.New(cfg)
+	if err != nil {
+		return fmt.Errorf("could not create controller: %w", err)
+	}
 
 	// Start our controller.
 	stopC := make(chan struct{})
 	if err := ctrl.Run(stopC); err != nil {
-		log.Errorf("error running controller: %s", err)
+		return fmt.Errorf("error running controller: %w", err)
+	}
+
+	return nil
+}
+
+func main() {
+	err := run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error running app: %s", err)
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }

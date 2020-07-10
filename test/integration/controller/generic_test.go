@@ -16,11 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/monitoring/metrics"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/log"
 )
 
 const (
@@ -53,45 +50,39 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 
 	// Create the faked retriever that will only return N pods.
 	podList := returnPodList(numberOfEvents)
-	r := &retrieve.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
-				return podList, nil
-			},
-			WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
-				return watch.NewFake(), nil
-			},
+	r := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
+			return podList, nil
 		},
-	}
+		WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
+			return watch.NewFake(), nil
+		},
+	})
 
 	// Create the handler that will wait on each event T duration and will
 	// end when all the wanted quantity of events have been processed.
 	var wg sync.WaitGroup
 	wg.Add(numberOfEvents)
 
-	h := &handler.HandlerFunc{
-		AddFunc: func(_ context.Context, _ runtime.Object) error {
-			time.Sleep(sleepDuration)
-			wg.Done()
-			return nil
-		},
-		DeleteFunc: func(_ context.Context, _ string) error {
-			assert.Fail("delete events should not be used on this test")
-			return nil
-		},
-	}
+	h := controller.HandlerFunc(func(_ context.Context, _ runtime.Object) error {
+		time.Sleep(sleepDuration)
+		wg.Done()
+		return nil
+	})
 
 	// Create the controller type depending on the concurrency level.
-	var ctrl controller.Controller
-	var err error
-	if concurrencyLevel < 2 {
-		ctrl = controller.NewSequential(noResync, h, r, metrics.Dummy, log.Dummy)
-	} else {
-		ctrl, err = controller.NewConcurrent(concurrencyLevel, noResync, h, r, metrics.Dummy, log.Dummy)
-		if !assert.NoError(err) {
-			return 0
-		}
+	cfg := &controller.Config{
+		Name:                 "test-controller",
+		Handler:              h,
+		Retriever:            r,
+		Logger:               log.Dummy,
+		ProcessingJobRetries: concurrencyLevel,
+		ResyncInterval:       noResync,
+		ConcurrentWorkers:    concurrencyLevel,
+	}
+	ctrl, err := controller.New(cfg)
+	if !assert.NoError(err) {
+		return 0
 	}
 
 	// Run handling

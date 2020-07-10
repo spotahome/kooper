@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,11 +22,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/controller/leaderelection"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/controller/leaderelection"
+	"github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
 )
 
 const (
@@ -53,18 +53,18 @@ func NewFlags() *Flags {
 	return flags
 }
 
-// Main runs the main application.
-func Main() error {
+func run() error {
 	// Flags
 	fl := NewFlags()
 
 	// Initialize logger.
-	logger := &log.Std{}
+	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
+		WithKV(log.KV{"example": "leader-election-controller"})
 
 	// Get k8s client.
 	k8scfg, err := rest.InClusterConfig()
 	if err != nil {
-		// No in cluster? letr's try locally
+		// No in cluster? lets try locally
 		kubehome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 		k8scfg, err = clientcmd.BuildConfigFromFlags("", kubehome)
 		if err != nil {
@@ -77,30 +77,21 @@ func Main() error {
 	}
 
 	// Create our retriever so the controller knows how to get/listen for pod events.
-	retr := &retrieve.Resource{
-		Object: &corev1.Pod{},
-		ListerWatcher: &cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
-			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
-			},
+	retr := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			return k8scli.CoreV1().Pods("").List(options)
 		},
-	}
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return k8scli.CoreV1().Pods("").Watch(options)
+		},
+	})
 
 	// Our domain logic that will print every add/sync/update and delete event we .
-	hand := &handler.HandlerFunc{
-		AddFunc: func(_ context.Context, obj runtime.Object) error {
-			pod := obj.(*corev1.Pod)
-			logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
-			return nil
-		},
-		DeleteFunc: func(_ context.Context, s string) error {
-			logger.Infof("Pod deleted: %s", s)
-			return nil
-		},
-	}
+	hand := controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+		pod := obj.(*corev1.Pod)
+		logger.Infof("Pod added: %s/%s", pod.Namespace, pod.Name)
+		return nil
+	})
 
 	// Leader election service.
 	lesvc, err := leaderelection.NewDefault(leaderElectionKey, fl.Namespace, k8scli, logger)
@@ -110,11 +101,20 @@ func Main() error {
 
 	// Create the controller and run.
 	cfg := &controller.Config{
+		Name:          "leader-election-controller",
+		Handler:       hand,
+		Retriever:     retr,
+		LeaderElector: lesvc,
+		Logger:        logger,
+
 		ProcessingJobRetries: 5,
 		ResyncInterval:       time.Duration(fl.ResyncIntervalSeconds) * time.Second,
 		ConcurrentWorkers:    1,
 	}
-	ctrl := controller.New(cfg, hand, retr, lesvc, nil, nil, logger)
+	ctrl, err := controller.New(cfg)
+	if err != nil {
+		return fmt.Errorf("error creating controller: %w", err)
+	}
 	stopC := make(chan struct{})
 	errC := make(chan error)
 	go func() {
@@ -142,7 +142,7 @@ func Main() error {
 }
 
 func main() {
-	if err := Main(); err != nil {
+	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error executing controller: %s", err)
 		os.Exit(1)
 	}
