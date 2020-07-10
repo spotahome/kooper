@@ -30,7 +30,7 @@ Regarding the changes... To know all of them check the changelog but mainly we s
 most relevant changes you will need to be aware and could impact are:
 
 - Before there were operators and controllers, now only controllers (one single concept).
-- Now CRD management in the library, CRDs now should be already registered when the controller starts (you can use [this][kube-code-generator] to generate these manifests).
+- Before CRD management in the library, CRDs now should be already registered when the controller starts (you can use [this][kube-code-generator] to generate these manifests).
 - Refactor Prometheus metrics, so you will need to change dashboards/alerts.
 - `Delete` event removed because wasn't reliable (Check `Garbage-collection` section).
 
