@@ -3,7 +3,7 @@ CODE_GENERATOR_IMAGE := quay.io/slok/kube-code-generator:v1.17.3
 CRD_GENERATOR_IMAGE :=  quay.io/slok/kube-code-generator:latest
 DIRECTORY := $(PWD)
 ROOT_DIRECTORY := $(DIRECTORY)/../..
-CODE_GENERATOR_PACKAGE := github.com/spotahome/kooper/examples/pod-terminator-operator
+CODE_GENERATOR_PACKAGE := github.com/spotahome/kooper/examples/pod-terminator-operator/v2
 
 generate: generate-client generate-crd
 

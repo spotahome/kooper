@@ -13,8 +13,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	kubetesting "k8s.io/client-go/testing"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/service/chaos"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/v2/service/chaos"
 )
 
 type timeMock struct {

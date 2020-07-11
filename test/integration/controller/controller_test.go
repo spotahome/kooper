@@ -39,7 +39,7 @@ func TestControllerHandleEvents(t *testing.T) {
 					Spec: corev1.ServiceSpec{
 						Type: "ClusterIP",
 						Ports: []corev1.ServicePort{
-							corev1.ServicePort{Name: "port1", Port: 8080},
+							{Name: "port1", Port: 8080},
 						},
 					},
 				},
@@ -48,7 +48,7 @@ func TestControllerHandleEvents(t *testing.T) {
 					Spec: corev1.ServiceSpec{
 						Type: "ClusterIP",
 						Ports: []corev1.ServicePort{
-							corev1.ServicePort{Name: "port1", Port: 8080},
+							{Name: "port1", Port: 8080},
 						},
 					},
 				},
