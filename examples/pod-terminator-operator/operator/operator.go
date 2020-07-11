@@ -12,10 +12,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	podtermk8scli "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/client/k8s/clientset/versioned"
-	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/service/chaos"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
+	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/v2/log"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/v2/service/chaos"
 )
 
 // Config is the controller configuration.

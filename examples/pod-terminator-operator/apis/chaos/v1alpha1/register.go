@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	podterminatoroperatorchaos "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/apis/chaos"
+	podterminatoroperatorchaos "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos"
 )
 
 const (

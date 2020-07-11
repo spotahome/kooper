@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	kooperlog "github.com/spotahome/kooper/v2/log"
+	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	podtermk8scli "github.com/spotahome/kooper/v2/examples/pod-terminator-operator/client/k8s/clientset/versioned"
-	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/log"
-	"github.com/spotahome/kooper/v2/examples/pod-terminator-operator/operator"
-	kooperlog "github.com/spotahome/kooper/v2/log"
-	kooperlogrus "github.com/spotahome/kooper/v2/log/logrus"
+	podtermk8scli "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/v2/log"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/v2/operator"
 )
 
 // Main is the main program.
