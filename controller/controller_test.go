@@ -246,8 +246,12 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 			mh3 := &mcontroller.Handler{}
 
 			// Expect the calls on the lead (mh1) and no calls on the other ones.
+			var mu sync.Mutex
 			totalCalls := len(test.nsList.Items)
 			mh1.On("Handle", mock.Anything, mock.Anything).Return(nil).Times(totalCalls).Run(func(args mock.Arguments) {
+				mu.Lock()
+				defer mu.Unlock()
+
 				totalCalls--
 				// Check last call, if is the last call expected then stop the controller so
 				// we can assert the expectations of the calls and finish the test.
