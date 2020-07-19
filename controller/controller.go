@@ -144,12 +144,17 @@ func New(cfg *Config) (Controller, error) {
 		cfg.ProcessingJobRetries,
 		workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 	)
-	queue = newMetricsBlockingQueue(
+
+	// Measure the queue.
+	queue, err = newMetricsBlockingQueue(
 		cfg.Name,
 		cfg.MetricsRecorder,
 		queue,
 		cfg.Logger,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("could not measure the queue: %w", err)
+	}
 
 	// store is the internal cache where objects will be store.
 	store := cache.Indexers{}

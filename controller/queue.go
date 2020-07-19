@@ -12,7 +12,7 @@ import (
 )
 
 // blockingQueue is a queue that any of its implementations should
-// implement a blocking mechanism when the
+// implement a blocking get mechanism.
 type blockingQueue interface {
 	// Add will add an item to the queue.
 	Add(ctx context.Context, item interface{})
@@ -27,6 +27,8 @@ type blockingQueue interface {
 	Done(ctx context.Context, item interface{})
 	// ShutDown stops the queue from accepting new jobs
 	ShutDown(ctx context.Context)
+	// Len returns the size of the queue.
+	Len(ctx context.Context) int
 }
 
 var (
@@ -72,6 +74,10 @@ func (r rateLimitingBlockingQueue) ShutDown(_ context.Context) {
 	r.queue.ShutDown()
 }
 
+func (r rateLimitingBlockingQueue) Len(_ context.Context) int {
+	return r.queue.Len()
+}
+
 // metricsQueue is a wrapper for a metrics measured queue.
 type metricsBlockingQueue struct {
 	mu            sync.Mutex
@@ -82,14 +88,20 @@ type metricsBlockingQueue struct {
 	queue         blockingQueue
 }
 
-func newMetricsBlockingQueue(name string, mrec MetricsRecorder, queue blockingQueue, logger log.Logger) blockingQueue {
+func newMetricsBlockingQueue(name string, mrec MetricsRecorder, queue blockingQueue, logger log.Logger) (blockingQueue, error) {
+	// Register func/callback based metrics. These are controlled by the MetricsRecorder.
+	err := mrec.RegisterResourceQueueLengthFunc(name, func(ctx context.Context) int { return queue.Len(ctx) })
+	if err != nil {
+		return nil, err
+	}
+
 	return &metricsBlockingQueue{
 		name:          name,
 		mrec:          mrec,
 		itemsQueuedAt: map[interface{}]time.Time{},
 		logger:        logger,
 		queue:         queue,
-	}
+	}, nil
 }
 
 func (m *metricsBlockingQueue) Add(ctx context.Context, item interface{}) {
@@ -141,4 +153,10 @@ func (m *metricsBlockingQueue) Done(ctx context.Context, item interface{}) {
 
 func (m *metricsBlockingQueue) ShutDown(ctx context.Context) {
 	m.queue.ShutDown(ctx)
+}
+
+func (m *metricsBlockingQueue) Len(ctx context.Context) int {
+	// Measurement controlled by the metrics recorder, so is implemented in callback
+	// mode, should be already registered, check factory. This is NOOP.
+	return m.queue.Len(ctx)
 }

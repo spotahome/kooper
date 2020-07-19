@@ -2,6 +2,7 @@ package prometheus
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -43,6 +44,8 @@ func (c *Config) defaults() {
 
 // Recorder implements the metrics recording in a prometheus registry.
 type Recorder struct {
+	reg prometheus.Registerer
+
 	queuedEventsTotal      *prometheus.CounterVec
 	inQueueEventDuration   *prometheus.HistogramVec
 	processedEventDuration *prometheus.HistogramVec
@@ -53,6 +56,8 @@ func New(cfg Config) *Recorder {
 	cfg.defaults()
 
 	r := &Recorder{
+		reg: cfg.Registerer,
+
 		queuedEventsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: promNamespace,
 			Subsystem: promControllerSubsystem,
@@ -78,7 +83,7 @@ func New(cfg Config) *Recorder {
 	}
 
 	// Register metrics.
-	cfg.Registerer.MustRegister(
+	r.reg.MustRegister(
 		r.queuedEventsTotal,
 		r.inQueueEventDuration,
 		r.processedEventDuration)
@@ -101,6 +106,25 @@ func (r Recorder) ObserveResourceInQueueDuration(ctx context.Context, controller
 func (r Recorder) ObserveResourceProcessingDuration(ctx context.Context, controller string, success bool, startProcessingAt time.Time) {
 	r.processedEventDuration.WithLabelValues(controller, strconv.FormatBool(success)).
 		Observe(time.Since(startProcessingAt).Seconds())
+}
+
+// RegisterResourceQueueLengthFunc satisfies controller.MetricsRecorder interface.
+func (r Recorder) RegisterResourceQueueLengthFunc(controller string, f func(context.Context) int) error {
+	err := r.reg.Register(prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Namespace:   promNamespace,
+			Subsystem:   promControllerSubsystem,
+			Name:        "event_queue_length",
+			Help:        "Length of the controller resource queue.",
+			ConstLabels: prometheus.Labels{"controller": controller},
+		},
+		func() float64 { return float64(f(context.Background())) },
+	))
+	if err != nil {
+		return fmt.Errorf("could not register ResourceQueueLengthFunc metrics: %w", err)
+	}
+
+	return nil
 }
 
 // Check interfaces implementation.
