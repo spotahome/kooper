@@ -1,6 +1,6 @@
 # Kooper [![Build Status][travis-image]][travis-url] [![Go Report Card][goreport-image]][goreport-url] [![GoDoc][godoc-image]][godoc-url]
 
-Kooper is a Go library to create simple and flexible [controllers]/operators, in a fast, decoupled and easy way.
+Kooper is a Go library to create simple and flexible Kubernetes [controllers]/operators, in a fast, decoupled and easy way.
 
 In other words, is a small alternative to big frameworks like [Kubebuilder] or [operator-framework].
 
@@ -10,7 +10,9 @@ In other words, is a small alternative to big frameworks like [Kubebuilder] or [
 
 - Easy usage and fast to get it working.
 - Extensible (Kooper doesn't get in your way).
-- Simple core concepts (`Retriever` + `Handler` == controller && controller == operator).
+- Simple core concepts
+  - `Retriever` + `Handler` is a `controller`
+  - An `operator` is also a `controller`.
 - Metrics (extensible with Prometheus already implementated).
 - Ready for core Kubernetes resources (pods, ingress, deployments...) and CRDs.
 - Optional leader election system for controllers.
@@ -71,7 +73,9 @@ The simplest example that prints pods would be this:
     }
 
     // Start our controller.
-    ctrl.Run(make(chan struct{}))
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+    ctrl.Run(ctx)
 ```
 
 ## Kubernetes version compatibility
@@ -109,11 +113,12 @@ Kooper instead solves most of the core controller/operator problems but as a sim
 
 ### Simplicty VS optimization
 
-For example Kubebuilder sacrifies API simplicity/client in favor of aggresive cache usage. Kooper instead embraces simplicity over optimization:
+Kooper embraces simplicity over optimization, it favors small APIs, simplicity and easy to use/test methods. Some examples:
 
-- Most of the controller/operators don't need this kind of optimizations. Adding complexity on all controllers for a small portion of the controllers out there is not the best approach for most of the developers.
-- If you need optimization related with Kubernetes resources, you can use Kubebuilder or implement your own solution for that specific use case like a cache based Kubernetes client or service.
-- If you need optimization and is not related with Kubernetes API itself, it doesn't matter the controller library optimization.
+- Each Kooper controller is independent, don't share anything unless the user says explicitly (e.g. 2 controllers receive the same handler).
+- Kooper uses a different resource/event cache internally for each controller (less bugs/corner cases but less optimized).
+- Kooper handler receives the K8s resource, the responsibility of how this object is used is on the user.
+- Multiresource controllers are made with independent controllers on the same app.
 
 ## More examples
 
@@ -192,8 +197,8 @@ The solution to these problems, is to embrace simplicity once again, and mainly 
 [travis-url]: https://travis-ci.org/spotahome/kooper
 [goreport-image]: https://goreportcard.com/badge/github.com/spotahome/kooper
 [goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
-[godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
-[godoc-url]: https://godoc.org/github.com/spotahome/kooper
+[godoc-image]: https://pkg.go.dev/badge/github.com/spotahome/kooper/v2
+[godoc-url]: https://pkg.go.dev/github.com/spotahome/kooper/v2
 [examples]: examples/
 [grafana-dashboard]: https://grafana.com/dashboards/7082
 [controllers]: https://kubernetes.io/docs/concepts/architecture/controller/
