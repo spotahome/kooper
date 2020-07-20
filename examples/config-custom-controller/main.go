@@ -78,8 +78,9 @@ func run() error {
 	}
 
 	// Start our controller.
-	stopC := make(chan struct{})
-	err = ctrl.Run(stopC)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = ctrl.Run(ctx)
 	if err != nil {
 		return fmt.Errorf("error running controller: %w", err)
 	}

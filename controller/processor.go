@@ -47,7 +47,7 @@ var errRequeued = fmt.Errorf("requeued after receiving error")
 // again to a queue if it has retrys pending.
 //
 // If the processing errored and has been retried, it will return a `errRequeued` error.
-func newRetryProcessor(name string, maxRetries int, queue blockingQueue, logger log.Logger, next processor) processor {
+func newRetryProcessor(name string, queue blockingQueue, logger log.Logger, next processor) processor {
 	return processorFunc(func(ctx context.Context, key string) error {
 		err := next.Process(ctx, key)
 		if err != nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -38,7 +39,7 @@ func New(logger log.Logger) *Main {
 }
 
 // Run runs the app.
-func (m *Main) Run(stopC <-chan struct{}) error {
+func (m *Main) Run(ctx context.Context) error {
 	m.logger.Infof("initializing pod termination operator")
 
 	// Get kubernetes rest client.
@@ -53,7 +54,7 @@ func (m *Main) Run(stopC <-chan struct{}) error {
 		return err
 	}
 
-	return op.Run(stopC)
+	return op.Run(ctx)
 }
 
 // getKubernetesClients returns all the required clients to communicate with
@@ -94,7 +95,8 @@ func main() {
 	logger := kooperlogrus.New(logrus.NewEntry(logrus.New())).
 		WithKV(kooperlog.KV{"example": "pod-terminator-operator"})
 
-	stopC := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	finishC := make(chan error)
 	signalC := make(chan os.Signal, 1)
 	signal.Notify(signalC, syscall.SIGTERM, syscall.SIGINT)
@@ -102,7 +104,7 @@ func main() {
 
 	// Run in background the operator.
 	go func() {
-		finishC <- m.Run(stopC)
+		finishC <- m.Run(ctx)
 	}()
 
 	select {
@@ -113,7 +115,7 @@ func main() {
 		}
 	case <-signalC:
 		logger.Infof("Signal captured, exiting...")
+		cancel()
 	}
-	close(stopC)
 	time.Sleep(5 * time.Second)
 }

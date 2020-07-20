@@ -86,11 +86,11 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	}
 
 	// Run handling
-	stopC := make(chan struct{})
-	defer close(stopC)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	start := time.Now()
 	go func() {
-		assert.NoError(ctrl.Run(stopC))
+		assert.NoError(ctrl.Run(ctx))
 	}()
 
 	// Wait until the finish event is received (wait until all events processed), it has a big timeout (it's an integration test).
