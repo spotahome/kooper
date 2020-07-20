@@ -63,7 +63,8 @@ func TestControllerHandleEvents(t *testing.T) {
 			require := require.New(t)
 			assert := assert.New(t)
 			resync := 30 * time.Second
-			stopC := make(chan struct{})
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			var gotAddedServices []string
 
 			// Create the kubernetes client.
@@ -93,7 +94,7 @@ func TestControllerHandleEvents(t *testing.T) {
 				svc := obj.(*corev1.Service)
 				gotAddedServices = append(gotAddedServices, svc.Name)
 				if calledTimes >= stopCallTimes {
-					close(stopC)
+					cancel()
 				}
 				return nil
 			})
@@ -108,7 +109,7 @@ func TestControllerHandleEvents(t *testing.T) {
 			}
 			ctrl, err := controller.New(cfg)
 			require.NoError(err, "controller is required, can't have error on creation")
-			go ctrl.Run(stopC)
+			go ctrl.Run(ctx)
 
 			// Create the required services.
 			for _, svc := range test.addServices {
@@ -133,7 +134,7 @@ func TestControllerHandleEvents(t *testing.T) {
 			// Timeout.
 			case <-time.After(20 * time.Second):
 			// Finished.
-			case <-stopC:
+			case <-ctx.Done():
 			}
 
 			// Check.

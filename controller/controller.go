@@ -26,9 +26,8 @@ var (
 // Controller is the object that will implement the different kinds of controllers that will be running
 // on the application.
 type Controller interface {
-	// Run runs the controller, it receives a channel that when receiving a signal it will stop the controller,
-	// Run will block until it's stopped.
-	Run(stopper <-chan struct{}) error
+	// Run runs the controller and blocks until the context is `Done`.
+	Run(ctx context.Context) error
 }
 
 // Config is the controller configuration.
@@ -194,7 +193,7 @@ func New(cfg *Config) (Controller, error) {
 	// Create processing chain: processor(+middlewares) -> handler(+middlewares).
 	processor := newIndexerProcessor(informer.GetIndexer(), cfg.Handler)
 	if cfg.ProcessingJobRetries > 0 {
-		processor = newRetryProcessor(cfg.Name, cfg.ProcessingJobRetries, queue, cfg.Logger, processor)
+		processor = newRetryProcessor(cfg.Name, queue, cfg.Logger, processor)
 	}
 	processor = newMetricsProcessor(cfg.Name, cfg.MetricsRecorder, processor)
 
@@ -223,19 +222,19 @@ func (g *generic) setRunning(running bool) {
 }
 
 // Run will run the controller.
-func (g *generic) Run(stopC <-chan struct{}) error {
+func (g *generic) Run(ctx context.Context) error {
 	// Check if leader election is required.
 	if g.leRunner != nil {
 		return g.leRunner.Run(func() error {
-			return g.run(stopC)
+			return g.run(ctx)
 		})
 	}
 
-	return g.run(stopC)
+	return g.run(ctx)
 }
 
 // run is the real run of the controller.
-func (g *generic) run(stopC <-chan struct{}) error {
+func (g *generic) run(ctx context.Context) error {
 	if g.isRunning() {
 		return fmt.Errorf("controller already running")
 	}
@@ -250,10 +249,10 @@ func (g *generic) run(stopC <-chan struct{}) error {
 	defer g.queue.ShutDown(context.TODO())
 
 	// Run the informer so it starts listening to resource events.
-	go g.informer.Run(stopC)
+	go g.informer.Run(ctx.Done())
 
 	// Wait until our store, jobs... stuff is synced (first list on resource, resources on store and jobs on queue).
-	if !cache.WaitForCacheSync(stopC, g.informer.HasSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), g.informer.HasSynced) {
 		return fmt.Errorf("timed out waiting for caches to sync")
 	}
 
@@ -261,13 +260,13 @@ func (g *generic) run(stopC <-chan struct{}) error {
 	// not end.
 	for i := 0; i < g.cfg.ConcurrentWorkers; i++ {
 		go func() {
-			wait.Until(g.runWorker, time.Second, stopC)
+			wait.Until(g.runWorker, time.Second, ctx.Done())
 		}()
 	}
 
 	// Until will be running our workers in a continuous way (and re run if they fail). But
 	// when stop signal is received we must stop.
-	<-stopC
+	<-ctx.Done()
 	g.logger.Infof("stopping controller")
 
 	return nil

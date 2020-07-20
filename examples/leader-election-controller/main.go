@@ -115,10 +115,11 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("error creating controller: %w", err)
 	}
-	stopC := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	errC := make(chan error)
 	go func() {
-		errC <- ctrl.Run(stopC)
+		errC <- ctrl.Run(ctx)
 	}()
 
 	sigC := make(chan os.Signal, 1)
@@ -133,7 +134,7 @@ func run() error {
 		logger.Infof("controller finished successfuly")
 	case s := <-sigC:
 		logger.Infof("signal %s received", s)
-		close(stopC)
+		cancel()
 	}
 
 	time.Sleep(5 * time.Second)

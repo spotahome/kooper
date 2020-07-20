@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -86,7 +87,8 @@ func TestGenericControllerHandle(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			controllerStopperC := make(chan struct{})
+			ctx, cancelCtx := context.WithCancel(context.Background())
+			defer cancelCtx()
 			resultC := make(chan error)
 
 			// Mocks kubernetes  client.
@@ -107,7 +109,7 @@ func TestGenericControllerHandle(t *testing.T) {
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
 					if callHandling == len(test.expNSAdds) {
-						close(controllerStopperC)
+						cancelCtx()
 					}
 				})
 			}
@@ -122,7 +124,7 @@ func TestGenericControllerHandle(t *testing.T) {
 
 			// Run Controller in background.
 			go func() {
-				resultC <- c.Run(controllerStopperC)
+				resultC <- c.Run(ctx)
 			}()
 
 			// Wait for different results. If no result means error failure.
@@ -159,7 +161,8 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			controllerStopperC := make(chan struct{})
+			ctx, cancelCtx := context.WithCancel(context.Background())
+			defer cancelCtx()
 			resultC := make(chan error)
 
 			// Mocks kubernetes  client.
@@ -183,7 +186,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 					// Check last call, if is the last call expected then stop the controller so
 					// we can assert the expectations of the calls and finish the test.
 					if totalCalls <= 0 {
-						close(controllerStopperC)
+						cancelCtx()
 					}
 				})
 			}
@@ -199,7 +202,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 
 			// Run Controller in background.
 			go func() {
-				resultC <- c.Run(controllerStopperC)
+				resultC <- c.Run(ctx)
 			}()
 
 			// Wait for different results. If no result means error failure.
@@ -234,7 +237,8 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			controllerStopperC := make(chan struct{})
+			ctx, cancelCtx := context.WithCancel(context.Background())
+			defer cancelCtx()
 			resultC := make(chan error)
 
 			// Mocks kubernetes  client.
@@ -256,7 +260,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 				// Check last call, if is the last call expected then stop the controller so
 				// we can assert the expectations of the calls and finish the test.
 				if totalCalls <= 0 {
-					close(controllerStopperC)
+					cancelCtx()
 				}
 			})
 
@@ -303,11 +307,11 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 			require.NoError(err)
 
 			// Run multiple controller in background.
-			go func() { resultC <- c1.Run(controllerStopperC) }()
+			go func() { resultC <- c1.Run(ctx) }()
 			// Let the first controller became the leader.
 			time.Sleep(200 * time.Microsecond)
-			go func() { resultC <- c2.Run(controllerStopperC) }()
-			go func() { resultC <- c3.Run(controllerStopperC) }()
+			go func() { resultC <- c2.Run(ctx) }()
+			go func() { resultC <- c3.Run(ctx) }()
 
 			// Wait for different results. If no result means error failure.
 			select {

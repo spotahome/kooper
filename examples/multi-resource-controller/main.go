@@ -111,15 +111,15 @@ func run() error {
 	})
 
 	// Start our controllers.
-	stopC := make(chan struct{})
-	defer close(stopC)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	errC := make(chan error)
 	go func() {
-		errC <- ctrlDep.Run(stopC)
+		errC <- ctrlDep.Run(ctx)
 	}()
 
 	go func() {
-		errC <- ctrlSt.Run(stopC)
+		errC <- ctrlSt.Run(ctx)
 	}()
 
 	// Wait until one finishes.
