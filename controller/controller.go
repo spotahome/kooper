@@ -246,7 +246,7 @@ func (g *generic) run(ctx context.Context) error {
 
 	// Shutdown when Run is stopped so we can process the last items and the queue doesn't
 	// accept more jobs.
-	defer g.queue.ShutDown(context.TODO())
+	defer g.queue.ShutDown(ctx)
 
 	// Run the informer so it starts listening to resource events.
 	go g.informer.Run(ctx.Done())
@@ -264,7 +264,7 @@ func (g *generic) run(ctx context.Context) error {
 		}()
 	}
 
-	// Until will be running our workers in a continuous way (and re run if they fail). But
+	// Block while running our workers in a continuous way (and re run if they fail). But
 	// when stop signal is received we must stop.
 	<-ctx.Done()
 	g.logger.Infof("stopping controller")

@@ -9,7 +9,7 @@ UID := $(shell id -u)
 UNIT_TEST_CMD := ./hack/scripts/unit-test.sh
 INTEGRATION_TEST_CMD := ./hack/scripts/integration-test.sh 
 CI_INTEGRATION_TEST_CMD := ./hack/scripts/integration-test-kind.sh
-MOCKS_CMD := ./hack/scripts/mockgen.sh
+GEN_CMD := ./hack/scripts/gen.sh
 DOCKER_RUN_CMD := docker run --env ostype=$(OSTYPE) -v ${PWD}:/src --rm -it ${SERVICE_NAME}
 DEPS_CMD := go mod tidy
 CHECK_CMD := ./hack/scripts/check.sh
@@ -55,6 +55,6 @@ ci-integration-test:  ## Runs integration tests in CI.
 .PHONY: ci  ## Runs all tests in CI.
 ci: ci-unit-test ci-integration-test
 
-.PHONY: mocks
-mocks: build  ## Generates mocks.
-	$(DOCKER_RUN_CMD) /bin/sh -c '$(MOCKS_CMD)'
+.PHONY: gen
+gen: build  ## Generates go code.
+	$(DOCKER_RUN_CMD) /bin/sh -c '$(GEN_CMD)'

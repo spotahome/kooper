@@ -20,9 +20,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/spotahome/kooper/v2/controller"
+	"github.com/spotahome/kooper/v2/controller/controllermock"
 	"github.com/spotahome/kooper/v2/controller/leaderelection"
 	"github.com/spotahome/kooper/v2/log"
-	mcontroller "github.com/spotahome/kooper/v2/mocks/controller"
 )
 
 // NewNamespace returns a Namespace retriever.
@@ -97,7 +97,7 @@ func TestGenericControllerHandle(t *testing.T) {
 
 			// Mock our handler and set expects.
 			callHandling := 0 // used to track the number of calls.
-			mh := &mcontroller.Handler{}
+			mh := &controllermock.Handler{}
 
 			var mu sync.Mutex
 			for _, ns := range test.expNSAdds {
@@ -172,7 +172,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 
 			// Mock our handler and set expects.
 			totalCalls := len(test.nsList.Items) + len(test.nsList.Items)*test.retryNumber
-			mh := &mcontroller.Handler{}
+			mh := &controllermock.Handler{}
 			err := fmt.Errorf("wanted error")
 
 			// Expect all the retries
@@ -245,9 +245,9 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 			mc := fake.NewSimpleClientset(nsList)
 
 			// Mock our handler and set expects.
-			mh1 := &mcontroller.Handler{}
-			mh2 := &mcontroller.Handler{}
-			mh3 := &mcontroller.Handler{}
+			mh1 := &controllermock.Handler{}
+			mh2 := &controllermock.Handler{}
+			mh3 := &controllermock.Handler{}
 
 			// Expect the calls on the lead (mh1) and no calls on the other ones.
 			var mu sync.Mutex
