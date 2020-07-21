@@ -45,42 +45,44 @@ func TestPrometheusRecorder(t *testing.T) {
 			addMetrics: func(r *kooperprometheus.Recorder) {
 				ctx := context.TODO()
 				t0 := time.Now()
-				r.ObserveResourceInQueueDuration(ctx, "ctrl1", t0.Add(-3*time.Second))
-				r.ObserveResourceInQueueDuration(ctx, "ctrl1", t0.Add(-280*time.Millisecond))
-				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-7*time.Second))
+				r.ObserveResourceInQueueDuration(ctx, "ctrl1", t0.Add(-30*time.Second))
+				r.ObserveResourceInQueueDuration(ctx, "ctrl1", t0.Add(-127*time.Millisecond))
+				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-70*time.Millisecond))
 				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-35*time.Millisecond))
-				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-770*time.Millisecond))
-				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-17*time.Millisecond))
+				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-500*time.Millisecond))
+				r.ObserveResourceInQueueDuration(ctx, "ctrl2", t0.Add(-2*time.Second))
 			},
 			expMetrics: []string{
 				`# HELP kooper_controller_event_in_queue_duration_seconds The duration of an event in the queue.`,
 				`# TYPE kooper_controller_event_in_queue_duration_seconds histogram`,
 
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.005"} 0`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.01"} 0`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.025"} 0`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.05"} 0`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.1"} 0`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.25"} 0`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.25"} 1`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="0.5"} 1`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="1"} 1`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="2.5"} 1`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="5"} 2`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="10"} 2`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="3"} 1`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="10"} 1`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="20"} 1`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="60"} 2`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="150"} 2`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="300"} 2`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl1",le="+Inf"} 2`,
 				`kooper_controller_event_in_queue_duration_seconds_count{controller="ctrl1"} 2`,
 
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.005"} 0`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.01"} 0`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.025"} 1`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.05"} 2`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.05"} 1`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.1"} 2`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.25"} 2`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="0.5"} 2`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="1"} 3`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="2.5"} 3`,
-				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="5"} 3`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="3"} 4`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="10"} 4`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="20"} 4`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="60"} 4`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="150"} 4`,
+				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="300"} 4`,
 				`kooper_controller_event_in_queue_duration_seconds_bucket{controller="ctrl2",le="+Inf"} 4`,
 				`kooper_controller_event_in_queue_duration_seconds_count{controller="ctrl2"} 4`,
 			},
