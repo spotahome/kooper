@@ -24,7 +24,7 @@ require (
 	k8s.io/apimachinery v0.16.6
 	k8s.io/client-go v0.16.6
 	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d // indirect
-	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6 // indirect
+	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6
 )
 
 go 1.13

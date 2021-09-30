@@ -17,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	kubetesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 
 	"github.com/yxxhero/kooper/client/crd"
 	"github.com/yxxhero/kooper/log"
@@ -100,6 +101,21 @@ func TestCRDEnsurePresent(t *testing.T) {
 								Name:    "v99",
 								Served:  true,
 								Storage: true,
+								Schema: &apiextensionsv1.CustomResourceValidation{
+									OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+										Type: "object",
+										Properties: map[string]apiextensionsv1.JSONSchemaProps{
+											"spec": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+											"status": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+										},
+									},
+								},
 							},
 						},
 						Scope: crd.ClusterScoped,
@@ -152,6 +168,21 @@ func TestCRDEnsurePresent(t *testing.T) {
 								Name:    "v99",
 								Served:  true,
 								Storage: true,
+								Schema: &apiextensionsv1.CustomResourceValidation{
+									OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+										Type: "object",
+										Properties: map[string]apiextensionsv1.JSONSchemaProps{
+											"spec": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+											"status": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+										},
+									},
+								},
 							},
 						},
 						Scope: crd.ClusterScoped,
@@ -196,6 +227,21 @@ func TestCRDEnsurePresent(t *testing.T) {
 								Name:    "v99",
 								Served:  true,
 								Storage: true,
+								Schema: &apiextensionsv1.CustomResourceValidation{
+									OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+										Type: "object",
+										Properties: map[string]apiextensionsv1.JSONSchemaProps{
+											"spec": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+											"status": {
+												Type:                   "object",
+												XPreserveUnknownFields: pointer.BoolPtr(true),
+											},
+										},
+									},
+								},
 								Subresources: &apiextensionsv1.CustomResourceSubresources{
 									Status: &apiextensionsv1.CustomResourceSubresourceStatus{},
 									Scale: &apiextensionsv1.CustomResourceSubresourceScale{

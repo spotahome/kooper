@@ -12,6 +12,7 @@ import (
 
 	"github.com/yxxhero/kooper/log"
 	wraptime "github.com/yxxhero/kooper/wrapper/time"
+	"k8s.io/utils/pointer"
 )
 
 const (
@@ -124,6 +125,21 @@ func (c *Client) EnsurePresent(conf Conf) error {
 					Served:       true,
 					Storage:      true,
 					Subresources: subres,
+					Schema: &apiextensionsv1.CustomResourceValidation{
+						OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+							Type: "object",
+							Properties: map[string]apiextensionsv1.JSONSchemaProps{
+								"spec": {
+									Type:                   "object",
+									XPreserveUnknownFields: pointer.BoolPtr(true),
+								},
+								"status": {
+									Type:                   "object",
+									XPreserveUnknownFields: pointer.BoolPtr(true),
+								},
+							},
+						},
+					},
 				},
 			},
 			Scope: conf.Scope,
