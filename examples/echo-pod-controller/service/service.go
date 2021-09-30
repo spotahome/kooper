@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/spotahome/kooper/examples/echo-pod-controller/log"
+	"github.com/yxxhero/kooper/examples/echo-pod-controller/log"
 )
 
 // Echo is simple echo service.

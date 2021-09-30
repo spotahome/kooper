@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/spotahome/kooper/examples/echo-pod-controller/service"
+	"github.com/yxxhero/kooper/examples/echo-pod-controller/service"
 )
 
 type logKind int

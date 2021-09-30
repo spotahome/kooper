@@ -129,6 +129,6 @@ Check the created traces of the controller in [jaeger ui][jaeger-ui-local-url]
 
 [opentracing-url][http://opentracing.io]
 [ot-baggage-url][https://github.com/opentracing/specification/blob/master/specification.md#set-a-baggage-item]
-[traced-controller][https://github.com/spotahome/kooper/tree/master/examples/traced-controller]
+[traced-controller][https://github.com/yxxhero/kooper/tree/master/examples/traced-controller]
 [jaeger-url][http://www.jaegertracing.io/]
 [jaeger-ui-local-url][http://127.0.0.1:16686]

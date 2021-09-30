@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	integrationtestk8scli "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned"
+	integrationtestk8scli "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned"
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // Load oidc authentication when creating the kubernetes client.

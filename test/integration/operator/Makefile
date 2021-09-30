@@ -1,6 +1,6 @@
 DIRECTORY := $(PWD)
 CODE_GENERATOR_IMAGE=quay.io/slok/kube-code-generator:v1.13.5
-CODE_GENERATOR_PACKAGE=github.com/spotahome/kooper/test/integration/operator
+CODE_GENERATOR_PACKAGE=github.com/yxxhero/kooper/test/integration/operator
 GROUPS_VERSION="superhero:v1alpha1"
 
 default: generate

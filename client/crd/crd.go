@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeversion "k8s.io/apimachinery/pkg/util/version"
 
-	"github.com/spotahome/kooper/log"
-	wraptime "github.com/spotahome/kooper/wrapper/time"
+	"github.com/yxxhero/kooper/log"
+	wraptime "github.com/yxxhero/kooper/wrapper/time"
 )
 
 const (
@@ -25,13 +25,13 @@ var (
 )
 
 // Scope is the scope of a CRD.
-type Scope = apiextensionsv1beta1.ResourceScope
+type Scope = apiextensionsv1.ResourceScope
 
 const (
 	// ClusterScoped represents a type of a cluster scoped CRD.
-	ClusterScoped = apiextensionsv1beta1.ClusterScoped
+	ClusterScoped = apiextensionsv1.ClusterScoped
 	// NamespaceScoped represents a type of a namespaced scoped CRD.
-	NamespaceScoped = apiextensionsv1beta1.NamespaceScoped
+	NamespaceScoped = apiextensionsv1.NamespaceScoped
 )
 
 // Conf is the configuration required to create a CRD
@@ -57,7 +57,7 @@ type Conf struct {
 	EnableStatusSubresource bool
 	// EnableScaleSubresource by default will be nil and means disabled, if
 	// the object is present it will set this scale configuration to the subresource.
-	EnableScaleSubresource *apiextensionsv1beta1.CustomResourceSubresourceScale
+	EnableScaleSubresource *apiextensionsv1.CustomResourceSubresourceScale
 }
 
 func (c *Conf) getName() string {
@@ -112,25 +112,31 @@ func (c *Client) EnsurePresent(conf Conf) error {
 	// Create subresources
 	subres := c.createSubresources(conf)
 
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
+	crd := &apiextensionsv1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
 		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   conf.Group,
-			Version: conf.Version,
-			Scope:   conf.Scope,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+		Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+			Group: conf.Group,
+			Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
+				{
+					Name:         conf.Version,
+					Served:       true,
+					Storage:      true,
+					Subresources: subres,
+				},
+			},
+			Scope: conf.Scope,
+			Names: apiextensionsv1.CustomResourceDefinitionNames{
 				Plural:     conf.NamePlural,
 				Kind:       conf.Kind,
 				ShortNames: conf.ShortNames,
 				Categories: c.addDefaultCaregories(conf.Categories),
 			},
-			Subresources: subres,
 		},
 	}
 
-	_, err := c.aeClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Create(crd)
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return fmt.Errorf("error creating crd %s: %s", crdName, err)
@@ -147,15 +153,15 @@ func (c *Client) EnsurePresent(conf Conf) error {
 	return nil
 }
 
-func (c *Client) createSubresources(conf Conf) *apiextensionsv1beta1.CustomResourceSubresources {
+func (c *Client) createSubresources(conf Conf) *apiextensionsv1.CustomResourceSubresources {
 	if !conf.EnableStatusSubresource && conf.EnableScaleSubresource == nil {
 		return nil
 	}
 
-	sr := &apiextensionsv1beta1.CustomResourceSubresources{}
+	sr := &apiextensionsv1.CustomResourceSubresources{}
 
 	if conf.EnableStatusSubresource {
-		sr.Status = &apiextensionsv1beta1.CustomResourceSubresourceStatus{}
+		sr.Status = &apiextensionsv1.CustomResourceSubresourceStatus{}
 	}
 
 	if conf.EnableScaleSubresource != nil {
@@ -177,7 +183,7 @@ func (c *Client) WaitToBePresent(name string, timeout time.Duration) error {
 	for {
 		select {
 		case <-t.C:
-			_, err := c.aeClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
+			_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
 			// Is present, finish.
 			if err == nil {
 				return nil
@@ -194,7 +200,7 @@ func (c *Client) Delete(name string) error {
 		return err
 	}
 
-	return c.aeClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(name, &metav1.DeleteOptions{})
+	return c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Delete(name, &metav1.DeleteOptions{})
 }
 
 // validClusterForCRDs returns nil if cluster is ok to be used for CRDs, otherwise error.

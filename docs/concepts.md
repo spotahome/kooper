@@ -21,7 +21,7 @@ A Kubernetes controller is something that listens/watch the status of a Kubernet
 
 I listen to a `replicaset` resource that wants N instances of X `pod`. My controller should take whatever action it considers so the cluster has N instances of X. In this case It will create N `pod` resources.
 
-In this framework it is defined as an interface [here](https://github.com/spotahome/kooper/tree/master/operator/controller)
+In this framework it is defined as an interface [here](https://github.com/yxxhero/kooper/tree/master/operator/controller)
 
 ```go
 package controller
@@ -36,7 +36,7 @@ type Controller interface {
 In kubernetes world the way of retrieving resources is listing or watching (streaming events) them. In Kubernetes client libraries they are called [listerwatchers](https://github.com/kubernetes/client-go/blob/1b825e3a786379cb2ae2edc98a39e9c8cd68ee3c/tools/cache/listwatch.go#L35-L41). They know how to list and watch a resource kind.
 
 In this framework we have the concept of `Retriever` It knows how to list, watch and create a void object
-so we can know the kind of the Retriever by inspecting the object. It is defined [here](https://github.com/spotahome/kooper/tree/master/operator/retrieve)
+so we can know the kind of the Retriever by inspecting the object. It is defined [here](https://github.com/yxxhero/kooper/tree/master/operator/retrieve)
 
 ```go
 type Retriever interface {

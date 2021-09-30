@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/resource"
+	"github.com/yxxhero/kooper/log"
+	"github.com/yxxhero/kooper/operator/controller"
+	"github.com/yxxhero/kooper/operator/resource"
 )
 
 const (

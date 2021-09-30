@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,9 +18,9 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	kubetesting "k8s.io/client-go/testing"
 
-	"github.com/spotahome/kooper/client/crd"
-	"github.com/spotahome/kooper/log"
-	mtime "github.com/spotahome/kooper/mocks/wrapper/time"
+	"github.com/yxxhero/kooper/client/crd"
+	"github.com/yxxhero/kooper/log"
+	mtime "github.com/yxxhero/kooper/mocks/wrapper/time"
 )
 
 var (
@@ -58,7 +58,7 @@ func newCRDGetAction(name string) kubetesting.GetActionImpl {
 	return kubetesting.NewGetAction(crdGroup, "", name)
 }
 
-func newCRDCreateAction(crd *apiextensionsv1beta1.CustomResourceDefinition) kubetesting.CreateActionImpl {
+func newCRDCreateAction(crd *apiextensionsv1.CustomResourceDefinition) kubetesting.CreateActionImpl {
 	return kubetesting.NewCreateAction(crdGroup, "", crd)
 }
 
@@ -89,15 +89,21 @@ func TestCRDEnsurePresent(t *testing.T) {
 			retErr: nil,
 			expErr: false,
 			expCalls: []kubetesting.Action{
-				newCRDCreateAction(&apiextensionsv1beta1.CustomResourceDefinition{
+				newCRDCreateAction(&apiextensionsv1.CustomResourceDefinition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "tests.toilettesting",
 					},
-					Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-						Group:   "toilettesting",
-						Version: "v99",
-						Scope:   crd.ClusterScoped,
-						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+					Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+						Group: "toilettesting",
+						Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
+							{
+								Name:    "v99",
+								Served:  true,
+								Storage: true,
+							},
+						},
+						Scope: crd.ClusterScoped,
+						Names: apiextensionsv1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
 							ShortNames: []string{"tst"},
@@ -135,15 +141,21 @@ func TestCRDEnsurePresent(t *testing.T) {
 				Version:    "v99",
 			},
 			expCalls: []kubetesting.Action{
-				newCRDCreateAction(&apiextensionsv1beta1.CustomResourceDefinition{
+				newCRDCreateAction(&apiextensionsv1.CustomResourceDefinition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "tests.toilettesting",
 					},
-					Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-						Group:   "toilettesting",
-						Version: "v99",
-						Scope:   crd.ClusterScoped,
-						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+					Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+						Group: "toilettesting",
+						Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
+							{
+								Name:    "v99",
+								Served:  true,
+								Storage: true,
+							},
+						},
+						Scope: crd.ClusterScoped,
+						Names: apiextensionsv1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
 							ShortNames: []string{"tst"},
@@ -166,34 +178,40 @@ func TestCRDEnsurePresent(t *testing.T) {
 				Group:                   "toilettesting",
 				Version:                 "v99",
 				EnableStatusSubresource: true,
-				EnableScaleSubresource: &apiextensionsv1beta1.CustomResourceSubresourceScale{
+				EnableScaleSubresource: &apiextensionsv1.CustomResourceSubresourceScale{
 					SpecReplicasPath:   ".spec.replicas",
 					StatusReplicasPath: ".status.replicas",
 					LabelSelectorPath:  &statusLabelSelector,
 				},
 			},
 			expCalls: []kubetesting.Action{
-				newCRDCreateAction(&apiextensionsv1beta1.CustomResourceDefinition{
+				newCRDCreateAction(&apiextensionsv1.CustomResourceDefinition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "tests.toilettesting",
 					},
-					Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-						Group:   "toilettesting",
-						Version: "v99",
-						Scope:   crd.ClusterScoped,
-						Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+					Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+						Group: "toilettesting",
+						Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
+							{
+								Name:    "v99",
+								Served:  true,
+								Storage: true,
+								Subresources: &apiextensionsv1.CustomResourceSubresources{
+									Status: &apiextensionsv1.CustomResourceSubresourceStatus{},
+									Scale: &apiextensionsv1.CustomResourceSubresourceScale{
+										SpecReplicasPath:   ".spec.replicas",
+										StatusReplicasPath: ".status.replicas",
+										LabelSelectorPath:  &statusLabelSelector,
+									},
+								},
+							},
+						},
+						Scope: crd.ClusterScoped,
+						Names: apiextensionsv1.CustomResourceDefinitionNames{
 							Plural:     "tests",
 							Kind:       "Test",
 							ShortNames: []string{"tst"},
 							Categories: []string{"all", "kooper"},
-						},
-						Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
-							Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
-							Scale: &apiextensionsv1beta1.CustomResourceSubresourceScale{
-								SpecReplicasPath:   ".spec.replicas",
-								StatusReplicasPath: ".status.replicas",
-								LabelSelectorPath:  &statusLabelSelector,
-							},
 						},
 					},
 				}),

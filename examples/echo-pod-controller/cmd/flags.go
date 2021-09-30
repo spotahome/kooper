@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spotahome/kooper/examples/echo-pod-controller/controller"
+	"github.com/yxxhero/kooper/examples/echo-pod-controller/controller"
 	"k8s.io/client-go/util/homedir"
 )
 

@@ -1,12 +1,12 @@
 package v1alpha1
 
 import (
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	podterminatoroperatorchaos "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos"
+	podterminatoroperatorchaos "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 	PodTerminatorKind       = "PodTerminator"
 	PodTerminatorName       = "podterminator"
 	PodTerminatorNamePlural = "podterminators"
-	PodTerminatorScope      = apiextensionsv1beta1.ClusterScoped
+	PodTerminatorScope      = apiextensionsv1.ClusterScoped
 )
 
 // PodTerminatorShortNames is used to register resource short names

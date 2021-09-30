@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package operator_test
@@ -16,15 +17,15 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/client/crd"
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/operator"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/test/integration/helper/cli"
-	"github.com/spotahome/kooper/test/integration/helper/prepare"
-	superherov1alpha1 "github.com/spotahome/kooper/test/integration/operator/apis/superhero/v1alpha1"
-	integrationtestk8scli "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned"
+	"github.com/yxxhero/kooper/client/crd"
+	"github.com/yxxhero/kooper/log"
+	"github.com/yxxhero/kooper/operator"
+	"github.com/yxxhero/kooper/operator/controller"
+	"github.com/yxxhero/kooper/operator/handler"
+	"github.com/yxxhero/kooper/test/integration/helper/cli"
+	"github.com/yxxhero/kooper/test/integration/helper/prepare"
+	superherov1alpha1 "github.com/yxxhero/kooper/test/integration/operator/apis/superhero/v1alpha1"
+	integrationtestk8scli "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned"
 	apiextensionscli "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 )
 
@@ -66,7 +67,7 @@ func (s *spidermanCRD) Initialize() error {
 
 func (s *spidermanCRD) deleteCRD() error {
 	crdName := fmt.Sprintf("%s.%s", superherov1alpha1.SpidermanNamePlural, superherov1alpha1.SchemeGroupVersion.Group)
-	return s.aexcli.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crdName, &metav1.DeleteOptions{})
+	return s.aexcli.apiextensionsv1().CustomResourceDefinitions().Delete(crdName, &metav1.DeleteOptions{})
 }
 
 // TestCRDRegister will test the CRD is registered on the cluster.

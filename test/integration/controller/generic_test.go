@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package controller_test
@@ -16,11 +17,11 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/spotahome/kooper/log"
-	"github.com/spotahome/kooper/monitoring/metrics"
-	"github.com/spotahome/kooper/operator/controller"
-	"github.com/spotahome/kooper/operator/handler"
-	"github.com/spotahome/kooper/operator/retrieve"
+	"github.com/yxxhero/kooper/log"
+	"github.com/yxxhero/kooper/monitoring/metrics"
+	"github.com/yxxhero/kooper/operator/controller"
+	"github.com/yxxhero/kooper/operator/handler"
+	"github.com/yxxhero/kooper/operator/retrieve"
 )
 
 const (

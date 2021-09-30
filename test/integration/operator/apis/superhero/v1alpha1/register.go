@@ -1,12 +1,12 @@
 package v1alpha1
 
 import (
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/spotahome/kooper/test/integration/operator/apis/superhero"
+	"github.com/yxxhero/kooper/test/integration/operator/apis/superhero"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 	SpidermanName       = "spiderman"
 	SpidermanNamePlural = "spidermans"
 	SpidermanNameMin    = "spd"
-	SpidermanScope      = apiextensionsv1beta1.NamespaceScoped
+	SpidermanScope      = apiextensionsv1.NamespaceScoped
 )
 
 // SpidermanShortName is used to register resource short names
