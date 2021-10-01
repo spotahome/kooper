@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,10 +30,10 @@ func (p *PodRetrieve) GetListerWatcher() cache.ListerWatcher {
 
 	return &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return p.client.CoreV1().Pods(p.namespace).List(options)
+			return p.client.CoreV1().Pods(p.namespace).List(context.TODO(), options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return p.client.CoreV1().Pods(p.namespace).Watch(options)
+			return p.client.CoreV1().Pods(p.namespace).Watch(context.TODO(), options)
 		},
 	}
 }

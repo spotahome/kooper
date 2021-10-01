@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"time"
 
 	v1alpha1 "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
@@ -67,7 +68,7 @@ func (c *podTerminators) Get(name string, options v1.GetOptions) (result *v1alph
 		Resource("podterminators").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -83,7 +84,7 @@ func (c *podTerminators) List(opts v1.ListOptions) (result *v1alpha1.PodTerminat
 		Resource("podterminators").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -99,7 +100,7 @@ func (c *podTerminators) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("podterminators").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(context.TODO())
 }
 
 // Create takes the representation of a podTerminator and creates it.  Returns the server's representation of the podTerminator, and an error, if there is any.
@@ -108,7 +109,7 @@ func (c *podTerminators) Create(podTerminator *v1alpha1.PodTerminator) (result *
 	err = c.client.Post().
 		Resource("podterminators").
 		Body(podTerminator).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -120,7 +121,7 @@ func (c *podTerminators) Update(podTerminator *v1alpha1.PodTerminator) (result *
 		Resource("podterminators").
 		Name(podTerminator.Name).
 		Body(podTerminator).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -131,7 +132,7 @@ func (c *podTerminators) Delete(name string, options *v1.DeleteOptions) error {
 		Resource("podterminators").
 		Name(name).
 		Body(options).
-		Do().
+		Do(context.TODO()).
 		Error()
 }
 
@@ -146,7 +147,7 @@ func (c *podTerminators) DeleteCollection(options *v1.DeleteOptions, listOptions
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(options).
-		Do().
+		Do(context.TODO()).
 		Error()
 }
 
@@ -158,7 +159,7 @@ func (c *podTerminators) Patch(name string, pt types.PatchType, data []byte, sub
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }

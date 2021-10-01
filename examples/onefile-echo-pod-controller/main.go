@@ -49,10 +49,10 @@ func main() {
 		Object: &corev1.Pod{},
 		ListerWatcher: &cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-				return k8scli.CoreV1().Pods("").List(options)
+				return k8scli.CoreV1().Pods("").List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-				return k8scli.CoreV1().Pods("").Watch(options)
+				return k8scli.CoreV1().Pods("").Watch(context.TODO(), options)
 			},
 		},
 	}

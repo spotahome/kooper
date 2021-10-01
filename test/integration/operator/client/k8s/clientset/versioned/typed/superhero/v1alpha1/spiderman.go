@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"time"
 
 	v1alpha1 "github.com/yxxhero/kooper/test/integration/operator/apis/superhero/v1alpha1"
@@ -70,7 +71,7 @@ func (c *spidermans) Get(name string, options v1.GetOptions) (result *v1alpha1.S
 		Resource("spidermans").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -87,7 +88,7 @@ func (c *spidermans) List(opts v1.ListOptions) (result *v1alpha1.SpidermanList, 
 		Resource("spidermans").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -104,7 +105,7 @@ func (c *spidermans) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("spidermans").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(context.TODO())
 }
 
 // Create takes the representation of a spiderman and creates it.  Returns the server's representation of the spiderman, and an error, if there is any.
@@ -114,7 +115,7 @@ func (c *spidermans) Create(spiderman *v1alpha1.Spiderman) (result *v1alpha1.Spi
 		Namespace(c.ns).
 		Resource("spidermans").
 		Body(spiderman).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -127,7 +128,7 @@ func (c *spidermans) Update(spiderman *v1alpha1.Spiderman) (result *v1alpha1.Spi
 		Resource("spidermans").
 		Name(spiderman.Name).
 		Body(spiderman).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }
@@ -139,7 +140,7 @@ func (c *spidermans) Delete(name string, options *v1.DeleteOptions) error {
 		Resource("spidermans").
 		Name(name).
 		Body(options).
-		Do().
+		Do(context.TODO()).
 		Error()
 }
 
@@ -155,7 +156,7 @@ func (c *spidermans) DeleteCollection(options *v1.DeleteOptions, listOptions v1.
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(options).
-		Do().
+		Do(context.TODO()).
 		Error()
 }
 
@@ -168,7 +169,7 @@ func (c *spidermans) Patch(name string, pt types.PatchType, data []byte, subreso
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
-		Do().
+		Do(context.TODO()).
 		Into(result)
 	return
 }

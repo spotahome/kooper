@@ -1,6 +1,7 @@
 package chaos
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -149,7 +150,7 @@ func (p *PodKiller) kill() error {
 			p.logger.Infof("pod %s not killed (dry run)", target.Name)
 		} else {
 			// if any error the abort deletion.
-			if err := p.k8sCli.CoreV1().Pods(target.Namespace).Delete(target.Name, &metav1.DeleteOptions{}); err != nil {
+			if err := p.k8sCli.CoreV1().Pods(target.Namespace).Delete(context.TODO(), target.Name, metav1.DeleteOptions{}); err != nil {
 				return err
 			}
 			p.logger.Infof("pod %s killed", target.Name)
@@ -166,7 +167,7 @@ func (p *PodKiller) getProbableTargets() (*corev1.PodList, error) {
 	opts := metav1.ListOptions{
 		LabelSelector: slc.String(),
 	}
-	return p.k8sCli.CoreV1().Pods("").List(opts)
+	return p.k8sCli.CoreV1().Pods("").List(context.TODO(), opts)
 }
 
 // getRandomTargets will get the targets randomly.
