@@ -24,7 +24,7 @@ Lets take and example of creating using the default leader election service.
 ```golang
 import (
     ...
-    "github.com/yxxhero/kooper/operator/controller/leaderelection"
+    "github.com/spotahome/kooper/operator/controller/leaderelection"
     ...
 )
 
@@ -40,7 +40,7 @@ Another example customizing the lock would be:
 ```golang
 import (
     ...
-    "github.com/yxxhero/kooper/operator/controller/leaderelection"
+    "github.com/spotahome/kooper/operator/controller/leaderelection"
     ...
 )
 
@@ -94,8 +94,8 @@ docker run --name ctrl1 \
     --network bridge \
     --rm -it \
     -v ${HOME}/.kube:/root/.kube:ro \
-    -v `pwd`:/go/src/github.com/yxxhero/kooper:ro  \
-    golang go run /go/src/github.com/yxxhero/kooper/examples/leader-election-controller/main.go
+    -v `pwd`:/go/src/github.com/spotahome/kooper:ro  \
+    golang go run /go/src/github.com/spotahome/kooper/examples/leader-election-controller/main.go
 ```
 
 ```bash
@@ -103,8 +103,8 @@ docker run --name ctrl2 \
     --network bridge \
     --rm -it \
     -v ${HOME}/.kube:/root/.kube:ro \
-    -v `pwd`:/go/src/github.com/yxxhero/kooper:ro  \
-    golang go run /go/src/github.com/yxxhero/kooper/examples/leader-election-controller/main.go
+    -v `pwd`:/go/src/github.com/spotahome/kooper:ro  \
+    golang go run /go/src/github.com/spotahome/kooper/examples/leader-election-controller/main.go
 ```
 
 Now you can test disconnecting and connecting them using these commands and checking the results.
@@ -115,5 +115,5 @@ Now you can test disconnecting and connecting them using these commands and chec
 * `docker network connect bridge ctrl1`
 
 
-[leaderelection-src]: https://github.com/yxxhero/kooper/tree/master/operator/controller/leaderelection
-[leaderelection-example]: https://github.com/yxxhero/kooper/tree/master/examples/leader-election-controller
+[leaderelection-src]: https://github.com/spotahome/kooper/tree/master/operator/controller/leaderelection
+[leaderelection-example]: https://github.com/spotahome/kooper/tree/master/examples/leader-election-controller

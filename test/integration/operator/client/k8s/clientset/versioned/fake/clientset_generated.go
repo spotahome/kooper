@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned"
-	superherov1alpha1 "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1"
-	fakesuperherov1alpha1 "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1/fake"
+	clientset "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned"
+	superherov1alpha1 "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1"
+	fakesuperherov1alpha1 "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

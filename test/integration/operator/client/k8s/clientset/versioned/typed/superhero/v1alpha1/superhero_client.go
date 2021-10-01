@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/yxxhero/kooper/test/integration/operator/apis/superhero/v1alpha1"
-	"github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned/scheme"
+	v1alpha1 "github.com/spotahome/kooper/test/integration/operator/apis/superhero/v1alpha1"
+	"github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )

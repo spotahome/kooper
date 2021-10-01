@@ -22,7 +22,7 @@ spec:
         imagePullPolicy: "Always"
 
 ---
-apiVersion: chaos.yxxhero.com/v1alpha1
+apiVersion: chaos.spotahome.com/v1alpha1
 kind: PodTerminator
 metadata:
   name: pause

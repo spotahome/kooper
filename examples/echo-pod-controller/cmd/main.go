@@ -6,14 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	applogger "github.com/yxxhero/kooper/log"
+	applogger "github.com/spotahome/kooper/log"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/yxxhero/kooper/examples/echo-pod-controller/controller"
-	"github.com/yxxhero/kooper/examples/echo-pod-controller/log"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/controller"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/log"
 )
 
 // Main is the main program.
@@ -95,5 +95,4 @@ func main() {
 	case <-signalC:
 		logger.Infof("Signal captured, exiting...")
 	}
-
 }

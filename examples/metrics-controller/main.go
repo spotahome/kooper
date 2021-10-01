@@ -23,11 +23,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/yxxhero/kooper/log"
-	"github.com/yxxhero/kooper/monitoring/metrics"
-	"github.com/yxxhero/kooper/operator/controller"
-	"github.com/yxxhero/kooper/operator/handler"
-	"github.com/yxxhero/kooper/operator/retrieve"
+	"github.com/spotahome/kooper/log"
+	"github.com/spotahome/kooper/monitoring/metrics"
+	"github.com/spotahome/kooper/operator/controller"
+	"github.com/spotahome/kooper/operator/handler"
+	"github.com/spotahome/kooper/operator/retrieve"
 )
 
 const (
@@ -36,9 +36,7 @@ const (
 	prometheusBackend = "prometheus"
 )
 
-var (
-	metricsBackend string
-)
+var metricsBackend string
 
 func initFlags() error {
 	fg := flag.NewFlagSet(os.Args[0], flag.ExitOnError)

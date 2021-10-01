@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,9 +33,9 @@ type FakePodTerminators struct {
 	Fake *FakeChaosV1alpha1
 }
 
-var podterminatorsResource = schema.GroupVersionResource{Group: "chaos.yxxhero.com", Version: "v1alpha1", Resource: "podterminators"}
+var podterminatorsResource = schema.GroupVersionResource{Group: "chaos.spotahome.com", Version: "v1alpha1", Resource: "podterminators"}
 
-var podterminatorsKind = schema.GroupVersionKind{Group: "chaos.yxxhero.com", Version: "v1alpha1", Kind: "PodTerminator"}
+var podterminatorsKind = schema.GroupVersionKind{Group: "chaos.spotahome.com", Version: "v1alpha1", Kind: "PodTerminator"}
 
 // Get takes name of the podTerminator, and returns the corresponding podTerminator object, and an error if there is any.
 func (c *FakePodTerminators) Get(name string, options v1.GetOptions) (result *v1alpha1.PodTerminator, err error) {

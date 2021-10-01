@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/yxxhero/kooper/examples/echo-pod-controller/service"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/service"
 )
 
 type logKind int
@@ -39,9 +39,11 @@ func (t *testLogger) logLine(kind logKind, format string, args ...interface{}) {
 func (t *testLogger) Infof(format string, args ...interface{}) {
 	t.logLine(infoKind, format, args...)
 }
+
 func (t *testLogger) Warningf(format string, args ...interface{}) {
 	t.logLine(warnignKind, format, args...)
 }
+
 func (t *testLogger) Errorf(format string, args ...interface{}) {
 	t.logLine(errorKind, format, args...)
 }

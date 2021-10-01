@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/yxxhero/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned/scheme"
+	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/client/k8s/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
@@ -30,7 +30,7 @@ type ChaosV1alpha1Interface interface {
 	PodTerminatorsGetter
 }
 
-// ChaosV1alpha1Client is used to interact with features provided by the chaos.yxxhero.com group.
+// ChaosV1alpha1Client is used to interact with features provided by the chaos.spotahome.com group.
 type ChaosV1alpha1Client struct {
 	restClient rest.Interface
 }

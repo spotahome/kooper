@@ -5,7 +5,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/yxxhero/kooper/log"
+	"github.com/spotahome/kooper/log"
 )
 
 // Logger will log the handling events. This handler can be sued to test that a

@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/yxxhero/kooper/monitoring/metrics"
+	"github.com/spotahome/kooper/monitoring/metrics"
 )
 
 func TestPrometheusMetrics(t *testing.T) {
@@ -52,7 +52,6 @@ func TestPrometheusMetrics(t *testing.T) {
 				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
 				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
 				p.IncResourceEventProcessedError(controller, metrics.DeleteEvent)
-
 			},
 			expMetrics: []string{
 				`kooper_controller_processed_events_total{controller="test",type="add"} 1`,

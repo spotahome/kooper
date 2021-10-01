@@ -83,12 +83,12 @@ This release breaks controllers constructors to allow passing a metrics recorder
 - sequential controller implementation.
 - Dependencies managed by dep and vendored.
 
-[unreleased]: https://github.com/yxxhero/kooper/compare/v0.6.0...HEAD
-[0.6.0]: https://github.com/yxxhero/kooper/compare/v0.5.1...v0.6.0
-[0.5.1]: https://github.com/yxxhero/kooper/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/yxxhero/kooper/compare/v0.4.1...v0.5.0
-[0.4.1]: https://github.com/yxxhero/kooper/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/yxxhero/kooper/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/yxxhero/kooper/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/yxxhero/kooper/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/yxxhero/kooper/releases/tag/v0.1.0
+[unreleased]: https://github.com/spotahome/kooper/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/spotahome/kooper/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/spotahome/kooper/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/spotahome/kooper/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/spotahome/kooper/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/spotahome/kooper/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/spotahome/kooper/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/spotahome/kooper/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/spotahome/kooper/releases/tag/v0.1.0

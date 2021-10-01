@@ -3,12 +3,12 @@ package controller
 import (
 	"context"
 
-	"github.com/yxxhero/kooper/operator/controller"
+	"github.com/spotahome/kooper/operator/controller"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/yxxhero/kooper/examples/echo-pod-controller/log"
-	"github.com/yxxhero/kooper/examples/echo-pod-controller/service"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/log"
+	"github.com/spotahome/kooper/examples/echo-pod-controller/service"
 )
 
 // Controller is a controller that echoes pod events.
@@ -21,7 +21,6 @@ type Controller struct {
 
 // New returns a new Echo controller.
 func New(config Config, k8sCli kubernetes.Interface, logger log.Logger) (*Controller, error) {
-
 	ret := NewPodRetrieve(config.Namespace, k8sCli)
 	echoSrv := service.NewSimpleEcho(logger)
 	handler := &handler{echoSrv: echoSrv}
@@ -48,6 +47,7 @@ func (h *handler) Add(_ context.Context, obj runtime.Object) error {
 	h.echoSrv.EchoObj(addPrefix, obj)
 	return nil
 }
+
 func (h *handler) Delete(_ context.Context, s string) error {
 	h.echoSrv.EchoS(deletePrefix, s)
 	return nil

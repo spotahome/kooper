@@ -3,13 +3,13 @@ Controller tutorial
 
 In this tutorial we will learn how to create a controller using kooper. Yes, I know what you are thinking, kooper is more an operator library... but an operator as we described in the [concepts](concepts.md) is a controller on steroids and controllers are also fully supported in Kooper.
 
-So... In this tutorial we will learn the pillars of the operator, the controller. The full controller is [here](https://github.com/yxxhero/kooper/tree/master/examples/echo-pod-controller), we will go step by step but some of the code is *glue* or doesn't refer to kooper. 
+So... In this tutorial we will learn the pillars of the operator, the controller. The full controller is [here](https://github.com/spotahome/kooper/tree/master/examples/echo-pod-controller), we will go step by step but some of the code is *glue* or doesn't refer to kooper. 
 
 Lets start!
 
 ## 01 - Description.
 
-Our Controller will log all the add/delete events that occur to pods on a given namespace. Easy peasy... Lets call it  `echo-pod-controller` (yes, very original). The full controller is in [examples/echo-pod-controller](https://github.com/yxxhero/kooper/tree/master/examples/echo-pod-controller).
+Our Controller will log all the add/delete events that occur to pods on a given namespace. Easy peasy... Lets call it  `echo-pod-controller` (yes, very original). The full controller is in [examples/echo-pod-controller](https://github.com/spotahome/kooper/tree/master/examples/echo-pod-controller).
 
 ### Structure.
 
@@ -58,7 +58,7 @@ type Echo interface {
 }
 ```
 
-We implemented that `Echo` service as `SimpleEcho` check it out on the [service file](https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/service/service.go).
+We implemented that `Echo` service as `SimpleEcho` check it out on the [service file](https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/service/service.go).
 
 Now is time to use Kooper and leverage all the controller stuff.
 
@@ -66,7 +66,7 @@ Now is time to use Kooper and leverage all the controller stuff.
 
 We need to implement our controller configuration. The controller is simple, it will need a namespace to know what pods should log and also a (re)synchronization period where the controller will receive all the pods again (apart from real time events).
 
-[controller/config.go](https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/controller/config.go)
+[controller/config.go](https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/controller/config.go)
 
 ```go
 type Config struct {
@@ -90,7 +90,7 @@ Our controller is for pods so our retriever will use the [Kubernetes client](htt
 client.CoreV1().Pods(namespace).List(options)
 ```
 
-Check the retriever [here](https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/controller/retrieve.go)
+Check the retriever [here](https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/controller/retrieve.go)
 
 
 ## 05 - Controller handler.
@@ -108,7 +108,7 @@ At first can look odd that an update on a resource calls `Add`. But we are getti
 In our case we don't bother to check if is new or old or if we have done something related with a previous event on the same resource. We just call our Echo Service.
 
 
-[controller/echo.go](https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/controller/echo.go)
+[controller/echo.go](https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/controller/echo.go)
 
 ```go
 type handler struct {
@@ -129,7 +129,7 @@ func (h *handler) Delete(_ context.Context, s string) error {
 
 We have all the pieces of the controller except the controller itself, but don't worry, Kooper gives you a controller implementation so you can glue all together and create a controller.
 
-This can be found in [controller/echo.go](https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/controller/echo.go) (is the same file of the handler).
+This can be found in [controller/echo.go](https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/controller/echo.go) (is the same file of the handler).
 
 We will go step by step:
 
@@ -169,13 +169,13 @@ And... finally we create the controller!
 ctrl := controller.NewSequential(config.ResyncPeriod, handler, ret, nil, logger)
 ```
 
-We are using a sequential controller constructor (`NewSequential`) from `"github.com/yxxhero/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
+We are using a sequential controller constructor (`NewSequential`) from `"github.com/spotahome/kooper/operator/controller"` package. It receives a handler, a retriever, a logger and a resync period.
 
 Wow, that was easy :)
 
 ## 07 - Finishing.
 
-After all these steps we have a controller, now just depends how the main is organized or where you start the controller. You can check how is initialized the kubernetes client on the exmaple's [main]((https://github.com/yxxhero/kooper/blob/master/examples/echo-pod-controller/cmd/main.go)), call our controller constructor and run it. But mainly is this:
+After all these steps we have a controller, now just depends how the main is organized or where you start the controller. You can check how is initialized the kubernetes client on the exmaple's [main]((https://github.com/spotahome/kooper/blob/master/examples/echo-pod-controller/cmd/main.go)), call our controller constructor and run it. But mainly is this:
 
 ```go
 //...

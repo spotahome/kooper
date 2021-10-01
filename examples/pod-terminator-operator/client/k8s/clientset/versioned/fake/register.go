@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	chaosv1alpha1 "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,12 +27,14 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
-var scheme = runtime.NewScheme()
-var codecs = serializer.NewCodecFactory(scheme)
-var parameterCodec = runtime.NewParameterCodec(scheme)
-var localSchemeBuilder = runtime.SchemeBuilder{
-	chaosv1alpha1.AddToScheme,
-}
+var (
+	scheme             = runtime.NewScheme()
+	codecs             = serializer.NewCodecFactory(scheme)
+	parameterCodec     = runtime.NewParameterCodec(scheme)
+	localSchemeBuilder = runtime.SchemeBuilder{
+		chaosv1alpha1.AddToScheme,
+	}
+)
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition
 // of clientsets, like in:

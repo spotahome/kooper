@@ -1,5 +1,5 @@
 package test
 
 const (
-	GroupName = "chaos.yxxhero.com"
+	GroupName = "chaos.spotahome.com"
 )

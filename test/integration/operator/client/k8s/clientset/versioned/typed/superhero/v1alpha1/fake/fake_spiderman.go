@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/yxxhero/kooper/test/integration/operator/apis/superhero/v1alpha1"
+	v1alpha1 "github.com/spotahome/kooper/test/integration/operator/apis/superhero/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -75,7 +75,6 @@ func (c *FakeSpidermans) List(opts v1.ListOptions) (result *v1alpha1.SpidermanLi
 func (c *FakeSpidermans) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(spidermansResource, c.ns, opts))
-
 }
 
 // Create takes the representation of a spiderman and creates it.  Returns the server's representation of the spiderman, and an error, if there is any.

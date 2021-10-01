@@ -5,8 +5,8 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	chaosv1alpha1 "github.com/yxxhero/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
-	"github.com/yxxhero/kooper/examples/pod-terminator-operator/log"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/apis/chaos/v1alpha1"
+	"github.com/spotahome/kooper/examples/pod-terminator-operator/log"
 )
 
 // Syncer is the interface that every chaos service implementation

@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/yxxhero/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1"
+	v1alpha1 "github.com/spotahome/kooper/test/integration/operator/client/k8s/clientset/versioned/typed/superhero/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

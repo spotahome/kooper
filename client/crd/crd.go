@@ -1,6 +1,7 @@
 package crd
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeversion "k8s.io/apimachinery/pkg/util/version"
 
-	"github.com/yxxhero/kooper/log"
-	wraptime "github.com/yxxhero/kooper/wrapper/time"
+	"github.com/spotahome/kooper/log"
+	wraptime "github.com/spotahome/kooper/wrapper/time"
 	"k8s.io/utils/pointer"
 )
 
@@ -152,7 +153,7 @@ func (c *Client) EnsurePresent(conf Conf) error {
 		},
 	}
 
-	_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Create(crd)
+	_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Create(context.TODO(), crd, metav1.CreateOptions{})
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return fmt.Errorf("error creating crd %s: %s", crdName, err)
@@ -199,7 +200,7 @@ func (c *Client) WaitToBePresent(name string, timeout time.Duration) error {
 	for {
 		select {
 		case <-t.C:
-			_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
+			_, err := c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), name, metav1.GetOptions{})
 			// Is present, finish.
 			if err == nil {
 				return nil
@@ -216,7 +217,7 @@ func (c *Client) Delete(name string) error {
 		return err
 	}
 
-	return c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Delete(name, &metav1.DeleteOptions{})
+	return c.aeClient.ApiextensionsV1().CustomResourceDefinitions().Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
 // validClusterForCRDs returns nil if cluster is ok to be used for CRDs, otherwise error.

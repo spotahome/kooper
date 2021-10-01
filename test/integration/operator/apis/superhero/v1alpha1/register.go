@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/yxxhero/kooper/test/integration/operator/apis/superhero"
+	"github.com/spotahome/kooper/test/integration/operator/apis/superhero"
 )
 
 const (

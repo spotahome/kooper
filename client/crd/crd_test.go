@@ -19,9 +19,9 @@ import (
 	kubetesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
 
-	"github.com/yxxhero/kooper/client/crd"
-	"github.com/yxxhero/kooper/log"
-	mtime "github.com/yxxhero/kooper/mocks/wrapper/time"
+	"github.com/spotahome/kooper/client/crd"
+	"github.com/spotahome/kooper/log"
+	mtime "github.com/spotahome/kooper/mocks/wrapper/time"
 )
 
 var (
@@ -296,7 +296,6 @@ func TestCRDEnsurePresent(t *testing.T) {
 			} else if assert.NoError(err) {
 				assert.Equal(test.expCalls, cli.Actions())
 			}
-
 		})
 	}
 }
@@ -358,7 +357,6 @@ func TestCRDWaitToBePresent(t *testing.T) {
 					return true, nil, nil
 				}
 				return true, nil, fmt.Errorf("wanted error")
-
 			})
 
 			crdCli := crd.NewCustomClient(cli, mt, log.Dummy)

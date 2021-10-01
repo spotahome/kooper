@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/yxxhero/kooper/log"
+	"github.com/spotahome/kooper/log"
 )
 
 const (
@@ -128,7 +128,6 @@ func (r *runner) initResourceLock() error {
 
 	r.resourceLock = rl
 	return nil
-
 }
 
 func (r *runner) Run(f func() error) error {

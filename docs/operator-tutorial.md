@@ -15,7 +15,7 @@ Our Operator will apply [chaos engineering](http://principlesofchaos.org/) at a 
 
 It will lack a lot of things and the main purpose of this tutorial is not the domain logic of the operator (the pod terminator, that is cool also and you should read it :)) but how you bootstrap a full working operator with its CRDs using Kooper.
 
-The full controller is in [examples/pod-terminator-operator](https://github.com/yxxhero/kooper/tree/master/examples/pod-terminator-operator).
+The full controller is in [examples/pod-terminator-operator](https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator).
 
 ## 02 - Operator structure
 
@@ -78,7 +78,7 @@ Two, you can trust Kubernetes and Kooper libraries, they are already tested, you
 The first thing that we need to do is to design our CRD. In the case of this example the definition of the resource needs to be something that need to select pods based on labels and periodically kill them, also needs to respect a safe quantity of minimum pods running and lastly a dry run option to check if it's selecting the correct pods to kill. Something like this:
 
 ```yaml
-apiVersion: chaos.yxxhero.com/v1alpha1
+apiVersion: chaos.spotahome.com/v1alpha1
 kind: PodTerminator
 metadata:
   name: nginx-controller
@@ -94,7 +94,7 @@ spec:
   DryRun: true
 ```
 
-We called `PodTerminator` and its group will be `chaos.yxxhero.com/v1alpha1` we selected `v1alpha1` as the version of the group because is the first iteration of our resources, eventually it will end up being `v1` when its stable, but in this example it will be there forever. You can imagine doing this when the example is up and running:
+We called `PodTerminator` and its group will be `chaos.spotahome.com/v1alpha1` we selected `v1alpha1` as the version of the group because is the first iteration of our resources, eventually it will end up being `v1` when its stable, but in this example it will be there forever. You can imagine doing this when the example is up and running:
 
 ```
 $ kubectl get podterminators
@@ -104,7 +104,7 @@ nginx-controller   1h
 
 ### Implementin the CRD
 
-We have designed the CRD, but now we need to implement. All of the operator resources are in [apis](https://github.com/yxxhero/kooper/tree/master/examples/pod-terminator-operator/apis) directory inside the example, the structure of the CRD follows Kubernetes conventions (group/version). How this structure is placed and how it's implemented its out of the scope of this tutorial, you can check [kubernetes api](https://github.com/kubernetes/api) repository and [this blog post](https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/)
+We have designed the CRD, but now we need to implement. All of the operator resources are in [apis](https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/apis) directory inside the example, the structure of the CRD follows Kubernetes conventions (group/version). How this structure is placed and how it's implemented its out of the scope of this tutorial, you can check [kubernetes api](https://github.com/kubernetes/api) repository and [this blog post](https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/)
 
 To summarize a little bit, we have this API structure:
 
@@ -119,9 +119,9 @@ To summarize a little bit, we have this API structure:
         └── zz_generated.deepcopy.go
 ```
 
-in `types` is our [PodTerminator Go object](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/types.go) that describes de API and in `register.go` files there is data to register this types in kubernetes client.
+in `types` is our [PodTerminator Go object](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/types.go) that describes de API and in `register.go` files there is data to register this types in kubernetes client.
 
-With these files kubernetes code-generator will generate the required code for the [clients](https://github.com/yxxhero/kooper/tree/master/examples/pod-terminator-operator/client/k8s/clientset) and deepcopy methods ([deepcopy](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/zz_generated.deepcopy.go) methods are required by all the kubernetes objects). You can see how its used in the [Makefile](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/Makefile). This will generate all the boilerplate code that is the same in all the kubernetes objects (crds and not crds).
+With these files kubernetes code-generator will generate the required code for the [clients](https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/client/k8s/clientset) and deepcopy methods ([deepcopy](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/apis/chaos/v1alpha1/zz_generated.deepcopy.go) methods are required by all the kubernetes objects). You can see how its used in the [Makefile](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/Makefile). This will generate all the boilerplate code that is the same in all the kubernetes objects (crds and not crds).
 
 At this point we have our PodTerminator CRD go code ready to work with (create, get, delete, list, watch... using kubernetes client).
 
@@ -129,7 +129,7 @@ At this point we have our PodTerminator CRD go code ready to work with (create, 
 
 Let's start with our domain logic. Our domain logic is a single service called `Chaos`. This service will be responsible for running a number of `podKillers`, and these podkillers will kill pods at regular intervals based on the filters and description described on our manifests (`PodTerminator` CRD).
 
-We will not explain the logic of this service as is out of the scope of this operator tutorial. But you can take a look [here]((https://github.com/yxxhero/kooper/tree/master/examples/pod-terminator-operator/service/chaos) if you think is interesting.
+We will not explain the logic of this service as is out of the scope of this operator tutorial. But you can take a look [here]((https://github.com/spotahome/kooper/tree/master/examples/pod-terminator-operator/service/chaos) if you think is interesting.
 
 Our service has these methods and are the ones that will be used by our operator.
 
@@ -148,7 +148,7 @@ For us, create and update are the same. This means that we need to think as "ens
 
 This operator only has the resync period (the interval kubernetes will return us all the resources we are listening to)
 
-This can be found in [operator/config.go](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/operator/config.go)
+This can be found in [operator/config.go](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/operator/config.go)
 ```
 type Config struct {
 	// ResyncPeriod is the resync period of the operator.
@@ -160,9 +160,9 @@ type Config struct {
 
 The first thing that the operator needs is the CRD, the operator will ensure CRD (`PodTerminator`) is registered on kubernetes and also will be reacting to this resource changes (add/update and delete).
 
-This can be found in [operator/crd.go](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/operator/crd.go).
+This can be found in [operator/crd.go](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/operator/crd.go).
 
-For the initialization kooper [CRD client](https://github.com/yxxhero/kooper/blob/master/client/crd/crd.go) is used.
+For the initialization kooper [CRD client](https://github.com/spotahome/kooper/blob/master/client/crd/crd.go) is used.
 All the stuff required by the `crd.Conf` was added on the implementation and design of the CRD in previous steps.
 
 ```
@@ -203,7 +203,7 @@ func (p *podTerminatorCRD) GetObject() runtime.Object {
 
 The handler is how the operator will react to Kubernetes resource changes/notifications. In this case is very simple because all the domain logic is inside our services (decouple your domain logic and responsibilities :)).
 
-This can be found in [operator/handler.go](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/operator/handler.go).
+This can be found in [operator/handler.go](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/operator/handler.go).
 
 ```golang
 func (h *handler) Add(_ context.Context, obj runtime.Object) error {
@@ -225,7 +225,7 @@ func (h *handler) Delete(_ context.Context, name string) error {
 All the pieces are ready, let's glue all together.
 
 
-This can be found in [operator/factory.go](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/operator/factory.go).
+This can be found in [operator/factory.go](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/operator/factory.go).
 ```golang
 func New(cfg Config, podTermCli podtermk8scli.Interface, crdCli crd.Interface, kubeCli kubernetes.Interface, logger log.Logger) (operator.Operator, error) {
 
@@ -248,7 +248,7 @@ First the CRD instance is created, next the handler, then with the handler and t
 
 ## 06 - Finishing
 
-After all these steps, a fully operational chaos operator is ready to destroy pods. You can check the [main](https://github.com/yxxhero/kooper/blob/master/examples/pod-terminator-operator/cmd/main.go) where the operator is instantiated.
+After all these steps, a fully operational chaos operator is ready to destroy pods. You can check the [main](https://github.com/spotahome/kooper/blob/master/examples/pod-terminator-operator/cmd/main.go) where the operator is instantiated.
 
 Run everything with:
 

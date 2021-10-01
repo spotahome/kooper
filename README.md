@@ -27,7 +27,7 @@ In Kooper the concepts of controller an operator are very simple, a controller c
 
 It can be seen how easy is to develop a controller or an operator in kooper looking at the [documentation](docs).
 
-This is a simple pod log controller example ([full running example here](https://github.com/yxxhero/kooper/blob/master/examples/onefile-echo-pod-controller/main.go)):
+This is a simple pod log controller example ([full running example here](https://github.com/spotahome/kooper/blob/master/examples/onefile-echo-pod-controller/main.go)):
 
 ```go
 // Initialize resources like logger and kubernetes client
@@ -82,7 +82,7 @@ docker run \
     --rm -it \
     -v ${HOME}/.kube:/root/.kube:ro \
     golang:1.10 \
-    /bin/bash -c "go get github.com/yxxhero/kooper/... && cd /go/src/github.com/yxxhero/kooper && go run ./examples/onefile-echo-pod-controller/main.go"
+    /bin/bash -c "go get github.com/spotahome/kooper/... && cd /go/src/github.com/spotahome/kooper && go run ./examples/onefile-echo-pod-controller/main.go"
 ```
 
 ## Motivation
@@ -91,7 +91,7 @@ The state of art in the operators/controllers moves fast, a lot of new operators
 
 At this moment there is no standard, although there are some projects like [rook operator kit](https://github.com/rook/operator-kit) or [Giantswarm operator kit](https://github.com/giantswarm/operatorkit) that are trying to create it.
 
-yxxhero studied these projects before developing Kooper and they didn't fit the requirements:
+spotahome studied these projects before developing Kooper and they didn't fit the requirements:
 
 - Clear and maintanable code.
 - Easy to test and mock.
@@ -106,7 +106,7 @@ yxxhero studied these projects before developing Kooper and they didn't fit the 
 Any dependency manager can get Kooper or directly with go get the latest version:
 
 ```bash
-go get -u github.com/yxxhero/kooper
+go get -u github.com/spotahome/kooper
 ```
 
 ## Using Kooper as a dependency
@@ -145,7 +145,7 @@ An example would be. If the cluster that will use kooper operators/controllers i
   version = "kubernetes-1.9.6"
 
 [[constraint]]
-  name = "github.com/yxxhero/kooper"
+  name = "github.com/spotahome/kooper"
   version = "0.2.0"
 
 ...
@@ -172,16 +172,16 @@ The starting point would be to check the [concepts](docs/concepts.md) and then c
 
 ## Who is using kooper
 
-- [redis-operator](https://github.com/yxxhero/redis-operator)
+- [redis-operator](https://github.com/spotahome/redis-operator)
 - [node-labeler-operator](https://github.com/barpilot/node-labeler-operator)
 - [source-ranges-controller](https://github.com/jeffersongirao/source-ranges-controller)
 
-[travis-image]: https://travis-ci.org/yxxhero/kooper.svg?branch=master
-[travis-url]: https://travis-ci.org/yxxhero/kooper
-[goreport-image]: https://goreportcard.com/badge/github.com/yxxhero/kooper
-[goreport-url]: https://goreportcard.com/report/github.com/yxxhero/kooper
-[godoc-image]: https://godoc.org/github.com/yxxhero/kooper?status.svg
-[godoc-url]: https://godoc.org/github.com/yxxhero/kooper
+[travis-image]: https://travis-ci.org/spotahome/kooper.svg?branch=master
+[travis-url]: https://travis-ci.org/spotahome/kooper
+[goreport-image]: https://goreportcard.com/badge/github.com/spotahome/kooper
+[goreport-url]: https://goreportcard.com/report/github.com/spotahome/kooper
+[godoc-image]: https://godoc.org/github.com/spotahome/kooper?status.svg
+[godoc-url]: https://godoc.org/github.com/spotahome/kooper
 [dependency-example]: https://github.com/slok/kooper-as-dependency
 [dep-project]: https://github.com/golang/dep
 [opentracing-url]: http://opentracing.io/

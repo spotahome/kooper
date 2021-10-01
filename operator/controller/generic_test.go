@@ -19,11 +19,11 @@ import (
 	kubetesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/yxxhero/kooper/log"
-	mhandler "github.com/yxxhero/kooper/mocks/operator/handler"
-	"github.com/yxxhero/kooper/monitoring/metrics"
-	"github.com/yxxhero/kooper/operator/controller"
-	"github.com/yxxhero/kooper/operator/controller/leaderelection"
+	"github.com/spotahome/kooper/log"
+	mhandler "github.com/spotahome/kooper/mocks/operator/handler"
+	"github.com/spotahome/kooper/monitoring/metrics"
+	"github.com/spotahome/kooper/operator/controller"
+	"github.com/spotahome/kooper/operator/controller/leaderelection"
 )
 
 // Namespace knows how to retrieve namespaces.
@@ -173,7 +173,6 @@ func TestGenericControllerHandleAdds(t *testing.T) {
 }
 
 func TestGenericControllerHandleDeletes(t *testing.T) {
-
 	startNSList, expNSAdds := createNamespaceList("testing", 10)
 	nsDels := []*corev1.Namespace{expNSAdds[0], expNSAdds[4], expNSAdds[1]}
 
@@ -435,7 +434,8 @@ func TestGenericControllerTracing(t *testing.T) {
 				ListMeta: metav1.ListMeta{
 					ResourceVersion: "1",
 				},
-				Items: []corev1.Namespace{test.addNs}})
+				Items: []corev1.Namespace{test.addNs},
+			})
 
 			// Mock our handler.
 			mh := &mhandler.Handler{}

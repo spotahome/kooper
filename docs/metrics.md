@@ -73,7 +73,7 @@ If you are using the default prometheus methods instead of a custom registry, yo
 
 There is a grafana dashboard for your Kubernetes controllers. You can get it [here][grafana-dashboard]
 
-[metrics-interface]: https://github.com/yxxhero/kooper/blob/master/monitoring/metrics/metrics.go
-[metrics-example]: https://github.com/yxxhero/kooper/tree/master/examples/metrics-controller
+[metrics-interface]: https://github.com/spotahome/kooper/blob/master/monitoring/metrics/metrics.go
+[metrics-example]: https://github.com/spotahome/kooper/tree/master/examples/metrics-controller
 [prometheus-registerer]: https://godoc.org/github.com/prometheus/client_golang/prometheus#Registerer
 [grafana-dashboard]: https://grafana.com/dashboards/7082
