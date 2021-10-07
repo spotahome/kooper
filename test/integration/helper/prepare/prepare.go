@@ -1,6 +1,7 @@
 package prepare
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -34,7 +35,7 @@ func New(cli kubernetes.Interface, t *testing.T) *Preparer {
 
 // SetUp will set up all the required preparation for the tests in a Kubernetes cluster.
 func (p *Preparer) SetUp() {
-	ns, err := p.cli.CoreV1().Namespaces().Create(p.namespace)
+	ns, err := p.cli.CoreV1().Namespaces().Create(context.Background(), p.namespace, metav1.CreateOptions{})
 	require.NoError(p.t, err, "set up failed, can't continue without setting up an environment")
 	p.namespace = ns
 }
@@ -46,6 +47,6 @@ func (p *Preparer) Namespace() *corev1.Namespace {
 
 // TearDown will tear down all the required preparation for the tests in a Kubernetes cluster.
 func (p *Preparer) TearDown() {
-	err := p.cli.CoreV1().Namespaces().Delete(p.namespace.Name, &metav1.DeleteOptions{})
+	err := p.cli.CoreV1().Namespaces().Delete(context.Background(), p.namespace.Name, metav1.DeleteOptions{})
 	require.NoError(p.t, err, "tear down failed, can't continue without destroying an environment")
 }

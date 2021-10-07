@@ -29,10 +29,10 @@ import (
 func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1().Namespaces().List(options)
+			return client.CoreV1().Namespaces().List(context.TODO(), options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return client.CoreV1().Namespaces().Watch(options)
+			return client.CoreV1().Namespaces().Watch(context.TODO(), options)
 		},
 	})
 }
