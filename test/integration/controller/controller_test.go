@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package controller_test
@@ -113,17 +114,17 @@ func TestControllerHandleEvents(t *testing.T) {
 
 			// Create the required services.
 			for _, svc := range test.addServices {
-				_, err := k8scli.CoreV1().Services(prep.Namespace().Name).Create(svc)
+				_, err := k8scli.CoreV1().Services(prep.Namespace().Name).Create(context.Background(), svc, metav1.CreateOptions{})
 				assert.NoError(err)
 				time.Sleep(1 * time.Second)
 			}
 
 			for _, svc := range test.updateServices {
-				origSvc, err := k8scli.CoreV1().Services(prep.Namespace().Name).Get(svc, metav1.GetOptions{})
+				origSvc, err := k8scli.CoreV1().Services(prep.Namespace().Name).Get(context.Background(), svc, metav1.GetOptions{})
 				if assert.NoError(err) {
 					// Change something
 					origSvc.Spec.Ports = append(origSvc.Spec.Ports, corev1.ServicePort{Name: "updateport", Port: 9876})
-					_, err := k8scli.CoreV1().Services(prep.Namespace().Name).Update(origSvc)
+					_, err := k8scli.CoreV1().Services(prep.Namespace().Name).Update(context.Background(), origSvc, metav1.UpdateOptions{})
 					assert.NoError(err)
 					time.Sleep(1 * time.Second)
 				}
