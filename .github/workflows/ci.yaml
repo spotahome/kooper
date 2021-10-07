@@ -7,19 +7,19 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     # Execute the checks inside the container instead the VM.
-    container: golangci/golangci-lint:v1.24.0-alpine
+    container: golangci/golangci-lint:v1.42.1-alpine
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: ./hack/scripts/check.sh
 
   unit-test:
     name: Unit test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-go@v2-beta
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: 1.14
+          go-version: 1.17
       - run: make ci-unit-test
 
   integration-test:
@@ -28,14 +28,26 @@ jobs:
     needs: [check, unit-test]
     strategy:
       matrix:
-        kubernetes: [1.15.7, 1.16.4, 1.17.0, 1.18.0]
+        kubernetes: [1.17.17, 1.18.19, 1.19.11, 1.20.7, 1.21.1, 1.22.0]
     env:
-      KIND_VERSION: v0.7.0
+      KIND_VERSION: v0.11.1
     steps:
-      - uses: actions/checkout@v1
-      - run: curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
-      - run: curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${{ matrix.kubernetes }}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-      - run: KUBERNETES_VERSION=${{ matrix.kubernetes }} make ci-integration-test
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Execute tests
+        env:
+          KIND_VERSION: v0.11.1
+        run: |
+          # Get dependencies.
+          echo "Getting dependencies..."
+          curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
+          curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${{ matrix.kubernetes }}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+          # Start cluster.
+          echo "Executing ${{ matrix.kubernetes }} Kubernetes tests..."
+          KUBERNETES_VERSION=${{ matrix.kubernetes }} make ci-integration-test  
 
 
 

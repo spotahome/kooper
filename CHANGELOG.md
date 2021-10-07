@@ -19,6 +19,7 @@ NOTE: Breaking release in controllers.
 - Refactor internal controller queue into a decorator implementation approach.
 - Remove `Delete` method from `controller.Handler` and simplify to only `Handle` method
 - Add `DisableResync` flag on controller configuration to disable the resync of all resources.
+- Update Kubernetes libraries for 1.22.
 
 ## [0.8.0] - 2019-12-11
 
