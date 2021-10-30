@@ -18,4 +18,4 @@ env:
   global:
     - GO111MODULE=on
     - KIND_VERSION=v0.6.1
-    - KUBERNETES_VERSION=1.15.6
+    - KUBERNETES_VERSION=1.22.3
