@@ -1,5 +1,7 @@
 ## [unreleased]
 
+- Update Kubernetes libraries for 1.23.
+
 ## [2.1.0] - 2021-10-07
 
 - Update Kubernetes libraries for 1.22.
