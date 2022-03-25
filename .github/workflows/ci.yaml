@@ -9,14 +9,14 @@ jobs:
     # Execute the checks inside the container instead the VM.
     container: golangci/golangci-lint:v1.42.1-alpine
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: ./hack/scripts/check.sh
 
   unit-test:
     name: Unit test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
         with:
           go-version: 1.17
@@ -32,7 +32,7 @@ jobs:
     env:
       KIND_VERSION: v0.11.1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
         with:
           go-version: 1.17
