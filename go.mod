@@ -1,7 +1,7 @@
 module github.com/spotahome/kooper/v2
 
 require (
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.23.1
