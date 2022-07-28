@@ -28,7 +28,7 @@ jobs:
     needs: [check, unit-test]
     strategy:
       matrix:
-        kubernetes: [1.17.17, 1.18.19, 1.19.11, 1.20.7, 1.21.1, 1.22.0, 1.23.0]
+        kubernetes: [1.17.17, 1.18.19, 1.19.11, 1.20.7, 1.21.1, 1.22.0, 1.23.0, 1.24.0]
     env:
       KIND_VERSION: v0.11.1
     steps:
