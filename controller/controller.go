@@ -141,16 +141,16 @@ func New(cfg *Config) (Controller, error) {
 	// Create the queue that will have our received job changes.
 	queue := newRateLimitingBlockingQueue(
 		cfg.ProcessingJobRetries,
-		workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), cfg.Name),
 	)
 
-	// Measure the queue.
-	queue, err = newMetricsBlockingQueue(
-		cfg.Name,
-		cfg.MetricsRecorder,
-		queue,
-		cfg.Logger,
-	)
+	//// Measure the queue.
+	//queue, err = newMetricsBlockingQueue(
+	//	cfg.Name,
+	//	cfg.MetricsRecorder,
+	//	queue,
+	//	cfg.Logger,
+	//)
 	if err != nil {
 		return nil, fmt.Errorf("could not measure the queue: %w", err)
 	}
