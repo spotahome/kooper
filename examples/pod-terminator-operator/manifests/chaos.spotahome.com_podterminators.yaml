@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
-  creationTimestamp: null
   name: podterminators.chaos.spotahome.com
 spec:
   group: chaos.spotahome.com

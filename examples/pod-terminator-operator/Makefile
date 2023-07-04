@@ -1,6 +1,6 @@
 
-CODE_GENERATOR_IMAGE := quay.io/slok/kube-code-generator:v1.25.0
-CRD_GENERATOR_IMAGE :=  quay.io/slok/kube-code-generator:v1.25.0
+CODE_GENERATOR_IMAGE := ghcr.io/slok/kube-code-generator:v1.27.0
+CRD_GENERATOR_IMAGE :=  ghcr.io/slok/kube-code-generator:v1.27.0
 DIRECTORY := $(PWD)
 ROOT_DIRECTORY := $(DIRECTORY)/../..
 CODE_GENERATOR_PACKAGE := github.com/spotahome/kooper/examples/pod-terminator-operator/v2
