@@ -163,7 +163,7 @@ func New(cfg *Config) (Controller, error) {
 	// Set up our informer event handler.
 	// Objects are already in our local store. Add only keys/jobs on the queue so they can re processed
 	// afterwards.
-	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
+	_, err = informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err != nil {
@@ -189,6 +189,9 @@ func New(cfg *Config) (Controller, error) {
 			queue.Add(context.TODO(), key)
 		},
 	}, cfg.ResyncInterval)
+	if err != nil {
+		return nil, fmt.Errorf("could not set event handler on controller: %w", err)
+	}
 
 	// Create processing chain: processor(+middlewares) -> handler(+middlewares).
 	processor := newIndexerProcessor(informer.GetIndexer(), cfg.Handler)
