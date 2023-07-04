@@ -1,5 +1,7 @@
 ## [unreleased]
 
+## [2.3.0] - 2022-07-04
+
 - Update Kubernetes libraries for 1.27.
 
 ## [2.2.0] - 2021-08-30
@@ -122,7 +124,9 @@ This release breaks controllers constructors to allow passing a metrics recorder
 - sequential controller implementation.
 - Dependencies managed by dep and vendored.
 
-[unreleased]: https://github.com/spotahome/kooper/compare/v2.1.0...HEAD
+[unreleased]: https://github.com/spotahome/kooper/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/spotahome/kooper/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/spotahome/kooper/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/spotahome/kooper/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/spotahome/kooper/compare/v0.8.0...v2.0.0
 [0.8.0]: https://github.com/spotahome/kooper/compare/v0.7.0...v0.8.0
