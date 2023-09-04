@@ -7,7 +7,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     # Execute the checks inside the container instead the VM.
-    container: golangci/golangci-lint:v1.53.3-alpine
+    container: golangci/golangci-lint:v1.54.2-alpine
     steps:
       - uses: actions/checkout@v3
       - run: ./hack/scripts/check.sh
@@ -28,7 +28,7 @@ jobs:
     needs: [check, unit-test]
     strategy:
       matrix:
-        kubernetes: [1.24.15, 1.25.11, 1.26.6, 1.27.3]
+        kubernetes: [1.24.15, 1.25.11, 1.26.6, 1.27.3, 1.28.0]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4

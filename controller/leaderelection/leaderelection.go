@@ -115,7 +115,7 @@ func (r *runner) initResourceLock() error {
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: r.key, Host: id})
 
 	rl, err := resourcelock.New(
-		resourcelock.ConfigMapsLeasesResourceLock,
+		resourcelock.LeasesResourceLock,
 		r.namespace,
 		r.key,
 		r.k8scli.CoreV1(),

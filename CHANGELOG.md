@@ -1,5 +1,10 @@
 ## [unreleased]
 
+## [2.5.0] - 2023-09-04
+
+- Update Kubernetes libraries for 1.28.
+- Change resource locks from configmaps to leases.
+
 ## [2.4.0] - 2023-07-04
 
 - Update Kubernetes libraries for 1.27.
@@ -128,7 +133,8 @@ This release breaks controllers constructors to allow passing a metrics recorder
 - sequential controller implementation.
 - Dependencies managed by dep and vendored.
 
-[unreleased]: https://github.com/spotahome/kooper/compare/v2.4.0...HEAD
+[unreleased]: https://github.com/spotahome/kooper/compare/v2.5.0...HEAD
+[2.4.0]: https://github.com/spotahome/kooper/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/spotahome/kooper/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/spotahome/kooper/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/spotahome/kooper/compare/v2.1.0...v2.2.0
