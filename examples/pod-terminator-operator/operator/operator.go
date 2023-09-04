@@ -39,10 +39,10 @@ func New(cfg Config, podTermCli podtermk8scli.Interface, kubeCli kubernetes.Inte
 func newRetriever(cli podtermk8scli.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return cli.ChaosV1alpha1().PodTerminators().List(options)
+			return cli.ChaosV1alpha1().PodTerminators().List(context.Background(), options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return cli.ChaosV1alpha1().PodTerminators().Watch(options)
+			return cli.ChaosV1alpha1().PodTerminators().Watch(context.Background(), options)
 		},
 	})
 }
@@ -51,7 +51,7 @@ func newHandler(k8sCli kubernetes.Interface, ptCli podtermk8scli.Interface, logg
 	const finalizer = "finalizer.chaos.spotahome.com/podKiller"
 	chaossvc := chaos.NewChaos(k8sCli, logger)
 
-	return controller.HandlerFunc(func(_ context.Context, obj runtime.Object) error {
+	return controller.HandlerFunc(func(ctx context.Context, obj runtime.Object) error {
 		pt, ok := obj.(*chaosv1alpha1.PodTerminator)
 		if !ok {
 			return fmt.Errorf("%v is not a pod terminator object", obj.GetObjectKind())
@@ -67,7 +67,7 @@ func newHandler(k8sCli kubernetes.Interface, ptCli podtermk8scli.Interface, logg
 			}
 
 			pt.Finalizers = removeStringFromSlice(pt.Finalizers, finalizer)
-			_, err = ptCli.ChaosV1alpha1().PodTerminators().Update(pt)
+			_, err = ptCli.ChaosV1alpha1().PodTerminators().Update(ctx, pt, metav1.UpdateOptions{})
 			if err != nil {
 				return fmt.Errorf("could not update pod terminator: %w", err)
 			}
@@ -82,7 +82,7 @@ func newHandler(k8sCli kubernetes.Interface, ptCli podtermk8scli.Interface, logg
 		// Add finalizer to the object.
 		case pt.DeletionTimestamp.IsZero() && !stringPresentInSlice(pt.Finalizers, finalizer):
 			pt.Finalizers = append(pt.Finalizers, finalizer)
-			_, err := ptCli.ChaosV1alpha1().PodTerminators().Update(pt)
+			_, err := ptCli.ChaosV1alpha1().PodTerminators().Update(ctx, pt, metav1.UpdateOptions{})
 			if err != nil {
 				return fmt.Errorf("could not update pod termiantor: %w", err)
 			}
