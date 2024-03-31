@@ -7,10 +7,14 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     # Execute the checks inside the container instead the VM.
-    container: golangci/golangci-lint:v1.54.2-alpine
+    container: golangci/golangci-lint:v1.57.2-alpine
     steps:
       - uses: actions/checkout@v3
-      - run: ./hack/scripts/check.sh
+      - run: |
+          # We need this go flag because it started to error after golangci-lint is using Go 1.21.
+          # TODO(slok): Remove it on next (>1.54.1) golangci-lint upgrade to check if this problem has gone.
+          export GOFLAGS="-buildvcs=false"
+          ./hack/scripts/check.sh
 
   unit-test:
     name: Unit test
@@ -28,7 +32,8 @@ jobs:
     needs: [check, unit-test]
     strategy:
       matrix:
-        kubernetes: [1.24.15, 1.25.11, 1.26.6, 1.27.3, 1.28.0]
+        kubernetes:
+          [1.23.17, 1.24.17, 1.25.16, 1.26.14, 1.27.11, 1.28.7, 1.29.2]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -36,7 +41,7 @@ jobs:
           go-version-file: go.mod
       - name: Execute tests
         env:
-          KIND_VERSION: v0.20.0
+          KIND_VERSION: v0.22.0
         run: |
           # Get dependencies.
           echo "Getting dependencies..."
@@ -45,7 +50,4 @@ jobs:
 
           # Start cluster.
           echo "Executing ${{ matrix.kubernetes }} Kubernetes tests..."
-          KUBERNETES_VERSION=${{ matrix.kubernetes }} make ci-integration-test  
-
-
-
+          KUBERNETES_VERSION=${{ matrix.kubernetes }} make ci-integration-test
