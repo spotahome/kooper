@@ -1,5 +1,7 @@
 ## [unreleased]
 
+## [2.6.0] - 2024-03-31
+
 - Update Kubernetes libraries for 1.29.
 - Update Go version to v1.22.
 
@@ -136,7 +138,8 @@ This release breaks controllers constructors to allow passing a metrics recorder
 - sequential controller implementation.
 - Dependencies managed by dep and vendored.
 
-[unreleased]: https://github.com/spotahome/kooper/compare/v2.5.0...HEAD
+[unreleased]: https://github.com/spotahome/kooper/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/spotahome/kooper/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/spotahome/kooper/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/spotahome/kooper/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/spotahome/kooper/compare/v2.2.0...v2.3.0
