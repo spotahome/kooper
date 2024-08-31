@@ -1,5 +1,5 @@
 
-IMAGE_GEN=ghcr.io/slok/kube-code-generator:v0.1.0
+IMAGE_GEN=ghcr.io/slok/kube-code-generator:v0.3.1
 
 default: generate
 

@@ -4,8 +4,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -23,30 +23,10 @@ type PodTerminatorLister interface {
 
 // podTerminatorLister implements the PodTerminatorLister interface.
 type podTerminatorLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.PodTerminator]
 }
 
 // NewPodTerminatorLister returns a new PodTerminatorLister.
 func NewPodTerminatorLister(indexer cache.Indexer) PodTerminatorLister {
-	return &podTerminatorLister{indexer: indexer}
-}
-
-// List lists all PodTerminators in the indexer.
-func (s *podTerminatorLister) List(selector labels.Selector) (ret []*v1alpha1.PodTerminator, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.PodTerminator))
-	})
-	return ret, err
-}
-
-// Get retrieves the PodTerminator from the index for a given name.
-func (s *podTerminatorLister) Get(name string) (*v1alpha1.PodTerminator, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("podterminator"), name)
-	}
-	return obj.(*v1alpha1.PodTerminator), nil
+	return &podTerminatorLister{listers.New[*v1alpha1.PodTerminator](indexer, v1alpha1.Resource("podterminator"))}
 }

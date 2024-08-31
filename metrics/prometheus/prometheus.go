@@ -33,13 +33,13 @@ func (c *Config) defaults() {
 		c.Registerer = prometheus.DefaultRegisterer
 	}
 
-	if c.InQueueBuckets == nil || len(c.InQueueBuckets) == 0 {
+	if len(c.InQueueBuckets) == 0 {
 		// Use bigger buckets thant he default ones because the times of waiting queues
 		// usually are greater than the handling, and resync of events can be minutes.
 		c.InQueueBuckets = []float64{.01, .05, .1, .25, .5, 1, 3, 10, 20, 60, 150, 300}
 	}
 
-	if c.ProcessingBuckets == nil || len(c.ProcessingBuckets) == 0 {
+	if len(c.ProcessingBuckets) == 0 {
 		c.ProcessingBuckets = prometheus.DefBuckets
 	}
 }

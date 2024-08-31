@@ -4,14 +4,13 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
 	scheme "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // PodTerminatorsGetter has a method to return a PodTerminatorInterface.
@@ -35,118 +34,18 @@ type PodTerminatorInterface interface {
 
 // podTerminators implements PodTerminatorInterface
 type podTerminators struct {
-	client rest.Interface
+	*gentype.ClientWithList[*v1alpha1.PodTerminator, *v1alpha1.PodTerminatorList]
 }
 
 // newPodTerminators returns a PodTerminators
 func newPodTerminators(c *ChaosV1alpha1Client) *podTerminators {
 	return &podTerminators{
-		client: c.RESTClient(),
+		gentype.NewClientWithList[*v1alpha1.PodTerminator, *v1alpha1.PodTerminatorList](
+			"podterminators",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			"",
+			func() *v1alpha1.PodTerminator { return &v1alpha1.PodTerminator{} },
+			func() *v1alpha1.PodTerminatorList { return &v1alpha1.PodTerminatorList{} }),
 	}
-}
-
-// Get takes name of the podTerminator, and returns the corresponding podTerminator object, and an error if there is any.
-func (c *podTerminators) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PodTerminator, err error) {
-	result = &v1alpha1.PodTerminator{}
-	err = c.client.Get().
-		Resource("podterminators").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of PodTerminators that match those selectors.
-func (c *podTerminators) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PodTerminatorList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.PodTerminatorList{}
-	err = c.client.Get().
-		Resource("podterminators").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested podTerminators.
-func (c *podTerminators) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Resource("podterminators").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a podTerminator and creates it.  Returns the server's representation of the podTerminator, and an error, if there is any.
-func (c *podTerminators) Create(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.CreateOptions) (result *v1alpha1.PodTerminator, err error) {
-	result = &v1alpha1.PodTerminator{}
-	err = c.client.Post().
-		Resource("podterminators").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(podTerminator).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a podTerminator and updates it. Returns the server's representation of the podTerminator, and an error, if there is any.
-func (c *podTerminators) Update(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.UpdateOptions) (result *v1alpha1.PodTerminator, err error) {
-	result = &v1alpha1.PodTerminator{}
-	err = c.client.Put().
-		Resource("podterminators").
-		Name(podTerminator.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(podTerminator).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the podTerminator and deletes it. Returns an error if one occurs.
-func (c *podTerminators) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Resource("podterminators").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *podTerminators) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Resource("podterminators").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched podTerminator.
-func (c *podTerminators) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PodTerminator, err error) {
-	result = &v1alpha1.PodTerminator{}
-	err = c.client.Patch(pt).
-		Resource("podterminators").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }
