@@ -141,7 +141,7 @@ func New(cfg *Config) (Controller, error) {
 	// Create the queue that will have our received job changes.
 	queue := newRateLimitingBlockingQueue(
 		cfg.ProcessingJobRetries,
-		workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		workqueue.NewTypedRateLimitingQueue(workqueue.DefaultTypedControllerRateLimiter[any]()),
 	)
 
 	// Measure the queue.

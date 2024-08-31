@@ -24,20 +24,22 @@ var podterminatorsKind = v1alpha1.SchemeGroupVersion.WithKind("PodTerminator")
 
 // Get takes name of the podTerminator, and returns the corresponding podTerminator object, and an error if there is any.
 func (c *FakePodTerminators) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PodTerminator, err error) {
+	emptyResult := &v1alpha1.PodTerminator{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(podterminatorsResource, name), &v1alpha1.PodTerminator{})
+		Invokes(testing.NewRootGetActionWithOptions(podterminatorsResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PodTerminator), err
 }
 
 // List takes label and field selectors, and returns the list of PodTerminators that match those selectors.
 func (c *FakePodTerminators) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PodTerminatorList, err error) {
+	emptyResult := &v1alpha1.PodTerminatorList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(podterminatorsResource, podterminatorsKind, opts), &v1alpha1.PodTerminatorList{})
+		Invokes(testing.NewRootListActionWithOptions(podterminatorsResource, podterminatorsKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -56,25 +58,27 @@ func (c *FakePodTerminators) List(ctx context.Context, opts v1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested podTerminators.
 func (c *FakePodTerminators) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(podterminatorsResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(podterminatorsResource, opts))
 }
 
 // Create takes the representation of a podTerminator and creates it.  Returns the server's representation of the podTerminator, and an error, if there is any.
 func (c *FakePodTerminators) Create(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.CreateOptions) (result *v1alpha1.PodTerminator, err error) {
+	emptyResult := &v1alpha1.PodTerminator{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(podterminatorsResource, podTerminator), &v1alpha1.PodTerminator{})
+		Invokes(testing.NewRootCreateActionWithOptions(podterminatorsResource, podTerminator, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PodTerminator), err
 }
 
 // Update takes the representation of a podTerminator and updates it. Returns the server's representation of the podTerminator, and an error, if there is any.
 func (c *FakePodTerminators) Update(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.UpdateOptions) (result *v1alpha1.PodTerminator, err error) {
+	emptyResult := &v1alpha1.PodTerminator{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(podterminatorsResource, podTerminator), &v1alpha1.PodTerminator{})
+		Invokes(testing.NewRootUpdateActionWithOptions(podterminatorsResource, podTerminator, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PodTerminator), err
 }
@@ -88,7 +92,7 @@ func (c *FakePodTerminators) Delete(ctx context.Context, name string, opts v1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePodTerminators) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(podterminatorsResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(podterminatorsResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PodTerminatorList{})
 	return err
@@ -96,10 +100,11 @@ func (c *FakePodTerminators) DeleteCollection(ctx context.Context, opts v1.Delet
 
 // Patch applies the patch and returns the patched podTerminator.
 func (c *FakePodTerminators) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PodTerminator, err error) {
+	emptyResult := &v1alpha1.PodTerminator{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(podterminatorsResource, name, pt, data, subresources...), &v1alpha1.PodTerminator{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(podterminatorsResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PodTerminator), err
 }

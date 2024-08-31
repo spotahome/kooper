@@ -37,10 +37,10 @@ var (
 
 type rateLimitingBlockingQueue struct {
 	maxRetries int
-	queue      workqueue.RateLimitingInterface
+	queue      workqueue.TypedRateLimitingInterface[any]
 }
 
-func newRateLimitingBlockingQueue(maxRetries int, queue workqueue.RateLimitingInterface) blockingQueue {
+func newRateLimitingBlockingQueue(maxRetries int, queue workqueue.TypedRateLimitingInterface[any]) blockingQueue {
 	return rateLimitingBlockingQueue{
 		maxRetries: maxRetries,
 		queue:      queue,
