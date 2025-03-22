@@ -86,7 +86,7 @@ The simplest example that prints pods would be this:
 
 ## Kubernetes version compatibility
 
-Kooper at this moment uses as base `v1.17`. But [check the integration test in CI][ci] to know the supported versions.
+Kooper at this moment uses as base `v1.32`. But [check the integration test in CI][ci] to know the supported versions.
 
 ## When should I use Kooper?
 
