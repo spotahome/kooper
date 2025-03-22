@@ -28,6 +28,10 @@ var (
 type Controller interface {
 	// Run runs the controller and blocks until the context is `Done`.
 	Run(ctx context.Context) error
+	// AddToQueue adds a key to the controller's processing queue
+	AddToQueue(ctx context.Context, key string)
+	// RunWithExternalQueue runs the controller and processes items from the external queue channel
+	RunWithExternalQueue(ctx context.Context, externalQueue <-chan string) error
 }
 
 // Config is the controller configuration.
@@ -315,4 +319,29 @@ func (g *generic) processNextJob() bool {
 	}
 
 	return false
+}
+
+func (g *generic) AddToQueue(ctx context.Context, key string) {
+	g.queue.Add(ctx, key)
+}
+
+// RunWithExternalQueue runs the controller and processes items from the external queue channel
+func (g *generic) RunWithExternalQueue(ctx context.Context, externalQueue <-chan string) error {
+	// We start processing the external queue in a separate goroutine
+	go func() {
+		for {
+			select {
+			case key, ok := <-externalQueue:
+				if !ok {
+					return
+				}
+				g.AddToQueue(ctx, key)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	// We start the main controller
+	return g.Run(ctx)
 }
