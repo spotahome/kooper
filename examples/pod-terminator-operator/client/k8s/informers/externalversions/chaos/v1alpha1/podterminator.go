@@ -3,13 +3,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
+	apischaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
 	versioned "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned"
 	internalinterfaces "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/listers/chaos/v1alpha1"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/listers/chaos/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -20,7 +20,7 @@ import (
 // PodTerminators.
 type PodTerminatorInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.PodTerminatorLister
+	Lister() chaosv1alpha1.PodTerminatorLister
 }
 
 type podTerminatorInformer struct {
@@ -54,7 +54,7 @@ func NewFilteredPodTerminatorInformer(client versioned.Interface, resyncPeriod t
 				return client.ChaosV1alpha1().PodTerminators().Watch(context.TODO(), options)
 			},
 		},
-		&chaosv1alpha1.PodTerminator{},
+		&apischaosv1alpha1.PodTerminator{},
 		resyncPeriod,
 		indexers,
 	)
@@ -65,9 +65,9 @@ func (f *podTerminatorInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *podTerminatorInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&chaosv1alpha1.PodTerminator{}, f.defaultInformer)
+	return f.factory.InformerFor(&apischaosv1alpha1.PodTerminator{}, f.defaultInformer)
 }
 
-func (f *podTerminatorInformer) Lister() v1alpha1.PodTerminatorLister {
-	return v1alpha1.NewPodTerminatorLister(f.Informer().GetIndexer())
+func (f *podTerminatorInformer) Lister() chaosv1alpha1.PodTerminatorLister {
+	return chaosv1alpha1.NewPodTerminatorLister(f.Informer().GetIndexer())
 }

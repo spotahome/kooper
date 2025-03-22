@@ -3,9 +3,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
+	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/apis/chaos/v1alpha1"
 	scheme "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -21,31 +21,32 @@ type PodTerminatorsGetter interface {
 
 // PodTerminatorInterface has methods to work with PodTerminator resources.
 type PodTerminatorInterface interface {
-	Create(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.CreateOptions) (*v1alpha1.PodTerminator, error)
-	Update(ctx context.Context, podTerminator *v1alpha1.PodTerminator, opts v1.UpdateOptions) (*v1alpha1.PodTerminator, error)
+	Create(ctx context.Context, podTerminator *chaosv1alpha1.PodTerminator, opts v1.CreateOptions) (*chaosv1alpha1.PodTerminator, error)
+	Update(ctx context.Context, podTerminator *chaosv1alpha1.PodTerminator, opts v1.UpdateOptions) (*chaosv1alpha1.PodTerminator, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.PodTerminator, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.PodTerminatorList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*chaosv1alpha1.PodTerminator, error)
+	List(ctx context.Context, opts v1.ListOptions) (*chaosv1alpha1.PodTerminatorList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PodTerminator, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *chaosv1alpha1.PodTerminator, err error)
 	PodTerminatorExpansion
 }
 
 // podTerminators implements PodTerminatorInterface
 type podTerminators struct {
-	*gentype.ClientWithList[*v1alpha1.PodTerminator, *v1alpha1.PodTerminatorList]
+	*gentype.ClientWithList[*chaosv1alpha1.PodTerminator, *chaosv1alpha1.PodTerminatorList]
 }
 
 // newPodTerminators returns a PodTerminators
 func newPodTerminators(c *ChaosV1alpha1Client) *podTerminators {
 	return &podTerminators{
-		gentype.NewClientWithList[*v1alpha1.PodTerminator, *v1alpha1.PodTerminatorList](
+		gentype.NewClientWithList[*chaosv1alpha1.PodTerminator, *chaosv1alpha1.PodTerminatorList](
 			"podterminators",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.PodTerminator { return &v1alpha1.PodTerminator{} },
-			func() *v1alpha1.PodTerminatorList { return &v1alpha1.PodTerminatorList{} }),
+			func() *chaosv1alpha1.PodTerminator { return &chaosv1alpha1.PodTerminator{} },
+			func() *chaosv1alpha1.PodTerminatorList { return &chaosv1alpha1.PodTerminatorList{} },
+		),
 	}
 }

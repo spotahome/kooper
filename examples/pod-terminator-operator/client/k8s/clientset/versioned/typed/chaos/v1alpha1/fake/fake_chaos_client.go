@@ -13,7 +13,7 @@ type FakeChaosV1alpha1 struct {
 }
 
 func (c *FakeChaosV1alpha1) PodTerminators() v1alpha1.PodTerminatorInterface {
-	return &FakePodTerminators{c}
+	return newFakePodTerminators(c)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
