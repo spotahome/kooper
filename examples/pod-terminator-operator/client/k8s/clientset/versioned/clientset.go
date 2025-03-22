@@ -3,8 +3,8 @@
 package versioned
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	chaosv1alpha1 "github.com/spotahome/kooper/examples/pod-terminator-operator/v2/client/k8s/clientset/versioned/typed/chaos/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
