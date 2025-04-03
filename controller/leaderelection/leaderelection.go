@@ -17,10 +17,22 @@ import (
 	"github.com/spotahome/kooper/v2/log"
 )
 
-const (
-	defLeaseDuration = 15 * time.Second
-	defRenewDeadline = 10 * time.Second
-	defRetryPeriod   = 2 * time.Second
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+	duration, err := time.ParseDuration(val)
+	if err != nil {
+		return defaultValue
+	}
+	return duration
+}
+
+var (
+	defLeaseDuration = getEnvDuration("LEASE_DURATION", 15*time.Second)
+	defRenewDeadline = getEnvDuration("RENEW_DEADLINE", 10*time.Second)
+	defRetryPeriod   = getEnvDuration("RETRY_PERIOD", 2*time.Second)
 )
 
 // LockConfig is the configuration for the lock (timing, leases...).
