@@ -109,6 +109,9 @@ func run() error {
 		ResyncInterval:       resyncInterval,
 		ConcurrentWorkers:    workers,
 	})
+	if err != nil {
+		return fmt.Errorf("could not create controller: %w", err)
+	}
 
 	// Start our controllers.
 	ctx, cancel := context.WithCancel(context.Background())

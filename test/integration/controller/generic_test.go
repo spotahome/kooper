@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package controller_test
@@ -44,7 +45,7 @@ func returnPodList(q int) *corev1.PodList {
 }
 
 // runTimedController will run a controller that will handle multiple events and will return the duration
-// how long it took to process all the events. each handled event will take the desired ammount of time.
+// how long it took to process all the events. each handled event will take the desired amount of time.
 func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numberOfEvents int, t *testing.T) time.Duration {
 	assert := assert.New(t)
 
@@ -106,7 +107,7 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 	}
 
 	// Return result duration of all the handling.
-	return time.Now().Sub(start)
+	return time.Since(start)
 }
 
 func TestGenericControllerSequentialVSConcurrent(t *testing.T) {

@@ -43,8 +43,8 @@ func MustRetrieverFromListerWatcher(lw cache.ListerWatcher) Retriever {
 }
 
 func (l listerWatcherRetriever) List(_ context.Context, options metav1.ListOptions) (runtime.Object, error) {
-	return l.lw.List(options)
+	return l.lw.List(options) //nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
 }
 func (l listerWatcherRetriever) Watch(_ context.Context, options metav1.ListOptions) (watch.Interface, error) {
-	return l.lw.Watch(options)
+	return l.lw.Watch(options) //nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer`` expects a listerwatcher for now.
 }

@@ -48,7 +48,7 @@ func NewFlags() *Flags {
 	fl.IntVar(&flags.ResyncIntervalSeconds, "resync-interval", resyncIntervalSecondsDef, "resync seconds of the controller")
 	fl.StringVar(&flags.Namespace, "namespace", namespaceDef, "kubernetes namespace where the controller is running")
 
-	fl.Parse(os.Args[1:])
+	_ = fl.Parse(os.Args[1:])
 
 	return flags
 }
@@ -131,7 +131,7 @@ func run() error {
 			logger.Infof("controller finished with error: %s", err)
 			return err
 		}
-		logger.Infof("controller finished successfuly")
+		logger.Infof("controller finished successfully")
 	case s := <-sigC:
 		logger.Infof("signal %s received", s)
 		cancel()

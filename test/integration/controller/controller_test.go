@@ -110,7 +110,10 @@ func TestControllerHandleEvents(t *testing.T) {
 			}
 			ctrl, err := controller.New(cfg)
 			require.NoError(err, "controller is required, can't have error on creation")
-			go ctrl.Run(ctx)
+			go func() {
+				err := ctrl.Run(ctx)
+				require.NoError(err)
+			}()
 
 			// Create the required services.
 			for _, svc := range test.addServices {
