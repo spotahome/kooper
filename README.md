@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/spotahome/kooper)](https://goreportcard.com/report/github.com/spotahome/kooper)
 [![Apache 2 licensed](https://img.shields.io/badge/license-Apache2-blue.svg)](https://raw.githubusercontent.com/spotahome/kooper/master/LICENSE)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/spotahome/kooper)](https://github.com/spotahome/kooper/releases/latest)
-![Kubernetes release](https://img.shields.io/badge/Kubernetes-v1.32-green?logo=Kubernetes&style=flat&color=326CE5&logoColor=white)
+![Kubernetes release](https://img.shields.io/badge/Kubernetes-v1.33-green?logo=Kubernetes&style=flat&color=326CE5&logoColor=white)
 
 Kooper is a Go library to create simple and flexible Kubernetes [controllers]/operators, in a fast, decoupled and easy way.
 
@@ -86,7 +86,7 @@ The simplest example that prints pods would be this:
 
 ## Kubernetes version compatibility
 
-Kooper at this moment uses as base `v1.32`. But [check the integration test in CI][ci] to know the supported versions.
+Kooper at this moment uses as base `v1.33`. But [check the integration test in CI][ci] to know the supported versions.
 
 ## When should I use Kooper?
 
