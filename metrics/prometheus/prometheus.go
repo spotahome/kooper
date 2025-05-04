@@ -53,7 +53,7 @@ type Recorder struct {
 	processedEventDuration *prometheus.HistogramVec
 }
 
-// New returns a new Prometheus implementaiton for a metrics recorder.
+// New returns a new Prometheus implementation for a metrics recorder.
 func New(cfg Config) *Recorder {
 	cfg.defaults()
 

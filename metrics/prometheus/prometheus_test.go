@@ -199,7 +199,7 @@ func TestPrometheusRecorder(t *testing.T) {
 			},
 		},
 
-		"Registering resource queue lenght function should measure the size of the queue.": {
+		"Registering resource queue length function should measure the size of the queue.": {
 			cfg: kooperprometheus.Config{},
 			addMetrics: func(r *kooperprometheus.Recorder) {
 				_ = r.RegisterResourceQueueLengthFunc("ctrl1", func(_ context.Context) int { return 42 })

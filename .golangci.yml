@@ -1,0 +1,29 @@
+version: "2"
+run:
+  build-tags:
+    - integration
+linters:
+  enable:
+    - godot
+    - misspell
+    - revive
+  settings:
+    revive:
+      rules:
+        # Spammy linter and complex to fix on lots of parameters. Makes more harm that it solves.
+        - name: unused-parameter
+          disabled: true
+    staticcheck:
+      checks:
+        - all
+        - -QF1008
+        - -QF1006
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+formatters:
+  enable:
+    - gofmt
+    - goimports

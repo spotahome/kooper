@@ -1,5 +1,7 @@
 ## [unreleased]
 
+- Update Kubernetes libraries for 1.33.
+
 ## [2.8.0] - 2025-03-22
 
 - Update Kubernetes libraries for 1.32.

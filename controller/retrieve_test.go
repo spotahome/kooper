@@ -37,12 +37,14 @@ var (
 	}
 )
 
+//nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
 func testPodListFunc(pl *corev1.PodList) cache.ListFunc {
 	return func(options metav1.ListOptions) (runtime.Object, error) {
 		return pl, nil
 	}
 }
 
+//nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
 func testEventWatchFunc(evs []watch.Event) cache.WatchFunc {
 	return func(options metav1.ListOptions) (watch.Interface, error) {
 		cg := make(chan watch.Event)

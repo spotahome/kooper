@@ -3,4 +3,4 @@
 set -o errexit
 set -o nounset
 
-golangci-lint run -E goimports --timeout 3m
+GOFLAGS="-buildvcs=false" golangci-lint run

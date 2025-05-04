@@ -72,7 +72,10 @@ func createPrometheusRecorder(logger log.Logger) *kooperprometheus.Recorder {
 	h := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
 	go func() {
 		logger.Infof("serving metrics at %s", metricsAddr)
-		http.ListenAndServe(metricsAddr, h)
+		err := http.ListenAndServe(metricsAddr, h)
+		if err != nil {
+			logger.Errorf("Error on server: %s", err)
+		}
 	}()
 
 	return rec

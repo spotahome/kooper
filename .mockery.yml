@@ -1,0 +1,8 @@
+dir: '{{.InterfaceDir}}/{{.SrcPackageName}}mock'
+filename: mocks.go
+force-file-write: true
+structname: '{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}mock'
+template: testify
+packages:
+  github.com/spotahome/kooper/v2/controller: {interfaces: {Handler}}

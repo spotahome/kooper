@@ -45,13 +45,25 @@ func NewFilteredPodTerminatorInformer(client versioned.Interface, resyncPeriod t
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ChaosV1alpha1().PodTerminators().List(context.TODO(), options)
+				return client.ChaosV1alpha1().PodTerminators().List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ChaosV1alpha1().PodTerminators().Watch(context.TODO(), options)
+				return client.ChaosV1alpha1().PodTerminators().Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.ChaosV1alpha1().PodTerminators().List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.ChaosV1alpha1().PodTerminators().Watch(ctx, options)
 			},
 		},
 		&apischaosv1alpha1.PodTerminator{},
