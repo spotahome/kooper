@@ -28,6 +28,8 @@ var (
 type Controller interface {
 	// Run runs the controller and blocks until the context is `Done`.
 	Run(ctx context.Context) error
+	// GetIndexer returns the indexer for the controller to allow access of the underlying object store.
+	GetIndexer() cache.Indexer
 }
 
 // Config is the controller configuration.
@@ -315,4 +317,8 @@ func (g *generic) processNextJob() bool {
 	}
 
 	return false
+}
+
+func (g *generic) GetIndexer() cache.Indexer {
+	return g.informer.GetIndexer()
 }
