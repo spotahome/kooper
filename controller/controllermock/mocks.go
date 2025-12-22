@@ -61,15 +61,26 @@ type Handler_Handle_Call struct {
 }
 
 // Handle is a helper method to define mock.On call
-//   - context1
-//   - object
+//   - context1 context.Context
+//   - object runtime.Object
 func (_e *Handler_Expecter) Handle(context1 interface{}, object interface{}) *Handler_Handle_Call {
 	return &Handler_Handle_Call{Call: _e.mock.On("Handle", context1, object)}
 }
 
 func (_c *Handler_Handle_Call) Run(run func(context1 context.Context, object runtime.Object)) *Handler_Handle_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(runtime.Object))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 runtime.Object
+		if args[1] != nil {
+			arg1 = args[1].(runtime.Object)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

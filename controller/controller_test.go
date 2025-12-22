@@ -87,7 +87,7 @@ func TestGenericControllerHandle(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			ctx, cancelCtx := context.WithCancel(context.Background())
+			ctx, cancelCtx := context.WithCancel(t.Context())
 			defer cancelCtx()
 			resultC := make(chan error)
 
@@ -161,7 +161,7 @@ func TestGenericControllerErrorRetries(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			ctx, cancelCtx := context.WithCancel(context.Background())
+			ctx, cancelCtx := context.WithCancel(t.Context())
 			defer cancelCtx()
 			resultC := make(chan error)
 
@@ -237,12 +237,13 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
-			ctx, cancelCtx := context.WithCancel(context.Background())
+			ctx, cancelCtx := context.WithCancel(t.Context())
 			defer cancelCtx()
 			resultC := make(chan error)
 
 			// Mocks kubernetes  client.
-			mc := fake.NewSimpleClientset(nsList)
+			mc := &fake.Clientset{}
+			onKubeClientListNamespaceReturn(mc, test.nsList)
 
 			// Mock our handler and set expects.
 			mh1 := &controllermock.Handler{}
@@ -309,7 +310,7 @@ func TestGenericControllerWithLeaderElection(t *testing.T) {
 			// Run multiple controller in background.
 			go func() { resultC <- c1.Run(ctx) }()
 			// Let the first controller became the leader.
-			time.Sleep(200 * time.Microsecond)
+			time.Sleep(500 * time.Millisecond)
 			go func() { resultC <- c2.Run(ctx) }()
 			go func() { resultC <- c3.Run(ctx) }()
 

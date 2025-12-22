@@ -1,7 +1,4 @@
-//go:build integration
-// +build integration
-
-package controller_test
+package concurrency_test
 
 import (
 	"context"
@@ -29,34 +26,48 @@ const (
 	maxAssertDurationDelta = 500 * time.Millisecond
 )
 
-func returnPodList(q int) *corev1.PodList {
-	items := make([]corev1.Pod, q)
-
-	for i := 0; i < q; i++ {
-		items[i] = corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("pod%d", i),
-			},
-		}
-	}
-	return &corev1.PodList{
-		Items: items,
-	}
-}
-
 // runTimedController will run a controller that will handle multiple events and will return the duration
 // how long it took to process all the events. each handled event will take the desired amount of time.
 func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numberOfEvents int, t *testing.T) time.Duration {
 	assert := assert.New(t)
 
 	// Create the faked retriever that will only return N pods.
-	podList := returnPodList(numberOfEvents)
 	r := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
 		ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
-			return podList, nil
+			return nil, nil
 		},
 		WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
-			return watch.NewFake(), nil
+			fakeWatch := watch.NewFake()
+
+			// Send bookmark immediately, our controller is already waiting for the sync.
+			go func() {
+				time.Sleep(1 * time.Millisecond)
+
+				// Send the required bookmark for initial events. Important to use  "k8s.io/initial-events-end" annotation
+				// so the controller knows initial events have ended.
+				bookmark := &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						ResourceVersion: "1",
+						Annotations: map[string]string{
+							"k8s.io/initial-events-end": "true",
+						},
+					},
+				}
+				fakeWatch.Action(watch.Bookmark, bookmark)
+
+				// Now send all the pod added events so the controller can process them.
+				for i := 0; i < numberOfEvents; i++ {
+					pod := &corev1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:            fmt.Sprintf("pod%d", i),
+							ResourceVersion: fmt.Sprintf("%d", i+2),
+						},
+					}
+					fakeWatch.Add(pod)
+				}
+			}()
+
+			return fakeWatch, nil
 		},
 	})
 
