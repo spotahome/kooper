@@ -255,7 +255,8 @@ func (g *generic) run(ctx context.Context) error {
 	go g.informer.Run(ctx.Done())
 
 	// Wait until our store, jobs... stuff is synced (first list on resource, resources on store and jobs on queue).
-	if !cache.WaitForCacheSync(ctx.Done(), g.informer.HasSynced) {
+	synced := cache.WaitForNamedCacheSyncWithContext(ctx, g.informer.HasSynced)
+	if !synced {
 		return fmt.Errorf("timed out waiting for caches to sync")
 	}
 
