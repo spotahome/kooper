@@ -28,11 +28,11 @@ import (
 // NewNamespace returns a Namespace retriever.
 func newNamespaceRetriever(client kubernetes.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
-		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return client.CoreV1().Namespaces().List(context.TODO(), options)
+		ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+			return client.CoreV1().Namespaces().List(ctx, options)
 		},
-		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return client.CoreV1().Namespaces().Watch(context.TODO(), options)
+		WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+			return client.CoreV1().Namespaces().Watch(ctx, options)
 		},
 	})
 }

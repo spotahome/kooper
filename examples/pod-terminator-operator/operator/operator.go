@@ -38,11 +38,11 @@ func New(cfg Config, podTermCli podtermk8scli.Interface, kubeCli kubernetes.Inte
 
 func newRetriever(cli podtermk8scli.Interface) controller.Retriever {
 	return controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
-		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return cli.ChaosV1alpha1().PodTerminators().List(context.Background(), options)
+		ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+			return cli.ChaosV1alpha1().PodTerminators().List(ctx, options)
 		},
-		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return cli.ChaosV1alpha1().PodTerminators().Watch(context.Background(), options)
+		WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+			return cli.ChaosV1alpha1().PodTerminators().Watch(ctx, options)
 		},
 	})
 }

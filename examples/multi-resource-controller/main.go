@@ -73,11 +73,11 @@ func run() error {
 		Handler: hand,
 		Retriever: controller.MustRetrieverFromListerWatcher(
 			&cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					return k8scli.AppsV1().Deployments("").List(context.Background(), options)
+				ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().Deployments("").List(ctx, options)
 				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					return k8scli.AppsV1().Deployments("").Watch(context.Background(), options)
+				WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().Deployments("").Watch(ctx, options)
 				},
 			},
 		),
@@ -96,11 +96,11 @@ func run() error {
 		Handler: hand,
 		Retriever: controller.MustRetrieverFromListerWatcher(
 			&cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					return k8scli.AppsV1().StatefulSets("").List(context.Background(), options)
+				ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+					return k8scli.AppsV1().StatefulSets("").List(ctx, options)
 				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					return k8scli.AppsV1().StatefulSets("").Watch(context.Background(), options)
+				WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+					return k8scli.AppsV1().StatefulSets("").Watch(ctx, options)
 				},
 			},
 		),

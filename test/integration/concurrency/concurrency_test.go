@@ -33,10 +33,10 @@ func runTimedController(sleepDuration time.Duration, concurrencyLevel int, numbe
 
 	// Create the faked retriever that will only return N pods.
 	r := controller.MustRetrieverFromListerWatcher(&cache.ListWatch{
-		ListFunc: func(_ metav1.ListOptions) (runtime.Object, error) {
+		ListWithContextFunc: func(_ context.Context, _ metav1.ListOptions) (runtime.Object, error) {
 			return nil, nil
 		},
-		WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) {
+		WatchFuncWithContext: func(_ context.Context, _ metav1.ListOptions) (watch.Interface, error) {
 			fakeWatch := watch.NewFake()
 
 			// Send bookmark immediately, our controller is already waiting for the sync.

@@ -20,7 +20,7 @@ type Retriever interface {
 }
 
 type listerWatcherRetriever struct {
-	lw cache.ListerWatcher
+	lw cache.ListerWatcherWithContext
 }
 
 // RetrieverFromListerWatcher returns a Retriever from a Kubernetes client-go cache.ListerWatcher.
@@ -29,7 +29,7 @@ func RetrieverFromListerWatcher(lw cache.ListerWatcher) (Retriever, error) {
 	if lw == nil {
 		return nil, fmt.Errorf("listerWatcher can't be nil")
 	}
-	return listerWatcherRetriever{lw: lw}, nil
+	return listerWatcherRetriever{lw: cache.ToListerWatcherWithContext(lw)}, nil
 }
 
 // MustRetrieverFromListerWatcher returns a Retriever from a Kubernetes client-go cache.ListerWatcher
@@ -42,9 +42,9 @@ func MustRetrieverFromListerWatcher(lw cache.ListerWatcher) Retriever {
 	return r
 }
 
-func (l listerWatcherRetriever) List(_ context.Context, options metav1.ListOptions) (runtime.Object, error) {
-	return l.lw.List(options) //nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
+func (l listerWatcherRetriever) List(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+	return l.lw.ListWithContext(ctx, options)
 }
-func (l listerWatcherRetriever) Watch(_ context.Context, options metav1.ListOptions) (watch.Interface, error) {
-	return l.lw.Watch(options) //nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer`` expects a listerwatcher for now.
+func (l listerWatcherRetriever) Watch(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+	return l.lw.WatchWithContext(ctx, options)
 }
