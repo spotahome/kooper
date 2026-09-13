@@ -119,13 +119,12 @@ type generic struct {
 }
 
 func listerWatcherFromRetriever(ret Retriever) cache.ListerWatcher {
-	// TODO(slok): pass context when Kubernetes updates its ListerWatchers ¯\_(ツ)_/¯.
 	return &cache.ListWatch{
-		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-			return ret.List(context.TODO(), options)
+		ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+			return ret.List(ctx, options)
 		},
-		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-			return ret.Watch(context.TODO(), options)
+		WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+			return ret.Watch(ctx, options)
 		},
 	}
 }

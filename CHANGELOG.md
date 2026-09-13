@@ -1,5 +1,8 @@
 ## [unreleased]
 
+- Update Kubernetes libraries for 1.36.
+- Update Go version to v1.26.
+
 ## [2.10.0] - 2025-12-22
 
 - Update Kubernetes libraries for 1.35.

@@ -7,7 +7,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     # Execute the checks inside the container instead the VM.
-    container: golangci/golangci-lint:v2.7.2-alpine
+    container: golangci/golangci-lint:v2.13.2-alpine
     steps:
       - uses: actions/checkout@v6
       - run: |
@@ -29,20 +29,22 @@ jobs:
     needs: [check, unit-test]
     strategy:
       matrix:
-        kubernetes: [1.31.14, 1.32.11, 1.33.7, 1.34.3, 1.35.0]
+        kubernetes: [1.32.11, 1.33.12, 1.34.11, 1.35.8, 1.36.4]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+      - uses: azure/setup-kubectl@v5
+        with:
+          version: v${{ matrix.kubernetes }}
       - name: Execute tests
         env:
-          KIND_VERSION: v0.31.0
+          KIND_VERSION: v0.33.0
         run: |
           # Get dependencies.
           echo "Getting dependencies..."
           curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
-          curl -Lo kubectl http://cdn.dl.k8s.io/release/v${{ matrix.kubernetes }}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 
           # Start cluster.
           echo "Executing ${{ matrix.kubernetes }} Kubernetes tests..."

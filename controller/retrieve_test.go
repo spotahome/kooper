@@ -37,16 +37,14 @@ var (
 	}
 )
 
-//nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
-func testPodListFunc(pl *corev1.PodList) cache.ListFunc {
-	return func(options metav1.ListOptions) (runtime.Object, error) {
+func testPodListFunc(pl *corev1.PodList) cache.ListWithContextFunc {
+	return func(_ context.Context, _ metav1.ListOptions) (runtime.Object, error) {
 		return pl, nil
 	}
 }
 
-//nolint:staticcheck // SA1019 `cache.NewSharedIndexInformer` expects a listerwatcher for now.
-func testEventWatchFunc(evs []watch.Event) cache.WatchFunc {
-	return func(options metav1.ListOptions) (watch.Interface, error) {
+func testEventWatchFunc(evs []watch.Event) cache.WatchFuncWithContext {
+	return func(_ context.Context, _ metav1.ListOptions) (watch.Interface, error) {
 		cg := make(chan watch.Event)
 		go func() {
 			for _, ev := range evs {
@@ -69,8 +67,12 @@ func TestRetrieverFromListerWatcher(t *testing.T) {
 	}{
 		"A List error or a watch error should be propagated to the upper layer": {
 			listerWatcher: &cache.ListWatch{
-				ListFunc:  func(_ metav1.ListOptions) (runtime.Object, error) { return nil, fmt.Errorf("wanted error") },
-				WatchFunc: func(_ metav1.ListOptions) (watch.Interface, error) { return nil, fmt.Errorf("wanted error") },
+				ListWithContextFunc: func(_ context.Context, _ metav1.ListOptions) (runtime.Object, error) {
+					return nil, fmt.Errorf("wanted error")
+				},
+				WatchFuncWithContext: func(_ context.Context, _ metav1.ListOptions) (watch.Interface, error) {
+					return nil, fmt.Errorf("wanted error")
+				},
 			},
 			expListErr:  true,
 			expWatchErr: true,
@@ -78,8 +80,8 @@ func TestRetrieverFromListerWatcher(t *testing.T) {
 
 		"List and watch should call the Kubernetes go clients lister watcher correctly.": {
 			listerWatcher: &cache.ListWatch{
-				ListFunc:  testPodListFunc(testPodList),
-				WatchFunc: testEventWatchFunc(testEventList),
+				ListWithContextFunc:  testPodListFunc(testPodList),
+				WatchFuncWithContext: testEventWatchFunc(testEventList),
 			},
 			expList:  testPodList,
 			expWatch: testEventList,
